@@ -6,7 +6,18 @@
 -export([start_http/1]).
 
 
+ensure_started(App) ->
+    case application:start(App) of
+        ok ->
+            ok;
+        {error, {already_started, App}} ->
+            ok
+    end.
+
 start_http({modules, Mods}) ->
+    ensure_started(crypto),
+    ensure_started(ranch),
+    ensure_started(cowboy),
     Dispatch = cowboy_router:compile(routes(Mods)),
     {ok, _} = cowboy:start_http(http, 100, [{port, 8080}],
                                 [{env, [{dispatch, Dispatch}]}]).
