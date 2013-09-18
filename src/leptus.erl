@@ -3,6 +3,7 @@
 -module(leptus).
 -author("Sina Samavati <sina.samv@gmail.com>").
 
+-export([start/0]).
 -export([start_http/1]).
 
 
@@ -13,6 +14,9 @@ ensure_started(App) ->
         {error, {already_started, App}} ->
             ok
     end.
+
+start() ->
+    start_http({module, []}).
 
 start_http({modules, Mods}) ->
     ensure_started(crypto),

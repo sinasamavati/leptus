@@ -1,0 +1,13 @@
+{application, leptus,
+ [
+  {description, ""},
+  {vsn, ""},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  cowboy
+                 ]},
+  {mod, { leptus_app, []}},
+  {env, []}
+ ]}.
