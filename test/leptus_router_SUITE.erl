@@ -1,12 +1,18 @@
 -module(leptus_router_SUITE).
 
 -export([all/0]).
+-export([fetch_routes/1]).
 -export([dispatches/1]).
 -export([routes/0]).
 
 
 all() ->
-    [dispatches].
+    [fetch_routes, dispatches].
+
+fetch_routes(_) ->
+    [{?MODULE,
+      ["/", "/blah", "/hello/:name", "/some-url/to/some-path"]
+     }] = leptus_router:fetch_routes([?MODULE]).
 
 dispatches(_) ->
     [{'_', [
