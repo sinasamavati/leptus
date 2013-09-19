@@ -28,7 +28,7 @@ fetch_paths(Mods) ->
 
 -spec handle_routes(routes()) -> [cowboy_router:route_path()].
 handle_routes(Routes) ->
-    Values = orddict:fold(fun(_, V, AccIn) -> V ++ AccIn end, [], Routes),
+    Values = orddict:fold(fun(_, V, AccIn) -> AccIn ++ V end, [], Routes),
     handle_routes(Values, []).
 
 handle_routes([], Acc) ->
