@@ -11,4 +11,4 @@ otp_release:
 notifications:
   email: false
   irc: "chat.freenode.net#xprous"
-script: make test
+script: make dev test
