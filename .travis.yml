@@ -5,9 +5,6 @@ otp_release:
   - R15B02
   - R15B01
   - R15B
-  - R14B04
-  - R14B03
-  - R14B02
 notifications:
   email: false
   irc: "chat.freenode.net#xprous"
