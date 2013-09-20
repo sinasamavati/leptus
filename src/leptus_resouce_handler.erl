@@ -20,11 +20,19 @@ terminate(_Reason, _Req, _State) ->
 
 %% internal
 handle_request(Method, Req, State) ->
-    %% convert request method to an lowercase atom & apply the function
     case leptus_router:find_mod(State) of
         {ok, Mod} ->
-            apply(Mod, list_to_atom([M - $A + $a || <<M>>  <= Method]),
-                  [State, Req]);
+            %% convert the http method to a lowercase atom
+            Func = list_to_atom([M - $A + $a || <<M>>  <= Method]),
+
+            %% method not allowed if function is not exported
+            case erlang:function_exported(Mod, Func, 2) of
+                true ->
+                    apply(Mod, Func, [State, Req]);
+                false ->
+                    {ok, 405, <<>>}
+            end;
+
         {error, undefined} ->
-            {ok, 404, "not found"}
+            {ok, 404, <<>>}
     end.
