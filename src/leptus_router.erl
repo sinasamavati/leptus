@@ -16,8 +16,8 @@
 -export([dispatches/1]).
 -export([find_mod/1]).
 
--type req_route() :: string().
--type routes() :: [{module(), [req_route()]}].
+-type route() :: string().
+-type routes() :: [{module(), [route()]}].
 
 
 start_link() ->
@@ -85,8 +85,10 @@ handle_routes([], Acc) ->
 handle_routes([Route|T], Acc) ->
     handle_routes(T, Acc ++ [{Route, leptus_resouce_handler, Route}]).
 
--spec find_mod(req_route(), routes()) -> {ok, string()} | {error, undefined}.
+-spec find_mod(route(), routes()) -> {ok, module()} | {error, undefined}.
 find_mod(Route, Routes) ->
+    %% find module name by route
+    %% (where the keys are module names and values are url patterns)
     Mod = orddict:fold(fun(K, V, Acc) ->
                                case lists:member(Acc, V) of
                                    true ->
