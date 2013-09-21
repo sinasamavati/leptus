@@ -6,6 +6,7 @@
 -export([start_http/1]).
 
 
+-spec start_http({modules, [module()]}) -> {ok, pid()}.
 start_http({modules, Mods}) ->
     ensure_started(crypto),
     ensure_started(ranch),
