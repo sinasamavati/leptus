@@ -4,10 +4,11 @@
 -export([binding/1]).
 -export([bindings/1]).
 -export([qs/1]).
+-export([qs_val/1]).
 
 
 all() ->
-    [binding, bindings, qs].
+    [binding, bindings, qs, qs_val].
 
 binding(_) ->
     true = undefined =:= leptus_req:binding(namez, req1()),
@@ -22,7 +23,13 @@ bindings(_) ->
 
 qs(_) ->
     <<>> = leptus_req:qs(req1()),
-    <<"q=123">> = leptus_req:qs(req2()).
+    <<"q=123&b=456">> = leptus_req:qs(req2()).
+
+qs_val(_) ->
+    undefined = leptus_req:qs_val(<<"p">>, req1()),
+    undefined = leptus_req:qs_val(<<"p">>, req2()),
+    <<"123">> = leptus_req:qs_val(<<"q">>, req2()),
+    <<"456">> = leptus_req:qs_val(<<"b">>, req2()).
 
 req1() ->
     {http_req, port, ranch_tcp, keepalive, pid, <<"GET">>,
@@ -44,7 +51,7 @@ req2() ->
      'HTTP/1.1',
      {{127,0,0,1}, 34273},
      <<"localhost">>, undefined, 8080, <<"/hello/leptus/97dba1">>, undefined,
-     <<"q=123">>, undefined, [],
+     <<"q=123&b=456">>, undefined, [],
      [{<<"user-agent">>,
        <<"curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1"
          " zlib/1.2.3.4 libidn/1.23 librtmp/2.3">>},
