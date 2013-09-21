@@ -3,6 +3,7 @@
 
 -export([binding/2]).
 -export([bindings/1]).
+-export([qs/1]).
 
 -type req() :: cowboy_req:req().
 
@@ -14,6 +15,10 @@ binding(Key, Req) ->
 -spec bindings(req()) -> [{atom(), binary()}] | undefined.
 bindings(Req) ->
     get_value(cowboy_req:bindings(Req)).
+
+-spec qs(req()) -> binary().
+qs(Req) ->
+    get_value(cowboy_req:qs(Req)).
 
 
 %% internal
