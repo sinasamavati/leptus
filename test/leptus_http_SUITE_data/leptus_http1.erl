@@ -13,5 +13,5 @@ get("/hello", _Req) ->
     {ok, 200, "hello, world!"};
 
 get("/hello/:name", Req) ->
-    {Name, _} = cowboy_req:binding(name, Req),
+    Name = leptus_req:binding(name, Req),
     {ok, 200, "hello, " ++ Name}.

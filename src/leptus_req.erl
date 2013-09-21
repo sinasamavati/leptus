@@ -4,7 +4,10 @@
 -export([binding/2]).
 -export([bindings/1]).
 
+-type req() :: cowboy_req:req().
 
+
+-spec binding(atom(), req()) -> binary() | undefined.
 binding(Key, Req) ->
     case cowboy_req:binding(Key, Req) of
         {undefined, _} ->
@@ -13,6 +16,7 @@ binding(Key, Req) ->
             Value
     end.
 
+-spec bindings(req()) -> [{atom(), binary()}] | undefined.
 bindings(Req) ->
     case cowboy_req:bindings(Req) of
         {undefined, _} ->
