@@ -9,18 +9,13 @@
 
 -spec binding(atom(), req()) -> binary() | undefined.
 binding(Key, Req) ->
-    case cowboy_req:binding(Key, Req) of
-        {undefined, _} ->
-            undefined;
-        {Value, _} ->
-            Value
-    end.
+    get_value(cowboy_req:binding(Key, Req)).
 
 -spec bindings(req()) -> [{atom(), binary()}] | undefined.
 bindings(Req) ->
-    case cowboy_req:bindings(Req) of
-        {undefined, _} ->
-            undefined;
-        {Params, _} ->
-            Params
-    end.
+    get_value(cowboy_req:bindings(Req)).
+
+
+%% internal
+get_value({Value, _}) ->
+    Value.
