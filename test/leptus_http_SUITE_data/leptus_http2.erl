@@ -8,15 +8,15 @@ routes() ->
 
 get("/users/:id", Req) ->
     Id = leptus_req:binding(id, Req),
-    {ok, 200, ["aha, this is ", Id]};
+    {200, ["aha, this is ", Id]};
 
 get("/users/:id/interests", Req) ->
     Id = leptus_req:binding(id, Req),
     case Id of
         <<"s1n4">> ->
-            {ok, 200, <<"Erlang and a lotta things else">>};
+            {200, <<"Erlang and a lotta things else">>};
         <<"456">> ->
-            {ok, 404, <<"not found...">>};
+            {200, "art, photography..."};
         _ ->
-            {ok, 200, "art, photography..."}
+            {404, <<"not found...">>}
     end.

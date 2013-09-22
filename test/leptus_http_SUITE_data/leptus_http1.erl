@@ -7,11 +7,11 @@ routes() ->
     ["/", "/hello", "/hello/:name"].
 
 get("/", _Req) ->
-    {ok, 200, "index"};
+    {200, "index"};
 
 get("/hello", _Req) ->
-    {ok, 200, "hello, world!"};
+    {200, "hello, world!"};
 
 get("/hello/:name", Req) ->
     Name = leptus_req:binding(name, Req),
-    {ok, 200, "hello, " ++ Name}.
+    {200, "hello, " ++ Name}.

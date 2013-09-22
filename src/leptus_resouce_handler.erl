@@ -10,7 +10,7 @@ init(_Transport, Req, State) ->
 
 handle(Req, State) ->
     {Method, Req2} = cowboy_req:method(Req),
-    {ok, Status, Resp} = handle_request(Method, Req2, State),
+    {Status, Resp} = handle_request(Method, Req2, State),
     Req3 = cowboy_req:reply(Status, [], Resp, Req2),
     {ok, Req3, State}.
 
@@ -30,9 +30,9 @@ handle_request(Method, Req, State) ->
                 true ->
                     apply(Mod, Func, [State, Req]);
                 false ->
-                    {ok, 405, <<>>}
+                    {405, <<>>}
             end;
 
         {error, undefined} ->
-            {ok, 404, <<>>}
+            {404, <<>>}
     end.
