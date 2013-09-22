@@ -40,4 +40,5 @@ reply({Status, Body}, Req, State) ->
     reply({Status, [], Body}, Req, State);
 
 reply({Status, Headers, Body}, Req, State) ->
-    {ok, cowboy_req:reply(Status, Headers, Body, Req), Req, State}.
+    {ok, Req1} = cowboy_req:reply(Status, Headers, Body, Req),
+    {ok, Req1, State}.
