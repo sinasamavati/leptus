@@ -9,10 +9,8 @@ init(_Transport, Req, State) ->
     {ok, Req, State}.
 
 handle(Req, State) ->
-    {Method, Req2} = cowboy_req:method(Req),
-    {Status, Resp} = handle_request(Method, Req2, State),
-    Req3 = cowboy_req:reply(Status, [], Resp, Req2),
-    {ok, Req3, State}.
+    {Method, _} = cowboy_req:method(Req),
+    handle_request(Method, Req, State).
 
 terminate(_Reason, _Req, _State) ->
     ok.
@@ -20,19 +18,26 @@ terminate(_Reason, _Req, _State) ->
 
 %% internal
 handle_request(Method, Req, State) ->
-    case leptus_router:find_mod(State) of
-        {ok, Mod} ->
-            %% convert the http method to a lowercase atom
-            Func = list_to_atom([M - $A + $a || <<M>>  <= Method]),
+    Args = case leptus_router:find_mod(State) of
+               {ok, Mod} ->
+                   %% convert the http method to a lowercase atom
+                   Func = list_to_atom([M - $A + $a || <<M>>  <= Method]),
 
-            %% method not allowed if function is not exported
-            case erlang:function_exported(Mod, Func, 2) of
-                true ->
-                    apply(Mod, Func, [State, Req]);
-                false ->
-                    {405, <<>>}
-            end;
+                   %% method not allowed if function is not exported
+                   case erlang:function_exported(Mod, Func, 2) of
+                       true ->
+                           apply(Mod, Func, [State, Req]);
+                       false ->
+                           {405, <<>>}
+                   end;
 
-        {error, undefined} ->
-            {404, <<>>}
-    end.
+               {error, undefined} ->
+                   {404, <<>>}
+           end,
+    reply(Args, Req, State).
+
+reply({Status, Body}, Req, State) ->
+    reply({Status, [], Body}, Req, State);
+
+reply({Status, Headers, Body}, Req, State) ->
+    {ok, cowboy_req:reply(Status, Headers, Body, Req), Req, State}.
