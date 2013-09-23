@@ -31,9 +31,14 @@ stop() ->
 fetch_routes(Mods) ->
     gen_server:call(?MODULE, {fetch_routes, Mods}).
 
+-spec dispatches([module()]) -> cowboy_router:dispatch_rules().
+dispatches(Mods) ->
+    [{'_', fetch_paths(Mods)}].
+
 -spec find_mod(string()) -> {ok, module()} | {error, undefined}.
 find_mod(Route) ->
     gen_server:call(?MODULE, {find_mod, Route}).
+
 
 %% gen_server
 init([]) ->
@@ -66,10 +71,6 @@ fetch_routes([Mod|T], Acc) ->
     %% each module must have routes/0 -> [string()].
     Routes = apply(Mod, routes, []),
     fetch_routes(T, orddict:append_list(Mod, Routes, Acc)).
-
--spec dispatches([module()]) -> cowboy_router:dispatch_rules().
-dispatches(Mods) ->
-    [{'_', fetch_paths(Mods)}].
 
 -spec fetch_paths([module()]) -> [cowboy_router:route_path()].
 fetch_paths(Mods) ->
