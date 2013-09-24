@@ -37,8 +37,10 @@ handle_request(Method, Req, State) ->
     reply(Args, Req, State).
 
 reply({Status, Body}, Req, State) ->
-    reply({Status, [], Body}, Req, State);
-
+    reply(Status, [], Body, Req, State);
 reply({Status, Headers, Body}, Req, State) ->
+    reply(Status, Headers, Body, Req, State).
+
+reply(Status, Headers, Body, Req, State) ->
     {ok, Req1} = cowboy_req:reply(Status, Headers, Body, Req),
     {ok, Req1, State}.
