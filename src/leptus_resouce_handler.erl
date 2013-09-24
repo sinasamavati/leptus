@@ -42,5 +42,17 @@ reply({Status, Headers, Body}, Req, State) ->
     reply(Status, Headers, Body, Req, State).
 
 reply(Status, Headers, Body, Req, State) ->
-    {ok, Req1} = cowboy_req:reply(Status, Headers, Body, Req),
+    {
+      Headers1,
+      Body1
+    } = case Headers of
+            json ->
+                {[{<<"content-type">>, <<"application/json">>}],
+                 jsx:encode(Body)};
+            [] ->
+                {[{<<"content-type">>, <<"text/plain">>}], Body};
+            _ ->
+                {Headers, Body}
+        end,
+    {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, State}.

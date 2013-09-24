@@ -4,7 +4,7 @@
 -export([get/2]).
 
 routes() ->
-    ["/users/:id", "/users/:id/interests"].
+    ["/users/:id", "/users/:id/interests", "/users/:id/profile"].
 
 get("/users/:id", Req) ->
     Id = leptus_req:binding(id, Req),
@@ -19,4 +19,12 @@ get("/users/:id/interests", Req) ->
             {200, "art, photography..."};
         _ ->
             {404, <<"not found...">>}
-    end.
+    end;
+
+get("/users/:id/profile", Req) ->
+    Body = [
+            {<<"id">>, leptus_req:binding(id, Req)},
+            {<<"bio">>, <<"Erlanger">>},
+            {<<"github">>, leptus_req:binding(id, Req)}
+           ],
+    {200, json, Body}.
