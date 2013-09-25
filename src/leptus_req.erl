@@ -5,6 +5,7 @@
 -export([bindings/1]).
 -export([qs/1]).
 -export([qs_val/2]).
+-export([uri/1]).
 
 -type req() :: cowboy_req:req().
 
@@ -24,6 +25,18 @@ qs(Req) ->
 -spec qs_val(binary(), req()) -> binary() | undefined.
 qs_val(Key, Req) ->
     get_value(cowboy_req:qs_val(Key, Req)).
+
+-spec uri(req()) -> binary().
+uri(Req) ->
+    Path = get_value(cowboy_req:path(Req)),
+    QS = qs(Req),
+
+    %% e.g <<"/path?query=string">>
+
+    case QS of
+        <<>> -> Path;
+        _ -> <<Path/binary, <<"?">>/binary, QS/binary>>
+    end.
 
 
 %% internal

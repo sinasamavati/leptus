@@ -5,10 +5,11 @@
 -export([bindings/1]).
 -export([qs/1]).
 -export([qs_val/1]).
+-export([uri/1]).
 
 
 all() ->
-    [binding, bindings, qs, qs_val].
+    [binding, bindings, qs, qs_val, uri].
 
 binding(_) ->
     true = undefined =:= leptus_req:binding(namez, req1()),
@@ -30,6 +31,11 @@ qs_val(_) ->
     undefined = leptus_req:qs_val(<<"p">>, req2()),
     <<"123">> = leptus_req:qs_val(<<"q">>, req2()),
     <<"456">> = leptus_req:qs_val(<<"b">>, req2()).
+
+uri(_) ->
+    <<"/hello/leptus/97dba1">> = leptus_req:uri(req1()),
+    <<"/hello/leptus/97dba1?q=123&b=456">> = leptus_req:uri(req2()).
+
 
 req1() ->
     {http_req, port, ranch_tcp, keepalive, pid, <<"GET">>,
