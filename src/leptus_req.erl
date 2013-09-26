@@ -6,6 +6,7 @@
 -export([qs/1]).
 -export([qs_val/2]).
 -export([uri/1]).
+-export([version/1]).
 
 -type req() :: cowboy_req:req().
 
@@ -37,6 +38,10 @@ uri(Req) ->
         <<>> -> Path;
         _ -> <<Path/binary, <<"?">>/binary, QS/binary>>
     end.
+
+-spec version(req()) -> cowboy:http_version().
+version(Req) ->
+    get_value(cowboy_req:version(Req)).
 
 
 %% internal
