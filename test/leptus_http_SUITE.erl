@@ -6,14 +6,19 @@
 -export([http_get/1]).
 -export([http_404/1]).
 -export([http_405/1]).
+-export([http_post/1]).
 
 
 init_per_suite(Config) ->
-    {ok, _} = leptus:start_http({modules, [leptus_http1, leptus_http2]}),
+    {ok, _} =
+        leptus:start_http(
+          {modules,
+           [leptus_http1, leptus_http2, leptus_http3]
+          }),
     Config.
 
 all() ->
-    [http_get, http_404, http_405].
+    [http_get, http_404, http_405, http_post].
 
 
 http_get(_) ->
@@ -53,7 +58,15 @@ http_404(_) ->
     {ok, 404, _, _} = hackney:get("localhost:8080/asdf"),
     {ok, 404, _, _} = hackney:get("localhost:8080/asdfg").
 
-
 http_405(_) ->
     {ok, 405, _, _} = hackney:delete("localhost:8080/users/876"),
     {ok, 405, _, _} = hackney:delete("localhost:8080/users/s1n4/interests").
+
+http_post(_) ->
+    B1 = <<"username=asdf&email=asdf@a.<...>.com">>,
+    {ok, 403, _, C1} = hackney:post("localhost:8080/user/register", [], B1),
+    {ok, <<"Username is already taken.">>, _} = hackney:body(C1),
+
+    B2 = <<"username=asdfg&email=something@a.<...>.com">>,
+    {ok, 201, _, C2} = hackney:post("localhost:8080/user/register", [], B2),
+    {ok, <<"Thanks for registration.">>, _} = hackney:body(C2).
