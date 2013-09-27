@@ -7,6 +7,7 @@
 -export([qs_val/2]).
 -export([uri/1]).
 -export([version/1]).
+-export([body/1]).
 
 -type req() :: cowboy_req:req().
 
@@ -43,7 +44,13 @@ uri(Req) ->
 version(Req) ->
     get_value(cowboy_req:version(Req)).
 
+-spec body(req()) -> binary().
+body(Req) ->
+    get_value(cowboy_req:body(infinity, Req)).
+
 
 %% internal
 get_value({Value, _}) ->
+    Value;
+get_value({ok, Value, _}) ->
     Value.
