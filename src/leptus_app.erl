@@ -10,7 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    leptus_router:start_link().
+    leptus_sup:start_link().
 
 stop(_State) ->
     ok.
