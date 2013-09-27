@@ -8,10 +8,11 @@
 -export([uri/1]).
 -export([version/1]).
 -export([body/1]).
+-export([body_qs/1]).
 
 
 all() ->
-    [binding, bindings, qs, qs_val, uri, version, body].
+    [binding, bindings, qs, qs_val, uri, version, body, body_qs].
 
 binding(_) ->
     true = undefined =:= leptus_req:binding(namez, req1()),
@@ -45,6 +46,14 @@ version(_) ->
 body(_) ->
     <<>> = leptus_req:body(req1()),
     <<"AAAAAAAAAAA">> = leptus_req:body(req3()).
+
+body_qs(_) ->
+    [] = leptus_req:body_qs(req1()),
+    [{<<"AAAAAAAAAAA">>, true}] = leptus_req:body_qs(req3()),
+    [
+     {<<"firstname">>, <<"Sina">>},
+     {<<"lastname">>, <<"Samavati">>}
+    ] = leptus_req:body_qs(req4()).
 
 
 req1() ->
@@ -90,3 +99,19 @@ req3() ->
           {<<"content-type">>, <<"application/x-www-form-urlencoded">>}],
      [], undefined, [], waiting, undefined, <<"AAAAAAAAAAA">>, false,
      waiting, [], <<>>, undefined}.
+
+req4() ->
+    {http_req, port, ranch_tcp, keepalive, pid, <<"POST">>,
+     'HTTP/1.1',
+     {{127,0,0,1},34372},
+     <<"localhost">>, undefined, 8080, <<"/">>, undefined, <<>>, undefined,
+     [], [{<<"user-agent">>,
+           <<"curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1"
+             " zlib/1.2.3.4 libidn/1.23 librtmp/2.3">>},
+          {<<"host">>, <<"localhost:8080">>},
+          {<<"accept">>, <<"*/*">>},
+          {<<"content-length">>, <<"32">>},
+          {<<"content-type">>, <<"application/x-www-form-urlencoded">>}],
+     [], undefined, [], waiting, undefined,
+     <<"firstname=Sina&lastname=Samavati">>, false, waiting, [], <<>>,
+     undefined}.
