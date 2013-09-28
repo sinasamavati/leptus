@@ -8,6 +8,7 @@
 -export([http_405/1]).
 -export([http_post/1]).
 -export([http_put/1]).
+-export([http_delete/1]).
 
 
 init_per_suite(Config) ->
@@ -19,7 +20,7 @@ init_per_suite(Config) ->
     Config.
 
 all() ->
-    [http_get, http_404, http_405, http_post, http_put].
+    [http_get, http_404, http_405, http_post, http_put, http_delete].
 
 
 http_get(_) ->
@@ -82,3 +83,8 @@ http_put(_) ->
     {ok, 200, _, C2} = hackney:put("localhost:8080/settings/change-password",
                                    [], B2),
     {ok, <<"Your password has been changed.">>, _} = hackney:body(C2).
+
+http_delete(_) ->
+    {ok, 404, _, _} = hackney:delete("localhost:8080/users/jack/posts/32601"),
+    {ok, 404, _, _} = hackney:delete("localhost:8080/users/jack/posts/3268"),
+    {ok, 204, _, _} = hackney:delete("localhost:8080/users/jack/posts/219").

@@ -3,10 +3,11 @@
 -export([routes/0]).
 -export([post/2]).
 -export([put/2]).
+-export([delete/2]).
 
 
 routes() ->
-    ["/user/register", "/settings/change-password"].
+    ["/user/register", "/settings/change-password", "/users/:username/posts/:id"].
 
 post("/user/register", Req) ->
     Body = leptus_req:body_qs(Req),
@@ -27,4 +28,13 @@ put("/settings/change-password", Req) ->
             {200, <<"Your password has been changed.">>};
        true ->
             {403, <<"Passwords didn't match.">>}
+    end.
+
+delete("/users/:username/posts/:id", Req) ->
+    IdLen = byte_size(leptus_req:binding(id, Req)),
+    if IdLen >= 4 ->
+            {404, <<>>};
+
+       true ->
+            {204, <<>>}
     end.
