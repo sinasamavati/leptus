@@ -7,6 +7,7 @@
 -export([http_404/1]).
 -export([http_405/1]).
 -export([http_post/1]).
+-export([http_put/1]).
 
 
 init_per_suite(Config) ->
@@ -18,7 +19,7 @@ init_per_suite(Config) ->
     Config.
 
 all() ->
-    [http_get, http_404, http_405, http_post].
+    [http_get, http_404, http_405, http_post, http_put].
 
 
 http_get(_) ->
@@ -70,3 +71,14 @@ http_post(_) ->
     B2 = <<"username=asdfg&email=something@a.<...>.com">>,
     {ok, 201, _, C2} = hackney:post("localhost:8080/user/register", [], B2),
     {ok, <<"Thanks for registration.">>, _} = hackney:body(C2).
+
+http_put(_) ->
+    B1 = <<"password=lkjhgf&password_confirmation=lkjhg">>,
+    {ok, 403, _, C1} = hackney:put("localhost:8080/settings/change-password",
+                                   [], B1),
+    {ok, <<"Passwords didn't match.">>, _} = hackney:body(C1),
+
+    B2 = <<"password=lkjhgf&password_confirmation=lkjhgf">>,
+    {ok, 200, _, C2} = hackney:put("localhost:8080/settings/change-password",
+                                   [], B2),
+    {ok, <<"Your password has been changed.">>, _} = hackney:body(C2).
