@@ -58,11 +58,20 @@ http_get(_) ->
 http_404(_) ->
     {ok, 404, _, _} = hackney:get("localhost:8080/asd"),
     {ok, 404, _, _} = hackney:get("localhost:8080/asdf"),
-    {ok, 404, _, _} = hackney:get("localhost:8080/asdfg").
+    {ok, 404, _, _} = hackney:get("localhost:8080/asdfg"),
+    {ok, 404, _, _} = hackney:post("localhost:8080/blah/new", [], <<>>),
+    {ok, 404, _, _} = hackney:put("localhost:8080/blah/186", [], <<>>),
+    {ok, 404, _, _} = hackney:delete("localhost:8080/blah/186"),
+    {ok, 404, _, _} = hackney:head("localhost:8080/blah/186").
 
 http_405(_) ->
     {ok, 405, _, _} = hackney:delete("localhost:8080/users/876"),
-    {ok, 405, _, _} = hackney:delete("localhost:8080/users/s1n4/interests").
+    {ok, 405, _, _} = hackney:delete("localhost:8080/users/s1n4/interests"),
+    {ok, 405, _, _} = hackney:put("localhost:8080/user/register", [], <<>>),
+    {ok, 405, _, _} = hackney:post("localhost:8080/settings/change-password",
+                                   [], <<>>),
+    {ok, 405, _, _} = hackney:get("localhost:8080/user/register/"),
+    {ok, 405, _, _} = hackney:head("localhost:8080/users/876").
 
 http_post(_) ->
     B1 = <<"username=asdf&email=asdf@a.<...>.com">>,

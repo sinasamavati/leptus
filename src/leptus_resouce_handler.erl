@@ -24,9 +24,14 @@ handle_request(Method, Req, State) ->
                    Func = list_to_atom([M - $A + $a || <<M>>  <= Method]),
 
                    %% method not allowed if function is not exported
+                   %% and/or doesn't match
                    case erlang:function_exported(Mod, Func, 2) of
                        true ->
-                           apply(Mod, Func, [State, Req]);
+                           try
+                               apply(Mod, Func, [State, Req])
+                           catch
+                               error:function_clause -> {405, <<>>}
+                           end;
                        false ->
                            {405, <<>>}
                    end;
