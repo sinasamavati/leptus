@@ -34,8 +34,8 @@ ensure_started(App) ->
 
 http_port() ->
     Default = 8080,
-    case get_value(http, config(), undefined) of
-        undefined ->
+    case get_value(http, config(), Default) of
+        Default ->
             Default;
         Http ->
             get_value(port, Http, Default)
