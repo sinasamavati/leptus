@@ -15,7 +15,7 @@ start_http({modules, Mods}) ->
     Paths = leptus_router:paths(Mods),
     Dispatch = cowboy_router:compile([{'_', Paths}]),
     {ok, _} = cowboy:start_http(
-                http, 100, [{port, 8080}],
+                http, 100, [{port, http_port()}],
                 [
                  {env, [{dispatch, Dispatch}]},
                  {onresponse, fun leptus_hooks:console_log/4}
@@ -30,4 +30,28 @@ ensure_started(App) ->
             ok;
         {error, {already_started, App}} ->
             ok
+    end.
+
+http_port() ->
+    Default = 8080,
+    case get_value(http, config(), undefined) of
+        undefined ->
+            Default;
+        Http ->
+            get_value(port, Http, Default)
+    end.
+
+config() ->
+    {ok, Cwd} = file:get_cwd(),
+    case file:consult(filename:join([Cwd, "priv", "leptus.config"])) of
+        {error, _} ->
+            [];
+        {ok, Terms} ->
+            Terms
+    end.
+
+get_value(Key, Proplist, Default) ->
+    case lists:keyfind(Key, 1, Proplist) of
+        {_, Value} -> Value;
+        _ -> Default
     end.
