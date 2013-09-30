@@ -14,7 +14,7 @@
 -export([start_link/0]).
 -export([stop/0]).
 -export([fetch_routes/1]).
--export([dispatches/1]).
+-export([paths/1]).
 -export([find_mod/1]).
 
 -type route() :: string().
@@ -31,9 +31,9 @@ stop() ->
 fetch_routes(Mods) ->
     gen_server:call(?MODULE, {fetch_routes, Mods}).
 
--spec dispatches([module()]) -> cowboy_router:dispatch_rules().
-dispatches(Mods) ->
-    [{'_', fetch_paths(Mods)}].
+-spec paths([module()]) -> cowboy_router:dispatch_rules().
+paths(Mods) ->
+    fetch_paths(Mods).
 
 -spec find_mod(string()) -> {ok, module()} | {error, undefined}.
 find_mod(Route) ->

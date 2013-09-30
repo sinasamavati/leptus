@@ -12,7 +12,8 @@ start_http({modules, Mods}) ->
     ensure_started(ranch),
     ensure_started(cowboy),
     ensure_started(leptus),
-    Dispatch = cowboy_router:compile(leptus_router:dispatches(Mods)),
+    Paths = leptus_router:paths(Mods),
+    Dispatch = cowboy_router:compile([{'_', Paths}]),
     {ok, _} = cowboy:start_http(
                 http, 100, [{port, 8080}],
                 [

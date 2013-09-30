@@ -5,12 +5,12 @@
 -export([end_per_testcase/2]).
 
 -export([fetch_routes/1]).
--export([dispatches/1]).
+-export([paths/1]).
 -export([find_mod/1]).
 
 
 all() ->
-    [fetch_routes, dispatches, find_mod].
+    [fetch_routes, paths, find_mod].
 
 init_per_testcase(_, Config) ->
     {ok, _} = leptus_router:start_link(),
@@ -33,20 +33,18 @@ fetch_routes(_) ->
     ] = leptus_router:fetch_routes([leptus_routes1, leptus_routes2,
                                       leptus_routes3]).
 
-dispatches(_) ->
-    [{'_', [
-            {"/", leptus_resouce_handler, "/"},
-            {"/blah", leptus_resouce_handler, "/blah"},
-            {"/hello/:name", leptus_resouce_handler, "/hello/:name"},
-            {"/some-url/to/some-path", leptus_resouce_handler,
-             "/some-url/to/some-path"},
-            {"/something/:key", leptus_resouce_handler, "/something/:key"},
-            {"/something/else", leptus_resouce_handler, "/something/else"},
-            {"/users/:id", leptus_resouce_handler, "/users/:id"},
-            {"/users/:id/info", leptus_resouce_handler, "/users/:id/info"}
-           ]
-     }] = leptus_router:dispatches([leptus_routes1, leptus_routes2,
-                                    leptus_routes3]).
+paths(_) ->
+    [
+     {"/", leptus_resouce_handler, "/"},
+     {"/blah", leptus_resouce_handler, "/blah"},
+     {"/hello/:name", leptus_resouce_handler, "/hello/:name"},
+     {"/some-url/to/some-path", leptus_resouce_handler,
+      "/some-url/to/some-path"},
+     {"/something/:key", leptus_resouce_handler, "/something/:key"},
+     {"/something/else", leptus_resouce_handler, "/something/else"},
+     {"/users/:id", leptus_resouce_handler, "/users/:id"},
+     {"/users/:id/info", leptus_resouce_handler, "/users/:id/info"}
+    ] = leptus_router:paths([leptus_routes1, leptus_routes2, leptus_routes3]).
 
 find_mod(_) ->
     fetch_routes(0),
