@@ -3,8 +3,13 @@
 -module(leptus).
 -author("Sina Samavati <sina.samv@gmail.com>").
 
+-export([start_http/0]).
 -export([start_http/1]).
 
+
+-spec start_http() -> {ok, pid()} | {error, any()}.
+start_http() ->
+    start_http({modules, get_value(modules, config(), [])}).
 
 -spec start_http({modules, [module()]}) -> {ok, pid()} | {error, any()}.
 start_http({modules, Mods}) ->
