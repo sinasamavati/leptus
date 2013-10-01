@@ -9,6 +9,7 @@
 -export([version/1]).
 -export([body/1]).
 -export([body_qs/1]).
+-export([header/2]).
 
 -type req() :: cowboy_req:req().
 
@@ -52,6 +53,10 @@ body(Req) ->
 -spec body_qs(req()) -> [{binary(), binary() | true}].
 body_qs(Req) ->
     get_value(cowboy_req:body_qs(infinity, Req)).
+
+-spec header(binary(), req()) -> binary().
+header(Name, Req) ->
+    get_value(cowboy_req:header(Name, Req, <<>>)).
 
 
 %% internal

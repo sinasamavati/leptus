@@ -9,10 +9,11 @@
 -export([version/1]).
 -export([body/1]).
 -export([body_qs/1]).
+-export([header/1]).
 
 
 all() ->
-    [binding, bindings, qs, qs_val, uri, version, body, body_qs].
+    [binding, bindings, qs, qs_val, uri, version, body, body_qs, header].
 
 binding(_) ->
     true = undefined =:= leptus_req:binding(namez, req1()),
@@ -55,6 +56,11 @@ body_qs(_) ->
      {<<"lastname">>, <<"Samavati">>}
     ] = leptus_req:body_qs(req4()).
 
+header(_) ->
+    <<>> = leptus_req:header(<<"content-type">>, req1()),
+    <<"localhost:8080">> = leptus_req:header(<<"host">>, req2()),
+    <<"application/x-www-form-urlencoded">> =
+        leptus_req:header(<<"content-type">>, req3()).
 
 req1() ->
     {http_req, port, ranch_tcp, keepalive, pid, <<"GET">>,
