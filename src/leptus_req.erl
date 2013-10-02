@@ -8,6 +8,7 @@
 -export([uri/1]).
 -export([version/1]).
 -export([body/1]).
+-export([body_raw/1]).
 -export([body_qs/1]).
 -export([header/2]).
 
@@ -48,7 +49,7 @@ version(Req) ->
 
 -spec body(req()) -> binary().
 body(Req) ->
-    Body = get_value(cowboy_req:body(infinity, Req)),
+    Body = body_raw(Req),
     case header(<<"content-type">>, Req) of
         %% decode body if content-type is json
         <<"application/json">> ->
@@ -56,6 +57,10 @@ body(Req) ->
         _ ->
             Body
     end.
+
+-spec body_raw(req()) -> binary().
+body_raw(Req) ->
+    get_value(cowboy_req:body(infinity, Req)).
 
 -spec body_qs(req()) -> [{binary(), binary() | true}].
 body_qs(Req) ->

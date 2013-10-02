@@ -8,12 +8,16 @@
 -export([uri/1]).
 -export([version/1]).
 -export([body/1]).
+-export([body_raw/1]).
 -export([body_qs/1]).
 -export([header/1]).
 
 
 all() ->
-    [binding, bindings, qs, qs_val, uri, version, body, body_qs, header].
+    [
+     binding, bindings, qs, qs_val, uri, version, body, body_raw, body_qs,
+     header
+    ].
 
 binding(_) ->
     true = undefined =:= leptus_req:binding(namez, req1()),
@@ -51,6 +55,12 @@ body(_) ->
      {<<"firstname">>, <<"Sina">>},
      {<<"lastname">>, <<"Samavati">>}
     ] = leptus_req:body(req5()).
+
+body_raw(_) ->
+    <<>> = leptus_req:body_raw(req1()),
+    <<"AAAAAAAAAAA">> = leptus_req:body_raw(req3()),
+    <<"{\"firstname\": \"Sina\","
+      " \"lastname\": \"Samavati\"}">> = leptus_req:body_raw(req5()).
 
 body_qs(_) ->
     [] = leptus_req:body_qs(req1()),
