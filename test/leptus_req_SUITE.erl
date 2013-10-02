@@ -46,7 +46,11 @@ version(_) ->
 
 body(_) ->
     <<>> = leptus_req:body(req1()),
-    <<"AAAAAAAAAAA">> = leptus_req:body(req3()).
+    <<"AAAAAAAAAAA">> = leptus_req:body(req3()),
+    [
+     {<<"firstname">>, <<"Sina">>},
+     {<<"lastname">>, <<"Samavati">>}
+    ] = leptus_req:body(req5()).
 
 body_qs(_) ->
     [] = leptus_req:body_qs(req1()),
@@ -61,6 +65,7 @@ header(_) ->
     <<"localhost:8080">> = leptus_req:header(<<"host">>, req2()),
     <<"application/x-www-form-urlencoded">> =
         leptus_req:header(<<"content-type">>, req3()).
+
 
 req1() ->
     {http_req, port, ranch_tcp, keepalive, pid, <<"GET">>,
@@ -121,3 +126,19 @@ req4() ->
      [], undefined, [], waiting, undefined,
      <<"firstname=Sina&lastname=Samavati">>, false, waiting, [], <<>>,
      undefined}.
+
+req5() ->
+    {http_req,port,ranch_tcp,keepalive,pid,<<"POST">>,
+     'HTTP/1.1',
+     {{127,0,0,1},33977},
+     <<"localhost">>,undefined,8080,<<"/">>,undefined,<<>>,undefined,
+     [],[{<<"user-agent">>,
+          <<"curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1"
+            "zlib/1.2.3.4 libidn/1.23 librtmp/2.3">>},
+         {<<"host">>,<<"localhost:8080">>},
+         {<<"accept">>,<<"*/*">>},
+         {<<"content-type">>,<<"application/json">>},
+         {<<"content-length">>,<<"45">>}],
+     [],undefined,[],waiting,undefined,
+     <<"{\"firstname\": \"Sina\", \"lastname\": \"Samavati\"}">>,
+     false,waiting,[],<<>>,console_log}.

@@ -48,7 +48,14 @@ version(Req) ->
 
 -spec body(req()) -> binary().
 body(Req) ->
-    get_value(cowboy_req:body(infinity, Req)).
+    Body = get_value(cowboy_req:body(infinity, Req)),
+    case header(<<"content-type">>, Req) of
+        %% decode body if content-type is json
+        <<"application/json">> ->
+            jsx:decode(Body);
+        _ ->
+            Body
+    end.
 
 -spec body_qs(req()) -> [{binary(), binary() | true}].
 body_qs(Req) ->
