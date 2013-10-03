@@ -2,9 +2,11 @@
 
 Leptus is a micro web framework that runs on top of cowboy.
 
-## Requirement
+## Requirements
 
   * Erlang/OTP R15B or newer
+  * [cowboy](https://github.com/extend/cowboy)
+  * [jsx](https://github.com/talentdeficit/jsx)
 
 ## Quickstart
 
