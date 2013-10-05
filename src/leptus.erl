@@ -45,7 +45,12 @@ ip_address() ->
         Default ->
             Default;
         Http ->
-            get_value(ip, Http, Default)
+            case inet_parse:address(get_value(ip, Http, Default)) of
+                {ok, IP} ->
+                    IP;
+                {error, _} ->
+                    Default
+            end
     end.
 
 http_port() ->
