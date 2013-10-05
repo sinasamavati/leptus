@@ -2,11 +2,24 @@
 
 Leptus is a micro web framework that runs on top of cowboy.
 
+Leptus aims at creating RESTful API.
+
 ## Requirements
 
   * Erlang/OTP R15B or newer
   * [cowboy](https://github.com/extend/cowboy)
   * [jsx](https://github.com/talentdeficit/jsx)
+
+## Installation
+
+Run `make` or add it to your rebar configuration
+
+```
+{deps, [
+        ...
+        {leptus, ".*", {git, "git://github.com/s1n4/leptus.git", {branch, "master"}}}
+       ]}.
+```
 
 ## Quickstart
 
