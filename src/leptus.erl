@@ -22,7 +22,7 @@ start_http({modules, Mods}) ->
     Dispatch = cowboy_router:compile([{'_', Paths}]),
 
     cowboy:start_http(
-      http, 100, [{port, http_port()}],
+      http, 100, [{ip, ip_address()}, {port, http_port()}],
       [
        {env, [{dispatch, Dispatch}]},
        {onresponse, fun leptus_hooks:console_log/4}
@@ -37,6 +37,15 @@ ensure_started(App) ->
             ok;
         {error, {already_started, App}} ->
             ok
+    end.
+
+ip_address() ->
+    Default = {127, 0, 0, 1},
+    case get_value(http, config(), Default) of
+        Default ->
+            Default;
+        Http ->
+            get_value(ip, Http, Default)
     end.
 
 http_port() ->
