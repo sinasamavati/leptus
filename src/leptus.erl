@@ -5,6 +5,7 @@
 
 -export([start_http/0]).
 -export([start_http/1]).
+-export([stop_http/0]).
 
 
 -spec start_http() -> {ok, pid()} | {error, any()}.
@@ -28,6 +29,10 @@ start_http({modules, Mods}) ->
        {onresponse, fun leptus_hooks:console_log/4}
       ]
      ).
+
+-spec stop_http() -> ok | {error, not_found}.
+stop_http() ->
+    cowboy:stop_listener(http).
 
 
 %% internal
