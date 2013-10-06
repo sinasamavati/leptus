@@ -52,3 +52,64 @@ $ erl -pa ebin deps/*/ebin
 ```erlang
 1> leptus:start_http({modules, [whatever]}).
 ```
+
+## Configuration
+
+Leptus configuration file must be named `leptus.config` and put in `priv` directory.
+
+There are two types of configuration that can be defined:
+
+  * http
+  * modules (request handlers)
+
+#### http
+
+IP address and port number have default values: `127.0.0.1:8000`, but you can override them as follows:
+
+```erlang
+{http,
+ [
+  {ip, string()},
+  {port, integer()}
+ ]
+}.
+```
+
+#### modules
+
+Leptus must know your request handlers, and they must be defined as `{modules, [module()]}.` in `leptus.config`
+
+#### leptus.config example
+
+Let's assume our current working directory looks like the following:
+
+```
+.
+├── ebin
+│   ├── ...
+│   └── rq_handler.beam
+│
+├── priv
+│   ├── ...
+│   └── leptus.config
+│
+├── src
+│   ├── ...
+│   └── rq_handler.erl
+│   ...
+```
+
+```erlang
+%% leptus.config
+
+{http,
+ [
+  {ip, "0.0.0.0"},
+  {port, 8080}
+ ]
+}.
+
+{modules,
+ [rq_handler]
+}.
+```
