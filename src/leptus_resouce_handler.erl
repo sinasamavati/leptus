@@ -30,6 +30,7 @@ handle_request(Method, Req, State) ->
                            try
                                apply(Mod, Func, [State, Req])
                            catch
+                               %% TODO: find an alternative way
                                error:function_clause -> {405, <<>>}
                            end;
                        false ->
