@@ -113,3 +113,7 @@ Let's assume our current working directory looks like the following:
  [rq_handler]
 }.
 ```
+
+## License
+
+MIT, see LICENSE file for more details.
