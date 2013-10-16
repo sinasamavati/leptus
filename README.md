@@ -24,7 +24,7 @@ Run `make` or add it to your rebar configuration
 ## Quickstart
 
 ```erlang
--module(whatever).
+-module(rq_handler).
 
 %% leptus callbacks
 -export([routes/0]).
@@ -50,7 +50,7 @@ $ erl -pa ebin deps/*/ebin
 ```
 
 ```erlang
-1> leptus:start_http({modules, [whatever]}).
+1> leptus:start_http({modules, [rq_handler]}).
 ```
 
 ## Configuration
