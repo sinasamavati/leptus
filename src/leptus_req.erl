@@ -11,6 +11,7 @@
 -export([body_raw/1]).
 -export([body_qs/1]).
 -export([header/2]).
+-export([parse_header/2]).
 
 -type req() :: cowboy_req:req().
 
@@ -70,9 +71,15 @@ body_qs(Req) ->
 header(Name, Req) ->
     get_value(cowboy_req:header(Name, Req, <<>>)).
 
+-spec parse_header(binary(), req()) -> any() | <<>>.
+parse_header(Name, Req) ->
+    get_value(cowboy_req:parse_header(Name, Req, <<>>)).
+
 
 %% internal
 get_value({Value, _}) ->
     Value;
 get_value({ok, Value, _}) ->
+    Value;
+get_value({undefined, Value, _}) ->
     Value.

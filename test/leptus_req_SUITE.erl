@@ -11,12 +11,13 @@
 -export([body_raw/1]).
 -export([body_qs/1]).
 -export([header/1]).
+-export([parse_header/1]).
 
 
 all() ->
     [
      binding, bindings, qs, qs_val, uri, version, body, body_raw, body_qs,
-     header
+     header, parse_header
     ].
 
 binding(_) ->
@@ -75,6 +76,16 @@ header(_) ->
     <<"localhost:8080">> = leptus_req:header(<<"host">>, req2()),
     <<"application/x-www-form-urlencoded">> =
         leptus_req:header(<<"content-type">>, req3()).
+
+parse_header(_) ->
+    <<>> = leptus_req:parse_header(<<"content-type">>, req1()),
+    <<"localhost:8080">> = leptus_req:parse_header(<<"host">>, req2()),
+    {
+      <<"application">>, <<"x-www-form-urlencoded">>, []
+    } = leptus_req:parse_header(<<"content-type">>, req3()),
+    {
+      <<"application">>, <<"json">>, []
+    } = leptus_req:parse_header(<<"content-type">>, req5()).
 
 
 req1() ->
