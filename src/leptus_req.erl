@@ -12,6 +12,7 @@
 -export([body_qs/1]).
 -export([header/2]).
 -export([parse_header/2]).
+-export([auth/2]).
 
 -type req() :: cowboy_req:req().
 
@@ -74,6 +75,15 @@ header(Name, Req) ->
 -spec parse_header(binary(), req()) -> any() | <<>>.
 parse_header(Name, Req) ->
     get_value(cowboy_req:parse_header(Name, Req, <<>>)).
+
+-spec auth(binary(), req()) -> {binary(), binary()} | <<>>.
+auth(<<"basic">>, Req) ->
+    case parse_header(<<"authorization">>, Req) of
+        <<>> ->
+            <<>>;
+        {<<"basic">>, UserPass} ->
+            UserPass
+    end.
 
 
 %% internal

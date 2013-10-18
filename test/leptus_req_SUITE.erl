@@ -12,12 +12,13 @@
 -export([body_qs/1]).
 -export([header/1]).
 -export([parse_header/1]).
+-export([auth/1]).
 
 
 all() ->
     [
      binding, bindings, qs, qs_val, uri, version, body, body_raw, body_qs,
-     header, parse_header
+     header, parse_header, auth
     ].
 
 binding(_) ->
@@ -87,6 +88,11 @@ parse_header(_) ->
       <<"application">>, <<"json">>, []
     } = leptus_req:parse_header(<<"content-type">>, req5()).
 
+auth(_) ->
+    <<>> = leptus_req:auth(<<"basic">>, req1()),
+    <<>> = leptus_req:auth(<<"basic">>, req3()),
+    {<<"123">>, <<"456">>} = leptus_req:auth(<<"basic">>, req5()).
+
 
 req1() ->
     {http_req, port, ranch_tcp, keepalive, pid, <<"GET">>,
@@ -153,7 +159,8 @@ req5() ->
      'HTTP/1.1',
      {{127,0,0,1},33977},
      <<"localhost">>,undefined,8080,<<"/">>,undefined,<<>>,undefined,
-     [],[{<<"user-agent">>,
+     [],[{<<"authorization">>,<<"Basic MTIzOjQ1Ng==">>},
+         {<<"user-agent">>,
           <<"curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1"
             "zlib/1.2.3.4 libidn/1.23 librtmp/2.3">>},
          {<<"host">>,<<"localhost:8080">>},
