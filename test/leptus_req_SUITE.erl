@@ -91,7 +91,8 @@ parse_header(_) ->
 auth(_) ->
     <<>> = leptus_req:auth(<<"basic">>, req1()),
     <<>> = leptus_req:auth(<<"basic">>, req3()),
-    {<<"123">>, <<"456">>} = leptus_req:auth(<<"basic">>, req5()).
+    {<<"123">>, <<"456">>} = leptus_req:auth(<<"basic">>, req5()),
+    error = leptus_req:auth(<<"basic">>, req6()).
 
 
 req1() ->
@@ -160,6 +161,23 @@ req5() ->
      {{127,0,0,1},33977},
      <<"localhost">>,undefined,8080,<<"/">>,undefined,<<>>,undefined,
      [],[{<<"authorization">>,<<"Basic MTIzOjQ1Ng==">>},
+         {<<"user-agent">>,
+          <<"curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1"
+            "zlib/1.2.3.4 libidn/1.23 librtmp/2.3">>},
+         {<<"host">>,<<"localhost:8080">>},
+         {<<"accept">>,<<"*/*">>},
+         {<<"content-type">>,<<"application/json">>},
+         {<<"content-length">>,<<"45">>}],
+     [],undefined,[],waiting,undefined,
+     <<"{\"firstname\": \"Sina\", \"lastname\": \"Samavati\"}">>,
+     false,waiting,[],<<>>,console_log}.
+
+req6() ->
+    {http_req,port,ranch_tcp,keepalive,pid,<<"POST">>,
+     'HTTP/1.1',
+     {{127,0,0,1},33977},
+     <<"localhost">>,undefined,8080,<<"/">>,undefined,<<>>,undefined,
+     [],[{<<"authorization">>,<<"Basic c2luYXdyb3RlX21lOg==">>},
          {<<"user-agent">>,
           <<"curl/7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0 OpenSSL/1.0.1"
             "zlib/1.2.3.4 libidn/1.23 librtmp/2.3">>},

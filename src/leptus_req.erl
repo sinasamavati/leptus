@@ -76,13 +76,13 @@ header(Name, Req) ->
 parse_header(Name, Req) ->
     get_value(cowboy_req:parse_header(Name, Req, <<>>)).
 
--spec auth(binary(), req()) -> {binary(), binary()} | <<>>.
+-spec auth(binary(), req()) -> {binary(), binary()} | <<>> | error.
 auth(<<"basic">>, Req) ->
     case parse_header(<<"authorization">>, Req) of
-        <<>> ->
-            <<>>;
         {<<"basic">>, UserPass} ->
-            UserPass
+            UserPass;
+        Value ->
+            Value
     end.
 
 
