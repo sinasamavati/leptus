@@ -9,6 +9,7 @@
 -export([http_post/1]).
 -export([http_put/1]).
 -export([http_delete/1]).
+-export([http_is_authorized/1]).
 
 
 init_per_suite(Config) ->
@@ -20,8 +21,10 @@ init_per_suite(Config) ->
     Config.
 
 all() ->
-    [http_get, http_404, http_405, http_post, http_put, http_delete].
-
+    [
+     http_get, http_404, http_405, http_post, http_put, http_delete,
+     http_is_authorized
+    ].
 
 http_get(_) ->
     {ok, 200, _, C1} = hackney:get("localhost:8080/"),
@@ -97,3 +100,11 @@ http_delete(_) ->
     {ok, 404, _, _} = hackney:delete("localhost:8080/users/jack/posts/32601"),
     {ok, 404, _, _} = hackney:delete("localhost:8080/users/jack/posts/3268"),
     {ok, 204, _, _} = hackney:delete("localhost:8080/users/jack/posts/219").
+
+http_is_authorized(_) ->
+    {ok, 401, _, _} = hackney:put("localhost:8080/users/sina"),
+    {ok, 401, _, _} = hackney:put("123:456@localhost:8080/users/sina"),
+    {ok, 401, _, _} = hackney:post("localhost:8080/users/sina"),
+    {ok, 401, _, _} = hackney:post("123:986@localhost:8080/users/sina"),
+    {ok, 200, _, _} = hackney:put("sina:wrote_me@localhost:8080/users/sina"),
+    {ok, 200, _, _} = hackney:post("sina:wrote_me@localhost:8080/users/sina").

@@ -2,9 +2,20 @@
 
 -export([routes/0]).
 -export([get/2]).
+-export([put/2]).
+-export([post/2]).
+-export([is_authorized/3]).
+
 
 routes() ->
     ["/users/:id", "/users/:id/interests", "/users/:id/profile"].
+
+is_authorized(<<"PUT">>, "/users/:id", Req) ->
+    check_auth(Req);
+is_authorized(<<"POST">>, "/users/:id", Req) ->
+    check_auth(Req);
+is_authorized(_, _, _Req) ->
+    true.
 
 get("/users/:id", Req) ->
     Id = leptus_req:binding(id, Req),
@@ -28,3 +39,19 @@ get("/users/:id/profile", Req) ->
             {<<"github">>, leptus_req:binding(id, Req)}
            ],
     {200, json, Body}.
+
+put("/users/:id", _Req) ->
+    {200, <<"updated">>}.
+
+post("/users/:id", _Req) ->
+    {200, <<"updated">>}.
+
+
+%% internal
+check_auth(Req) ->
+    case leptus_req:auth(<<"basic">>, Req) of
+        {<<"sina">>, <<"wrote_me">>} ->
+            true;
+        _ ->
+            {false, <<"unauthorized.">>}
+    end.
