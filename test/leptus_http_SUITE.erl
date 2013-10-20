@@ -104,7 +104,12 @@ http_delete(_) ->
 http_is_authorized(_) ->
     {ok, 401, _, _} = hackney:put("localhost:8080/users/sina"),
     {ok, 401, _, _} = hackney:put("123:456@localhost:8080/users/sina"),
-    {ok, 401, _, _} = hackney:post("localhost:8080/users/sina"),
-    {ok, 401, _, _} = hackney:post("123:986@localhost:8080/users/sina"),
+    {ok, 401, H, C} = hackney:post("localhost:8080/users/sina"),
+    {ok, 401, H1, C1} = hackney:post("123:986@localhost:8080/users/sina"),
     {ok, 200, _, _} = hackney:put("sina:wrote_me@localhost:8080/users/sina"),
-    {ok, 200, _, _} = hackney:post("sina:wrote_me@localhost:8080/users/sina").
+    {ok, 200, _, _} = hackney:post("sina:wrote_me@localhost:8080/users/sina"),
+
+    <<"application/json">> = proplists:get_value(<<"content-type">>, H),
+    {ok, <<"{\"error\":\"unauthorized\"}">>, _} = hackney:body(C),
+    <<"application/json">> = proplists:get_value(<<"content-type">>, H1),
+    {ok, <<"{\"error\":\"unauthorized\"}">>, _} = hackney:body(C1).

@@ -13,7 +13,12 @@ routes() ->
 is_authorized(<<"PUT">>, "/users/:id", Req) ->
     check_auth(Req);
 is_authorized(<<"POST">>, "/users/:id", Req) ->
-    check_auth(Req);
+    case check_auth(Req) of
+        {false, _} ->
+            {false, json, [{<<"error">>, <<"unauthorized">>}]};
+        _ ->
+            true
+    end;
 is_authorized(_, _, _Req) ->
     true.
 
