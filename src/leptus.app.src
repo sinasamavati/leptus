@@ -1,6 +1,6 @@
 {application, leptus,
  [
-  {description, ""},
+  {description, "A micro web framework that aims at creating RESTful APIs."},
   {vsn, "0.0.1"},
   {registered, []},
   {applications, [
