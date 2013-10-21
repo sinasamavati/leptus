@@ -90,7 +90,8 @@ handle_routes([Route|T], Acc) ->
 -spec find_mod(route(), routes()) -> {ok, module()} | {error, undefined}.
 find_mod(Route, Routes) ->
     %% find module name by route
-    %% (where the keys are module names and values are url patterns)
+    %% (where a key is a module() and values are url patterns (routes))
+    %% TODO: OPTIMIZE ME
     Mod = orddict:fold(fun(K, V, Acc) ->
                                case lists:member(Acc, V) of
                                    true ->

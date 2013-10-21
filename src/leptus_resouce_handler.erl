@@ -1,5 +1,7 @@
 -module(leptus_resouce_handler).
+-author("Sina Samavati <sina.samv@gmail.com>").
 
+%% cowboy callbacks
 -export([init/3]).
 -export([handle/2]).
 -export([terminate/3]).
@@ -17,6 +19,8 @@ terminate(_Reason, _Req, _State) ->
 
 
 %% internal
+
+%% the heart of leptus
 handle_request(Method, Req, State) ->
     Args = case leptus_router:find_mod(State) of
                {ok, Mod} ->
