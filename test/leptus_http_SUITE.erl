@@ -50,8 +50,6 @@ http_get(_) ->
 
     B1 = <<"{\"id\":\"asdf\",\"bio\":\"Erlanger\",\"github\":\"asdf\"}">>,
     B2 = <<"{\"id\":\"you\",\"bio\":\"Erlanger\",\"github\":\"you\"}">>,
-    true = jsx:is_json(B1),
-    true = jsx:is_json(B2),
 
     {ok, 200, _, C8} = hackney:get("localhost:8080/users/asdf/profile"),
     {ok, B1, _} = hackney:body(C8),

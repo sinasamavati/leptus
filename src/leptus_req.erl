@@ -55,7 +55,7 @@ body(Req) ->
     case header(<<"content-type">>, Req) of
         %% decode body if content-type is json
         <<"application/json">> ->
-            jsx:decode(Body);
+            jiffy:decode(Body);
         _ ->
             Body
     end.
