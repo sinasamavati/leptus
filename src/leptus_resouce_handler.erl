@@ -83,7 +83,7 @@ reply(Status, Headers, Body, Req, State) ->
     } = case Headers of
             json ->
                 {[{<<"content-type">>, <<"application/json">>}],
-                 jiffy:encode(Body)};
+                 jiffy:encode({Body})};
             [] ->
                 {[{<<"content-type">>, <<"text/plain">>}], Body};
             _ ->
