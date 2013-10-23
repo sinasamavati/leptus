@@ -19,13 +19,19 @@ terminate(_Reason, _Req, _State) ->
 
 
 %% internal
+http_method(<<"GET">>) -> get;
+http_method(<<"PUT">>) -> put;
+http_method(<<"POST">>) -> post;
+http_method(<<"DELETE">>) -> delete;
+http_method(Method) ->
+    list_to_atom([M - $A + $a || <<M>>  <= Method]).
 
 %% the heart of leptus
 handle_request(Method, Req, State) ->
     Args = case leptus_router:find_mod(State) of
                {ok, Mod} ->
                    %% convert the http method to a lowercase atom
-                   Func = list_to_atom([M - $A + $a || <<M>>  <= Method]),
+                   Func = http_method(Method),
 
                    %% method not allowed if function is not exported
                    case erlang:function_exported(Mod, Func, 2) of
