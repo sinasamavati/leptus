@@ -71,7 +71,8 @@ handle_request(Method, Req, State) ->
     reply(Args, Req, State).
 
 -spec handle_authorization(module(), method(), route(), req()) ->
-                                  true | {false, term()} | {false, json, term()}.
+                                  true | {false, {401, term()}} |
+                                  {false, {401, json, term()}}.
 handle_authorization(Mod, Method, State, Req) ->
     %% spec: is_authorized(Method, State, Req) ->
     %%           true | {false, Body} | {false, json, JsonTerm}.
