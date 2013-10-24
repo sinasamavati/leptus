@@ -29,6 +29,7 @@ http_method(<<"PUT">>) -> put;
 http_method(<<"POST">>) -> post;
 http_method(<<"DELETE">>) -> delete;
 http_method(Method) ->
+    %% TODO: decide to change or remove it
     list_to_atom([M - $A + $a || <<M>>  <= Method]).
 
 %% check if request handler is exported
