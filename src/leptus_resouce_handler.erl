@@ -52,7 +52,7 @@ handle_request(Method, Req, State) ->
                                true ->
                                    %% method not allowed if function doesn't match
                                    try
-                                       apply(Mod, Func, [State, Req])
+                                       Mod:Func(State, Req)
                                    catch
                                        %% TODO: find an alternative way
                                        error:function_clause -> {405, <<>>}
@@ -78,7 +78,7 @@ handle_authorization(Mod, Method, State, Req) ->
     %%           true | {false, Body} | {false, json, JsonTerm}.
     case erlang:function_exported(Mod, is_authorized, 3) of
         true ->
-            case apply(Mod, is_authorized, [Method, State, Req]) of
+            case Mod:is_authorized(Method, State, Req) of
                 true ->
                     true;
                 {false, Body} ->

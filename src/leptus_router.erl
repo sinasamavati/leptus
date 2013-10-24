@@ -69,7 +69,7 @@ fetch_routes([], Acc) ->
     Acc;
 fetch_routes([Mod|T], Acc) ->
     %% each module must have routes/0 -> [string()].
-    Routes = apply(Mod, routes, []),
+    Routes = Mod:routes(),
     fetch_routes(T, orddict:append_list(Mod, Routes, Acc)).
 
 -spec fetch_paths([module()]) -> [cowboy_router:route_path()].
