@@ -6,6 +6,10 @@
 -export([handle/2]).
 -export([terminate/3]).
 
+-type method() :: binary().
+-type req() :: cowboy_req:req().
+-type route() :: cowboy_router:route_match().
+
 
 init(_Transport, Req, State) ->
     {ok, Req, State}.
@@ -19,6 +23,7 @@ terminate(_Reason, _Req, _State) ->
 
 
 %% internal
+-spec http_method(method()) -> atom().
 http_method(<<"GET">>) -> get;
 http_method(<<"PUT">>) -> put;
 http_method(<<"POST">>) -> post;
@@ -26,7 +31,13 @@ http_method(<<"DELETE">>) -> delete;
 http_method(Method) ->
     list_to_atom([M - $A + $a || <<M>>  <= Method]).
 
+%% check if request handler is exported
+-spec is_rqh_exported(module(), function()) -> boolean().
+is_rqh_exported(Mod, Func) ->
+    erlang:function_exported(Mod, Func, 2).
+
 %% the heart of leptus
+-spec handle_request(method(), req(), route()) -> {ok, req(), route()}.
 handle_request(Method, Req, State) ->
     Args = case leptus_router:find_mod(State) of
                {ok, Mod} ->
@@ -34,7 +45,7 @@ handle_request(Method, Req, State) ->
                    Func = http_method(Method),
 
                    %% method not allowed if function is not exported
-                   case erlang:function_exported(Mod, Func, 2) of
+                   case is_rqh_exported(Mod, Func) of
                        true ->
                            %% handle authorization
                            case handle_authorization(Mod, Method, State, Req) of
@@ -59,7 +70,8 @@ handle_request(Method, Req, State) ->
            end,
     reply(Args, Req, State).
 
-
+-spec handle_authorization(module(), method(), route(), req()) ->
+                                  true | {false, term()} | {false, json, term()}.
 handle_authorization(Mod, Method, State, Req) ->
     %% spec: is_authorized(Method, State, Req) ->
     %%           true | {false, Body} | {false, json, JsonTerm}.
