@@ -21,7 +21,8 @@ end_per_testcase(_, _Config) ->
 
 
 fetch_routes(_) ->
-    [{leptus_routes1,
+    [
+     {leptus_routes1,
       ["/", "/blah", "/hello/:name", "/some-url/to/some-path"]
      },
      {leptus_routes2,
@@ -30,8 +31,10 @@ fetch_routes(_) ->
      {leptus_routes3,
       ["/users/:id", "/users/:id/info"]
      }
-    ] = leptus_router:fetch_routes([leptus_routes1, leptus_routes2,
-                                      leptus_routes3]).
+    ] = leptus_router:fetch_routes([
+                                    leptus_routes1, leptus_routes2,
+                                    leptus_routes3
+                                   ]).
 
 paths(_) ->
     [
