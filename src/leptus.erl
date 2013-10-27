@@ -14,16 +14,23 @@ start_http() ->
 
 -spec start_http({modules, [module()]}) -> {ok, pid()} | {error, any()}.
 start_http({modules, Mods}) ->
+    %% ensure dependencies are started
     ensure_started(crypto),
     ensure_started(ranch),
     ensure_started(cowboy),
     ensure_started(leptus),
 
+    %% routes
     Paths = leptus_router:paths(Mods),
     Dispatch = cowboy_router:compile([{'_', Paths}]),
 
+    %% basic http configuration
+    Config = config(),
+    IP = ip_address(Config),
+    Port = http_port(Config),
+
     cowboy:start_http(
-      http, 100, [{ip, ip_address()}, {port, http_port()}],
+      http, 100, [{ip, IP}, {port, Port}],
       [
        {env, [{dispatch, Dispatch}]},
        {onresponse, fun leptus_hooks:console_log/4}
@@ -44,9 +51,9 @@ ensure_started(App) ->
             ok
     end.
 
-ip_address() ->
+ip_address(Config) ->
     Default = {127, 0, 0, 1},
-    case get_value(http, config(), Default) of
+    case get_value(http, Config, Default) of
         Default ->
             Default;
         Http ->
@@ -58,9 +65,9 @@ ip_address() ->
             end
     end.
 
-http_port() ->
+http_port(Config) ->
     Default = 8080,
-    case get_value(http, config(), Default) of
+    case get_value(http, Config, Default) of
         Default ->
             Default;
         Http ->
