@@ -8,7 +8,7 @@ Leptus aims at creating RESTful API.
 
   * Erlang/OTP R15B or newer
   * [cowboy](https://github.com/extend/cowboy)
-  * [jsx](https://github.com/talentdeficit/jsx)
+  * [jiffy](https://github.com/davisp/jiffy)
 
 ## Installation
 
