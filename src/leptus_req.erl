@@ -14,6 +14,8 @@
 -export([parse_header/2]).
 -export([auth/2]).
 
+-include("leptus.hrl").
+
 -type req() :: cowboy_req:req().
 
 
@@ -23,11 +25,11 @@ binding(Key, Req) ->
 
 -spec bindings(req()) -> [{atom(), binary()}] | undefined.
 bindings(Req) ->
-    get_value(cowboy_req:bindings(Req)).
+    Req#http_req.bindings.
 
 -spec qs(req()) -> binary().
 qs(Req) ->
-    get_value(cowboy_req:qs(Req)).
+    Req#http_req.qs.
 
 -spec qs_val(binary(), req()) -> binary() | undefined.
 qs_val(Key, Req) ->
@@ -35,19 +37,19 @@ qs_val(Key, Req) ->
 
 -spec uri(req()) -> binary().
 uri(Req) ->
-    Path = get_value(cowboy_req:path(Req)),
+    Path = Req#http_req.path,
     QS = qs(Req),
 
     %% e.g <<"/path?query=string">>
 
     case QS of
         <<>> -> Path;
-        _ -> <<Path/binary, <<"?">>/binary, QS/binary>>
+        _ -> <<Path/binary, "?", QS/binary>>
     end.
 
 -spec version(req()) -> cowboy:http_version().
 version(Req) ->
-    get_value(cowboy_req:version(Req)).
+    Req#http_req.version.
 
 -spec body(req()) -> binary().
 body(Req) ->
