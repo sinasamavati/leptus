@@ -1,13 +1,15 @@
+%%-*- mode: erlang -*-
+
 {application, leptus,
  [
   {description, "A micro web framework that aims at creating RESTful APIs."},
-  {vsn, "0.0.1"},
+  {vsn, "0.0.3"},
   {registered, []},
   {applications, [
                   kernel,
                   stdlib,
                   cowboy
                  ]},
-  {mod, { leptus_app, []}},
+  {mod, {leptus_app, []}},
   {env, []}
  ]}.
