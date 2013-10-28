@@ -41,7 +41,7 @@ get("/", _Req) ->
 get("/hello/:name", Req) ->
     Status = 200,
     Name = leptus_req:binding(name, Req),
-    Body = << <<"Hello, ">>/binary, Name/binary >>,
+    Body = <<"Hello, ", Name/binary>>,
     {Status, Body}.
 ```
 
