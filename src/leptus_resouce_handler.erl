@@ -49,7 +49,7 @@ handle_request(Method, Req, State) ->
                    case is_rqh_exported(Mod, Func) of
                        true ->
                            %% handle authorization
-                           case handle_authorization(Mod, Method, State, Req) of
+                           case handle_authorization(Mod, State, Req) of
                                true ->
                                    %% method not allowed if function doesn't match
                                    try
@@ -71,15 +71,15 @@ handle_request(Method, Req, State) ->
            end,
     reply(Args, Req, State).
 
--spec handle_authorization(module(), method(), route(), req()) ->
+-spec handle_authorization(module(), route(), req()) ->
                                   true | {false, {401, term()}} |
                                   {false, {401, json, term()}}.
-handle_authorization(Mod, Method, State, Req) ->
-    %% spec: is_authorized(Method, State, Req) ->
+handle_authorization(Mod, State, Req) ->
+    %% spec: is_authorized(State, Req) ->
     %%           true | {false, Body} | {false, json, JsonTerm}.
-    case erlang:function_exported(Mod, is_authorized, 3) of
+    case erlang:function_exported(Mod, is_authorized, 2) of
         true ->
-            case Mod:is_authorized(Method, State, Req) of
+            case Mod:is_authorized(State, Req) of
                 true ->
                     true;
                 {false, Body} ->

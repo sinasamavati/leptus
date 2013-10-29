@@ -4,22 +4,27 @@
 -export([get/2]).
 -export([put/2]).
 -export([post/2]).
--export([is_authorized/3]).
+-export([is_authorized/2]).
 
 
 routes() ->
     ["/users/:id", "/users/:id/interests", "/users/:id/profile"].
 
-is_authorized(<<"PUT">>, "/users/:id", Req) ->
-    check_auth(Req);
-is_authorized(<<"POST">>, "/users/:id", Req) ->
-    case check_auth(Req) of
-        {false, _} ->
-            {false, json, [{<<"error">>, <<"unauthorized">>}]};
+is_authorized("/users/:id", Req) ->
+    case leptus_req:method(Req) of
+        <<"PUT">> ->
+            check_auth(Req);
+        <<"POST">> ->
+            case check_auth(Req) of
+                {false, _} ->
+                    {false, json, [{<<"error">>, <<"unauthorized">>}]};
+                _ ->
+                    true
+            end;
         _ ->
             true
     end;
-is_authorized(_, _, _Req) ->
+is_authorized(_Route, _Req) ->
     true.
 
 get("/users/:id", Req) ->
