@@ -13,12 +13,13 @@
 -export([header/1]).
 -export([parse_header/1]).
 -export([auth/1]).
+-export([method/1]).
 
 
 all() ->
     [
      binding, bindings, qs, qs_val, uri, version, body, body_raw, body_qs,
-     header, parse_header, auth
+     header, parse_header, auth, method
     ].
 
 binding(_) ->
@@ -93,6 +94,12 @@ auth(_) ->
     <<>> = leptus_req:auth(<<"basic">>, req3()),
     {<<"123">>, <<"456">>} = leptus_req:auth(<<"basic">>, req5()),
     error = leptus_req:auth(<<"basic">>, req6()).
+
+method(_) ->
+    <<"GET">> = leptus_req:method(req1()),
+    <<"GET">> = leptus_req:method(req2()),
+    <<"POST">> = leptus_req:method(req3()),
+    <<"POST">> = leptus_req:method(req4()).
 
 
 req1() ->
