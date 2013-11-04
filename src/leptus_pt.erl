@@ -54,15 +54,19 @@ add_route(Route) ->
     put(routes, get(routes) ++ [Route]).
 
 %% add routes/0 to the module
-%% i.e. routes() -> [Routes].
+%% i.e. routes() -> [Route].
 add_routes_fun(AST) ->
     {eof, L} = lists:keyfind(eof, 1, AST),
+
+    %% remove duplicate elements
+    Routes = lists:usort(get(routes)),
+
     AST1 = AST -- [{eof, L}],
     AST1 ++ [
              {function, L + 1, routes, 0,
               [
                {clause, L + 1, [], [],
-                [erl_parse:abstract(get(routes), [{line, L + 2}])]
+                [erl_parse:abstract(Routes, [{line, L + 2}])]
                }
               ]
              },

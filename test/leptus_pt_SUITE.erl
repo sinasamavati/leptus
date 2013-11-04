@@ -8,4 +8,5 @@ all() ->
     [pt].
 
 pt(_) ->
-    ["/", "/hello", "/hello/:name"] = pt1:routes().
+    ["/", "/hello", "/hello/:name"] = pt1:routes(),
+    ["/1", "/2", "/3", "/4"] = pt2:routes().
