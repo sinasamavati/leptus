@@ -7,6 +7,7 @@
 -export([qs_val/2]).
 -export([uri/1]).
 -export([version/1]).
+-export([method/1]).
 -export([body/1]).
 -export([body_raw/1]).
 -export([body_qs/1]).
@@ -50,6 +51,10 @@ uri(Req) ->
 -spec version(req()) -> cowboy:http_version().
 version(Req) ->
     Req#http_req.version.
+
+-spec method(req()) -> binary().
+method(Req) ->
+    Req#http_req.method.
 
 -spec body(req()) -> binary().
 body(Req) ->
