@@ -1,6 +1,7 @@
 -module(leptus_http_SUITE).
 
 -export([init_per_suite/1]).
+-export([end_per_suite/1]).
 -export([all/0]).
 
 -export([http_get/1]).
@@ -19,6 +20,9 @@ init_per_suite(Config) ->
            [leptus_http1, leptus_http2, leptus_http3]
           }),
     Config.
+
+end_per_suite(_Config) ->
+    ok = leptus:stop_http().
 
 all() ->
     [
