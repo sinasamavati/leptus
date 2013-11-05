@@ -6,7 +6,7 @@
 console_log(Status, Headers, _, Req) ->
     %% [%Y-%m-%d %H:%M:%S] "METHOD URL VERSION" STATUS CONTENT-LENGTH
     {{Year, Month, Day}, {Hour, Min, Sec}} = erlang:localtime(),
-    {Method, _} = cowboy_req:method(Req),
+    Method = leptus_req:method(Req),
     Uri = leptus_req:uri(Req),
     Version = leptus_req:version(Req),
     ContentLength = get_value(<<"content-length">>, Headers, 0),
