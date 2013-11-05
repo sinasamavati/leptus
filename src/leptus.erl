@@ -51,6 +51,7 @@ ensure_started(App) ->
             ok
     end.
 
+%% get IP address to bind to
 ip_address(Config) ->
     Default = {127, 0, 0, 1},
     case get_value(http, Config, Default) of
@@ -65,6 +66,7 @@ ip_address(Config) ->
             end
     end.
 
+%% get http port to listen on
 http_port(Config) ->
     Default = 8080,
     case get_value(http, Config, Default) of
@@ -74,6 +76,7 @@ http_port(Config) ->
             get_value(port, Http, Default)
     end.
 
+%% read priv/leptus.config file
 config() ->
     {ok, Cwd} = file:get_cwd(),
     case file:consult(filename:join([Cwd, "priv", "leptus.config"])) of
