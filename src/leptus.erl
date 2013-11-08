@@ -6,6 +6,8 @@
 -export([start_http/0]).
 -export([start_http/1]).
 -export([stop_http/0]).
+-export([upgrade/0]).
+-export([upgrade/1]).
 
 
 -spec start_http() -> {ok, pid()} | {error, any()}.
@@ -40,6 +42,15 @@ start_http({modules, Mods}) ->
 -spec stop_http() -> ok | {error, not_found}.
 stop_http() ->
     cowboy:stop_listener(http).
+
+-spec upgrade() -> ok.
+upgrade() ->
+    upgrade(get_value(modules, config(), [])).
+
+-spec upgrade([module()]) -> ok.
+upgrade(Mods) ->
+    Paths = leptus_router:paths(Mods),
+    cowboy:set_env(http, dispatch, cowboy_router:compile([{'_', Paths}])).
 
 
 %% internal
