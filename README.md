@@ -2,7 +2,7 @@
 
 Leptus is a micro web framework that runs on top of cowboy.
 
-Leptus aims at creating RESTful API.
+Leptus aims at simply creating RESTful API.
 
 ## Requirements
 
