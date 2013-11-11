@@ -11,6 +11,7 @@
 -export([terminate/2]).
 -export([code_change/3]).
 
+-export([start/0]).
 -export([start_link/0]).
 -export([stop/0]).
 -export([fetch_routes/1]).
@@ -20,6 +21,10 @@
 -type route() :: string().
 -type routes() :: [{module(), [route()]}].
 
+
+-spec start() -> {ok, pid()} | {error, any()}.
+start() ->
+    gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
 -spec start_link() -> {ok, pid()} | {error, any()}.
 start_link() ->
