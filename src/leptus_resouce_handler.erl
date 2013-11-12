@@ -39,37 +39,33 @@ is_rqh_exported(Mod, Func) ->
 
 %% the heart of leptus
 -spec handle_request(method(), req(), route()) -> {ok, req(), route()}.
-handle_request(Method, Req, State) ->
-    Args = case leptus_router:find_mod(State) of
-               {ok, Mod} ->
-                   %% convert the http method to a lowercase atom
-                   Func = http_method(Method),
+handle_request(Method, Req, State={Mod, Route}) ->
+    %% convert the http method to a lowercase atom
+    Func = http_method(Method),
 
-                   %% method not allowed if function is not exported
-                   case is_rqh_exported(Mod, Func) of
+    %% method not allowed if function is not exported
+    Args = case is_rqh_exported(Mod, Func) of
+               true ->
+                   %% handle authorization
+                   case handle_authorization(Mod, Route, Req) of
                        true ->
-                           %% handle authorization
-                           case handle_authorization(Mod, State, Req) of
-                               true ->
-                                   %% method not allowed if function doesn't match
-                                   try
-                                       Mod:Func(State, Req)
-                                   catch
-                                       %% TODO: find an alternative way
-                                       error:function_clause -> {405, <<>>}
-                                   end;
-                               {false, Args1} ->
-                                   Args1
+                           %% method not allowed if function doesn't match
+                           try
+                               Mod:Func(Route, Req)
+                           catch
+                               %% TODO: find an alternative way
+                               error:function_clause -> {405, <<>>}
                            end;
-
-                       false ->
-                           {405, <<>>}
+                       {false, Args1} ->
+                           Args1
                    end;
 
-               {error, undefined} ->
-                   {404, <<>>}
+               false ->
+                   {405, <<>>}
            end,
-    reply(Args, Req, State).
+    reply(Args, Req, State);
+handle_request(_, Req, State) ->
+    reply({<<404>>, <<>>}, Req, State).
 
 -spec handle_authorization(module(), route(), req()) ->
                                   true | {false, {401, term()}} |

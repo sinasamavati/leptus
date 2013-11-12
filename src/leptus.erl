@@ -20,7 +20,6 @@ start_http({modules, Mods}) ->
     ensure_started(crypto),
     ensure_started(ranch),
     ensure_started(cowboy),
-    ensure_started(leptus),
 
     %% routes
     Paths = leptus_router:paths(Mods),
