@@ -25,13 +25,10 @@ Run `make` or add it to your rebar configuration
 
 ```erlang
 -module(rq_handler).
+-compile({parse_transform, leptus_pt}).
 
-%% leptus callbacks
--export([routes/0]).
+%% leptus callback
 -export([get/2]).
-
-routes() ->
-    ["/", "/hello/:name"].
 
 get("/", _Req) ->
     Status = 200,
@@ -81,24 +78,6 @@ Leptus must know your request handlers, and they must be defined as `{modules, [
 
 #### leptus.config example
 
-Let's assume our current working directory looks like the following:
-
-```
-.
-├── ebin
-│   ├── ...
-│   └── rq_handler.beam
-│
-├── priv
-│   ├── ...
-│   └── leptus.config
-│
-├── src
-│   ├── ...
-│   └── rq_handler.erl
-│   ...
-```
-
 ```erlang
 %% leptus.config
 
@@ -117,3 +96,11 @@ Let's assume our current working directory looks like the following:
 ## License
 
 MIT, see LICENSE file for more details.
+
+## TODO
+
+* Write documentation
+* Add hooks
+* Add examples
+* ...
+
