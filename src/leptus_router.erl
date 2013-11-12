@@ -1,77 +1,19 @@
 -module(leptus_router).
 -author("Sina Samavati <sina.samv@gmail.com>").
 
--behaviour(gen_server).
-
-%% gen_server
--export([init/1]).
--export([handle_call/3]).
--export([handle_cast/2]).
--export([handle_info/2]).
--export([terminate/2]).
--export([code_change/3]).
-
--export([start/0]).
--export([start_link/0]).
--export([stop/0]).
--export([fetch_routes/1]).
 -export([paths/1]).
--export([find_mod/1]).
 
 -type route() :: string().
--type routes() :: [{module(), [route()]}].
-
-
--spec start() -> {ok, pid()} | {error, any()}.
-start() ->
-    gen_server:start({local, ?MODULE}, ?MODULE, [], []).
-
--spec start_link() -> {ok, pid()} | {error, any()}.
-start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
-
--spec stop() -> ok.
-stop() ->
-    gen_server:cast(?MODULE, stop).
-
--spec fetch_routes([module()]) -> routes().
-fetch_routes(Mods) ->
-    gen_server:call(?MODULE, {fetch_routes, Mods}).
+-type routes_dict() :: [{module(), [route()]}].
+-type routes_proplist() :: [{module(), route()}].
 
 -spec paths([module()]) -> cowboy_router:dispatch_rules().
 paths(Mods) ->
-    fetch_paths(Mods).
-
--spec find_mod(string()) -> {ok, module()} | {error, undefined}.
-find_mod(Route) ->
-    gen_server:call(?MODULE, {find_mod, Route}).
-
-
-%% gen_server
-init([]) ->
-    {ok, []}.
-
-handle_call({fetch_routes, Mods}, _From, _State) ->
-    NewState = fetch_routes(Mods, []),
-    {reply, NewState, NewState};
-
-handle_call({find_mod, Route}, _From, State) ->
-    {reply, find_mod(Route, State), State}.
-
-handle_cast(stop, State) ->
-    {stop, normal, State}.
-
-handle_info(_Info, State) ->
-    {noreply, State}.
-
-terminate(normal, _State) ->
-    ok.
-
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
-
+    Routes = fetch_routes(Mods, []),
+    handle_routes(to_rp(Routes), []).
 
 %% internal
+-spec fetch_routes([module()], []) -> routes_dict().
 fetch_routes([], Acc) ->
     Acc;
 fetch_routes([Mod|T], Acc) ->
@@ -79,37 +21,12 @@ fetch_routes([Mod|T], Acc) ->
     Routes = Mod:routes(),
     fetch_routes(T, orddict:append_list(Mod, Routes, Acc)).
 
--spec fetch_paths([module()]) -> [cowboy_router:route_path()].
-fetch_paths(Mods) ->
-    Routes = fetch_routes(Mods),
-    handle_routes(Routes).
+-spec to_rp(routes_dict()) -> routes_proplist().
+to_rp(RD) ->
+    [{Mod, Route} || {Mod, Routes} <- RD, Route <- Routes].
 
--spec handle_routes(routes()) -> [cowboy_router:route_path()].
-handle_routes(Routes) ->
-    Values = orddict:fold(fun(_, V, AccIn) -> AccIn ++ V end, [], Routes),
-    handle_routes(Values, []).
-
+-spec handle_routes(routes_proplist(), []) -> [cowboy_router:route_path()].
 handle_routes([], Acc) ->
     Acc;
-handle_routes([Route|T], Acc) ->
-    handle_routes(T, Acc ++ [{Route, leptus_resouce_handler, Route}]).
-
--spec find_mod(route(), routes()) -> {ok, module()} | {error, undefined}.
-find_mod(Route, Routes) ->
-    %% find module name by route
-    %% (where a key is a module() and values are url patterns (routes)
-    %%   e.g. {rq_handler, ["/route1", "/route2" ...]})
-    %% TODO: OPTIMIZE ME
-
-    find_mod_by_route(Route, Routes).
-
-find_mod_by_route(_, []) ->
-    {error, undefined};
-find_mod_by_route(Route, [H|T]) ->
-    {K, V} = H,
-    case lists:member(Route, V) of
-        true ->
-            {ok, K};
-        false ->
-            find_mod_by_route(Route, T)
-    end.
+handle_routes([{Mod, Route}|T], Acc) ->
+    handle_routes(T, Acc ++ [{Route, leptus_resouce_handler, {Mod, Route}}]).
