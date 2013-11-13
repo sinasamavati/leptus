@@ -4,26 +4,19 @@
 -export([paths/1]).
 
 -type route() :: string().
--type routes_dict() :: [{module(), [route()]}].
 -type routes_proplist() :: [{module(), route()}].
 
 -spec paths([module()]) -> cowboy_router:dispatch_rules().
 paths(Mods) ->
-    Routes = fetch_routes(Mods, []),
-    handle_routes(to_rp(Routes), []).
+    handle_routes(fetch_routes(Mods, []), []).
 
 %% internal
--spec fetch_routes([module()], []) -> routes_dict().
+-spec fetch_routes([module()], []) -> routes_proplist().
 fetch_routes([], Acc) ->
     Acc;
 fetch_routes([Mod|T], Acc) ->
     %% each module must have routes/0 -> [string()].
-    Routes = Mod:routes(),
-    fetch_routes(T, orddict:append_list(Mod, Routes, Acc)).
-
--spec to_rp(routes_dict()) -> routes_proplist().
-to_rp(RD) ->
-    [{Mod, Route} || {Mod, Routes} <- RD, Route <- Routes].
+    fetch_routes(T, Acc ++ [{Mod, Route} || Route <- Mod:routes()]).
 
 -spec handle_routes(routes_proplist(), []) -> [cowboy_router:route_path()].
 handle_routes([], Acc) ->
