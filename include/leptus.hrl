@@ -1,5 +1,3 @@
-%%-*- mode: erlang -*-
-
 -record(http_req, {
           %% Transport.
           socket,
