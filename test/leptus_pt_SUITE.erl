@@ -11,7 +11,8 @@ all() ->
 
 routes(_) ->
     ["/", "/hello", "/hello/:name"] = pt1:routes(),
-    ["/1", "/2", "/3", "/4"] = pt2:routes().
+    ["/1", "/2", "/3", "/4"] = pt2:routes(),
+    ["/", "/new", "/old"] = pt3:routes().
 
 allowed_methods(_) ->
     [<<"GET">>] = pt1:allowed_methods("/"),
