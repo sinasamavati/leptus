@@ -19,13 +19,5 @@ start_link() ->
 %% ===================================================================
 init([]) ->
     {ok, {
-       {one_for_one, 5, 10}, [child(leptus_router, worker)]}
+       {one_for_one, 5, 10}, []}
     }.
-
-
-%% helper function for declaring children of supervisor
-child(I, Type) ->
-    child(I, Type, []).
-
-child(I, Type, Args) ->
-    {I, {I, start_link, Args}, permanent, 5000, Type, [I]}.

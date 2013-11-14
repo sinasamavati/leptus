@@ -10,6 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    leptus:start_http(),
     leptus_sup:start_link().
 
 stop(_State) ->
