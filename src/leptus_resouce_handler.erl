@@ -61,7 +61,7 @@ handle_request(Method, Req, State={Mod, Route}) ->
                    end;
 
                false ->
-                   {405, <<>>}
+                   method_not_allowed(Mod:allowed_methods(Route))
            end,
     reply(Args, Req, State);
 handle_request(_, Req, State) ->
@@ -107,3 +107,7 @@ reply(Status, Headers, Body, Req, State) ->
         end,
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, State}.
+
+method_not_allowed(Methods) ->
+    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
+    {405, [{<<"Allow">>, Allow}], <<>>}.
