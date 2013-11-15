@@ -1,7 +1,7 @@
 PROJECT = leptus
 CT_SUITES = leptus_router leptus_req leptus_http leptus_pt
 
-.PHONY: all deps compile shell dev
+.PHONY: all deps compile shell
 
 all: deps compile
 
@@ -13,8 +13,5 @@ compile:
 
 shell: all
 	erl -pa ebin deps/*/ebin
-
-dev: all
-	./rebar -C rebar_dev.config get-deps compile
 
 include erlang.mk

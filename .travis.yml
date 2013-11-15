@@ -8,5 +8,5 @@ otp_release:
 notifications:
   email: false
   irc: "chat.freenode.net#xprous"
-install: "make dev"
+install: "make"
 script: "make test"
