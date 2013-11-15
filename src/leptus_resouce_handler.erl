@@ -54,18 +54,16 @@ handle_request(Method, Req, State={Handler, Route}) ->
                                Handler:Func(Route, Req)
                            catch
                                %% TODO: find an alternative way
-                               error:function_clause -> {405, <<>>}
+                               error:function_clause -> method_not_allowed(State)
                            end;
                        {false, Args1} ->
                            Args1
                    end;
 
                false ->
-                   method_not_allowed(Handler:allowed_methods(Route))
+                   method_not_allowed(State)
            end,
-    reply(Args, Req, State);
-handle_request(_, Req, State) ->
-    reply({<<404>>, <<>>}, Req, State).
+    reply(Args, Req, State).
 
 -spec handle_authorization(module(), route(), req()) ->
                                   true | {false, {401, term()}} |
@@ -108,6 +106,7 @@ reply(Status, Headers, Body, Req, State) ->
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, State}.
 
-method_not_allowed(Methods) ->
+method_not_allowed({Handler, Route}) ->
+    Methods = Handler:allowed_methods(Route),
     <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
     {405, [{<<"Allow">>, Allow}], <<>>}.
