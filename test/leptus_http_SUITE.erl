@@ -12,6 +12,8 @@
 -export([http_delete/1]).
 -export([http_is_authorized/1]).
 
+-import(helpers, [request/2, request/3, request/4, response_body/1]).
+
 
 init_per_suite(Config) ->
     {ok, _} =
@@ -31,53 +33,54 @@ all() ->
     ].
 
 http_get(_) ->
-    {ok, 200, _, C1} = hackney:get("localhost:8080/"),
-    {ok, <<"index">>, _} = hackney:body(C1),
+    M = <<"GET">>,
 
-    {ok, 200, _, C2} = hackney:get("localhost:8080/hello"),
-    {ok, <<"hello, world!">>, _} = hackney:body(C2),
+    {200, _, C1} = request(M, "/"),
+    <<"index">>= response_body(C1),
 
-    {ok, 200, _, C3} = hackney:get("localhost:8080/hello/sina"),
-    {ok, <<"hello, sina">>, _} = hackney:body(C3),
+    {200, _, C2} = request(M, "/hello"),
+    <<"hello, world!">> = response_body(C2),
 
-    {ok, 200, _, C4} = hackney:get("localhost:8080/users/1234"),
-    {ok, <<"aha, this is 1234">>, _} = hackney:body(C4),
+    {200, _, C3} = request(M, "/hello/sina"),
+    <<"hello, sina">> = response_body(C3),
 
-    {ok, 200, _, C5} = hackney:get("localhost:8080/users/456/interests"),
-    {ok, <<"art, photography...">>, _} = hackney:body(C5),
+    {200, _, C4} = request(M, "/users/1234"),
+    <<"aha, this is 1234">> = response_body(C4),
 
-    {ok, 200, _, C6} = hackney:get("localhost:8080/users/s1n4/interests"),
-    {ok, <<"Erlang and a lotta things else">>, _} = hackney:body(C6),
+    {200, _, C5} = request(M, "/users/456/interests"),
+    <<"art, photography...">> = response_body(C5),
 
-    {ok, 404, _, C7} = hackney:get("localhost:8080/users/123/interests"),
-    {ok, <<"not found...">>, _} = hackney:body(C7),
+    {200, _, C6} = request(M, "/users/s1n4/interests"),
+    <<"Erlang and a lotta things else">> = response_body(C6),
+
+    {404, _, C7} = request(M, "/users/123/interests"),
+    <<"not found...">> = response_body(C7),
 
     B1 = <<"{\"id\":\"asdf\",\"bio\":\"Erlanger\",\"github\":\"asdf\"}">>,
     B2 = <<"{\"id\":\"you\",\"bio\":\"Erlanger\",\"github\":\"you\"}">>,
 
-    {ok, 200, _, C8} = hackney:get("localhost:8080/users/asdf/profile"),
-    {ok, B1, _} = hackney:body(C8),
-    {ok, 200, _, C9} = hackney:get("localhost:8080/users/you/profile"),
-    {ok, B2, _} = hackney:body(C9).
+    {200, _, C8} = request(M, "/users/asdf/profile"),
+    B1 = response_body(C8),
+    {200, _, C9} = request(M, "/users/you/profile"),
+    B2 = response_body(C9).
 
 http_404(_) ->
-    {ok, 404, _, _} = hackney:get("localhost:8080/asd"),
-    {ok, 404, _, _} = hackney:get("localhost:8080/asdf"),
-    {ok, 404, _, _} = hackney:get("localhost:8080/asdfg"),
-    {ok, 404, _, _} = hackney:post("localhost:8080/blah/new"),
-    {ok, 404, _, _} = hackney:put("localhost:8080/blah/186"),
-    {ok, 404, _, _} = hackney:delete("localhost:8080/blah/186"),
-    {ok, 404, _, _} = hackney:head("localhost:8080/blah/186").
+    {404, _, _} = request(<<"GET">>, "/asd"),
+    {404, _, _} = request(<<"GET">>, "/asdf"),
+    {404, _, _} = request(<<"GET">>, "/asdfg"),
+    {404, _, _} = request(<<"POST">>, "/blah/new"),
+    {404, _, _} = request(<<"PUT">>, "/blah/186"),
+    {404, _, _} = request(<<"DELETE">>, "/blah/186"),
+    {404, _, _} = request(<<"HEAD">>, "/blah/186").
 
 http_405(_) ->
-    {ok, C} = cowboy_client:init([]),
-    {405, H1, _} = request(<<"DELETE">>, url("/users/876"), C),
-    {405, H2, _} = request(<<"DELETE">>, url("/users/s1n4/interests"), C),
-    {405, H3, _} = request(<<"PUT">>, url("/user/register"), C),
-    {405, H4, _} = request(<<"POST">>, url("/settings/change-password"), C),
-    {405, H5, _} = request(<<"GET">>, url("/user/register"), C),
-    {405, H6, _} = request(<<"HEAD">>, url("/users/876"), C),
-    {405, H7, _} = request(<<"HEAD">>, url("/users/blah/posts/876"), C),
+    {405, H1, _} = request(<<"DELETE">>, "/users/876"),
+    {405, H2, _} = request(<<"DELETE">>, "/users/s1n4/interests"),
+    {405, H3, _} = request(<<"PUT">>, "/user/register"),
+    {405, H4, _} = request(<<"POST">>, "/settings/change-password"),
+    {405, H5, _} = request(<<"GET">>, "/user/register"),
+    {405, H6, _} = request(<<"HEAD">>, "/users/876"),
+    {405, H7, _} = request(<<"HEAD">>, "/users/blah/posts/876"),
 
     F = fun(H) -> proplists:get_value(<<"allow">>, H) end,
     <<"GET, PUT, POST">> = F(H1),
@@ -89,55 +92,45 @@ http_405(_) ->
     <<"DELETE">> = F(H7).
 
 http_post(_) ->
+    M = <<"POST">>,
     B1 = <<"username=asdf&email=asdf@a.<...>.com">>,
-    {ok, 403, _, C1} = hackney:post("localhost:8080/user/register", [], B1),
-    {ok, <<"Username is already taken.">>, _} = hackney:body(C1),
+    {403, _, C1} = request(M, "/user/register", [], B1),
+    <<"Username is already taken.">> = response_body(C1),
 
     B2 = <<"username=asdfg&email=something@a.<...>.com">>,
-    {ok, 201, _, C2} = hackney:post("localhost:8080/user/register", [], B2),
-    {ok, <<"Thanks for registration.">>, _} = hackney:body(C2).
+    {201, _, C2} = request(M, "/user/register", [], B2),
+    <<"Thanks for registration.">> = response_body(C2).
 
 http_put(_) ->
+    M = <<"PUT">>,
     B1 = <<"password=lkjhgf&password_confirmation=lkjhg">>,
-    {ok, 403, _, C1} = hackney:put("localhost:8080/settings/change-password",
-                                   [], B1),
-    {ok, <<"Passwords didn't match.">>, _} = hackney:body(C1),
+    {403, _, C1} = request(M, "/settings/change-password", [], B1),
+    <<"Passwords didn't match.">> = response_body(C1),
 
     B2 = <<"password=lkjhgf&password_confirmation=lkjhgf">>,
-    {ok, 200, _, C2} = hackney:put("localhost:8080/settings/change-password",
-                                   [], B2),
-    {ok, <<"Your password has been changed.">>, _} = hackney:body(C2).
+    {200, _, C2} = request(M, "/settings/change-password", [], B2),
+    <<"Your password has been changed.">> = response_body(C2).
 
 http_delete(_) ->
-    {ok, 404, _, _} = hackney:delete("localhost:8080/users/jack/posts/32601"),
-    {ok, 404, _, _} = hackney:delete("localhost:8080/users/jack/posts/3268"),
-    {ok, 204, _, _} = hackney:delete("localhost:8080/users/jack/posts/219").
+    M = <<"DELETE">>,
+    {404, _, _} = request(M, "/users/jack/posts/32601"),
+    {404, _, _} = request(M, "/users/jack/posts/3268"),
+    {204, _, _} = request(M, "/users/jack/posts/219").
 
 http_is_authorized(_) ->
-    {ok, 401, _, _} = hackney:put("localhost:8080/users/sina"),
-    {ok, 401, _, _} = hackney:put("123:456@localhost:8080/users/sina"),
-    {ok, 401, H, C} = hackney:post("localhost:8080/users/sina"),
-    {ok, 401, H1, C1} = hackney:post("123:986@localhost:8080/users/sina"),
-    {ok, 200, _, _} = hackney:put("sina:wrote_me@localhost:8080/users/sina"),
-    {ok, 200, _, _} = hackney:post("sina:wrote_me@localhost:8080/users/sina"),
+    A1 = base64:encode(<<"123:456">>),
+    A2 = base64:encode(<<"123:986">>),
+    A3 = base64:encode(<<"sina:wrote_me">>),
+    Auth = fun(D) -> [{<<"Authorization">>, <<"Basic ", D/binary>>}] end,
+
+    {401, _, _} = request(<<"PUT">>, "/users/sina"),
+    {401, _, _} = request(<<"PUT">>, "/users/sina", Auth(A1)),
+    {401, H, C} = request(<<"POST">>, "/users/sina"),
+    {401, H1, C1} = request(<<"POST">>, "/users/sina", Auth(A2)),
+    {200, _, _} = request(<<"PUT">>, "/users/sina", Auth(A3)),
+    {200, _, _} = request(<<"POST">>, "/users/sina", Auth(A3)),
 
     <<"application/json">> = proplists:get_value(<<"content-type">>, H),
-    {ok, <<"{\"error\":\"unauthorized\"}">>, _} = hackney:body(C),
+    <<"{\"error\":\"unauthorized\"}">> = response_body(C),
     <<"application/json">> = proplists:get_value(<<"content-type">>, H1),
-    {ok, <<"{\"error\":\"unauthorized\"}">>, _} = hackney:body(C1).
-
-
-%% internal
-url(Route) when is_binary(Route) ->
-    <<"http://localhost:8080", Route/binary>>;
-url(Route) when is_list(Route) ->
-    R1 = list_to_binary(Route),
-    <<"http://localhost:8080", R1/binary>>.
-
-request(Method, Url, Client) ->
-    request(Method, Url, [], <<>>, Client).
-
-request(Method, Url, Headers, Body, Client) ->
-    {ok, Client1} = cowboy_client:request(Method, Url, Headers, Body, Client),
-    {ok, Status, Headers1, Client2} = cowboy_client:response(Client1),
-    {Status, Headers1, Client2}.
+    <<"{\"error\":\"unauthorized\"}">> = response_body(C1).

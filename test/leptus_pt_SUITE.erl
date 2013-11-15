@@ -5,6 +5,8 @@
 -export([allowed_methods/1]).
 -export([rq_pt/1]).
 
+-import(helpers, [request/2]).
+
 
 all() ->
     [routes, allowed_methods, rq_pt].
@@ -26,8 +28,8 @@ allowed_methods(_) ->
 rq_pt(_) ->
     {ok, _} = leptus:start_http({modules, [pt3]}),
     ["/", "/new", "/old"] = pt3:routes(),
-    {ok, 200, _, _} = hackney:get("localhost:8080/"),
-    {ok, 200, _, _} = hackney:put("localhost:8080/old"),
-    {ok, 201, _, _} = hackney:post("localhost:8080/new"),
-    {ok, 204, _, _} = hackney:delete("localhost:8080/old"),
+    {200, _, _} = request(<<"GET">>, "/"),
+    {200, _, _} = request(<<"PUT">>, "/old"),
+    {201, _, _} = request(<<"POST">>, "/new"),
+    {204, _, _} = request(<<"DELETE">>, "/old"),
     ok = leptus:stop_http().
