@@ -34,24 +34,24 @@ http_method(Method) ->
 
 %% check if request handler is exported
 -spec is_rqh_exported(module(), function()) -> boolean().
-is_rqh_exported(Mod, Func) ->
-    erlang:function_exported(Mod, Func, 2).
+is_rqh_exported(Handler, Func) ->
+    erlang:function_exported(Handler, Func, 2).
 
 %% the heart of leptus
--spec handle_request(method(), req(), route()) -> {ok, req(), route()}.
-handle_request(Method, Req, State={Mod, Route}) ->
+-spec handle_request(method(), {module(), req()}, route()) -> {ok, req(), route()}.
+handle_request(Method, Req, State={Handler, Route}) ->
     %% convert the http method to a lowercase atom
     Func = http_method(Method),
 
     %% method not allowed if function is not exported
-    Args = case is_rqh_exported(Mod, Func) of
+    Args = case is_rqh_exported(Handler, Func) of
                true ->
                    %% handle authorization
-                   case handle_authorization(Mod, Route, Req) of
+                   case handle_authorization(Handler, Route, Req) of
                        true ->
                            %% method not allowed if function doesn't match
                            try
-                               Mod:Func(Route, Req)
+                               Handler:Func(Route, Req)
                            catch
                                %% TODO: find an alternative way
                                error:function_clause -> {405, <<>>}
@@ -61,7 +61,7 @@ handle_request(Method, Req, State={Mod, Route}) ->
                    end;
 
                false ->
-                   method_not_allowed(Mod:allowed_methods(Route))
+                   method_not_allowed(Handler:allowed_methods(Route))
            end,
     reply(Args, Req, State);
 handle_request(_, Req, State) ->
@@ -70,12 +70,12 @@ handle_request(_, Req, State) ->
 -spec handle_authorization(module(), route(), req()) ->
                                   true | {false, {401, term()}} |
                                   {false, {401, json, term()}}.
-handle_authorization(Mod, State, Req) ->
+handle_authorization(Handler, State, Req) ->
     %% spec: is_authorized(State, Req) ->
     %%           true | {false, Body} | {false, json, JsonTerm}.
-    case erlang:function_exported(Mod, is_authorized, 2) of
+    case erlang:function_exported(Handler, is_authorized, 2) of
         true ->
-            case Mod:is_authorized(State, Req) of
+            case Handler:is_authorized(State, Req) of
                 true ->
                     true;
                 {false, Body} ->
