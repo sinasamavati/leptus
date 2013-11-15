@@ -64,28 +64,28 @@ http_404(_) ->
     {ok, 404, _, _} = hackney:get("localhost:8080/asd"),
     {ok, 404, _, _} = hackney:get("localhost:8080/asdf"),
     {ok, 404, _, _} = hackney:get("localhost:8080/asdfg"),
-    {ok, 404, _, _} = hackney:post("localhost:8080/blah/new", [], <<>>),
-    {ok, 404, _, _} = hackney:put("localhost:8080/blah/186", [], <<>>),
+    {ok, 404, _, _} = hackney:post("localhost:8080/blah/new"),
+    {ok, 404, _, _} = hackney:put("localhost:8080/blah/186"),
     {ok, 404, _, _} = hackney:delete("localhost:8080/blah/186"),
     {ok, 404, _, _} = hackney:head("localhost:8080/blah/186").
 
 http_405(_) ->
-    {ok, 405, H1, _} = hackney:delete("localhost:8080/users/876"),
-    {ok, 405, H2, _} = hackney:delete("localhost:8080/users/s1n4/interests"),
-    {ok, 405, H3, _} = hackney:put("localhost:8080/user/register", [], <<>>),
-    {ok, 405, H4, _} = hackney:post("localhost:8080/settings/change-password",
-                                   [], <<>>),
-    {ok, 405, H5, _} = hackney:get("localhost:8080/user/register/"),
-    {ok, 405, H6, _} = hackney:head("localhost:8080/users/876"),
-    {ok, 405, H7, _} = hackney:head("localhost:8080/users/blah/posts/876"),
+    {ok, C} = cowboy_client:init([]),
+    {405, H1, _} = request(<<"DELETE">>, url("/users/876"), C),
+    {405, H2, _} = request(<<"DELETE">>, url("/users/s1n4/interests"), C),
+    {405, H3, _} = request(<<"PUT">>, url("/user/register"), C),
+    {405, H4, _} = request(<<"POST">>, url("/settings/change-password"), C),
+    {405, H5, _} = request(<<"GET">>, url("/user/register"), C),
+    {405, H6, _} = request(<<"HEAD">>, url("/users/876"), C),
+    {405, H7, _} = request(<<"HEAD">>, url("/users/blah/posts/876"), C),
 
-    F = fun(H) -> proplists:get_value(<<"Allow">>, H) end,
+    F = fun(H) -> proplists:get_value(<<"allow">>, H) end,
     <<"GET, PUT, POST">> = F(H1),
     <<"GET">> = F(H2),
     <<"POST">> = F(H3),
     <<"PUT">> = F(H4),
     <<"POST">> = F(H5),
-    <<"GET">> = F(H6),
+    <<"GET, PUT, POST">> = F(H6),
     <<"DELETE">> = F(H7).
 
 http_post(_) ->
@@ -125,3 +125,19 @@ http_is_authorized(_) ->
     {ok, <<"{\"error\":\"unauthorized\"}">>, _} = hackney:body(C),
     <<"application/json">> = proplists:get_value(<<"content-type">>, H1),
     {ok, <<"{\"error\":\"unauthorized\"}">>, _} = hackney:body(C1).
+
+
+%% internal
+url(Route) when is_binary(Route) ->
+    <<"http://localhost:8080", Route/binary>>;
+url(Route) when is_list(Route) ->
+    R1 = list_to_binary(Route),
+    <<"http://localhost:8080", R1/binary>>.
+
+request(Method, Url, Client) ->
+    request(Method, Url, [], <<>>, Client).
+
+request(Method, Url, Headers, Body, Client) ->
+    {ok, Client1} = cowboy_client:request(Method, Url, Headers, Body, Client),
+    {ok, Status, Headers1, Client2} = cowboy_client:response(Client1),
+    {Status, Headers1, Client2}.
