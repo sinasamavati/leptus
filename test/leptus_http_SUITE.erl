@@ -70,13 +70,23 @@ http_404(_) ->
     {ok, 404, _, _} = hackney:head("localhost:8080/blah/186").
 
 http_405(_) ->
-    {ok, 405, _, _} = hackney:delete("localhost:8080/users/876"),
-    {ok, 405, _, _} = hackney:delete("localhost:8080/users/s1n4/interests"),
-    {ok, 405, _, _} = hackney:put("localhost:8080/user/register", [], <<>>),
-    {ok, 405, _, _} = hackney:post("localhost:8080/settings/change-password",
+    {ok, 405, H1, _} = hackney:delete("localhost:8080/users/876"),
+    {ok, 405, H2, _} = hackney:delete("localhost:8080/users/s1n4/interests"),
+    {ok, 405, H3, _} = hackney:put("localhost:8080/user/register", [], <<>>),
+    {ok, 405, H4, _} = hackney:post("localhost:8080/settings/change-password",
                                    [], <<>>),
-    {ok, 405, _, _} = hackney:get("localhost:8080/user/register/"),
-    {ok, 405, _, _} = hackney:head("localhost:8080/users/876").
+    {ok, 405, H5, _} = hackney:get("localhost:8080/user/register/"),
+    {ok, 405, H6, _} = hackney:head("localhost:8080/users/876"),
+    {ok, 405, H7, _} = hackney:head("localhost:8080/users/blah/posts/876"),
+
+    F = fun(H) -> proplists:get_value(<<"Allow">>, H) end,
+    <<"GET, PUT, POST">> = F(H1),
+    <<"GET">> = F(H2),
+    <<"POST">> = F(H3),
+    <<"PUT">> = F(H4),
+    <<"POST">> = F(H5),
+    <<"GET">> = F(H6),
+    <<"DELETE">> = F(H7).
 
 http_post(_) ->
     B1 = <<"username=asdf&email=asdf@a.<...>.com">>,

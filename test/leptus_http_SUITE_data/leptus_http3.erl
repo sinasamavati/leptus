@@ -1,6 +1,7 @@
 -module(leptus_http3).
 
 -export([routes/0]).
+-export([allowed_methods/1]).
 -export([post/2]).
 -export([put/2]).
 -export([delete/2]).
@@ -8,6 +9,10 @@
 
 routes() ->
     ["/user/register", "/settings/change-password", "/users/:username/posts/:id"].
+
+allowed_methods("/user/register") -> [<<"POST">>];
+allowed_methods("/settings/change-password") -> [<<"PUT">>];
+allowed_methods(_) -> [<<"DELETE">>].
 
 post("/user/register", Req) ->
     Body = leptus_req:body_qs(Req),

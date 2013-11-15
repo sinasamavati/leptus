@@ -1,6 +1,7 @@
 -module(leptus_http2).
 
 -export([routes/0]).
+-export([allowed_methods/1]).
 -export([get/2]).
 -export([put/2]).
 -export([post/2]).
@@ -9,6 +10,10 @@
 
 routes() ->
     ["/users/:id", "/users/:id/interests", "/users/:id/profile"].
+
+allowed_methods("/users/:id") -> [<<"GET">>, <<"PUT">>, <<"POST">>];
+allowed_methods("/users/:id/interests") -> [<<"GET">>];
+allowed_methods("/users/:id/profile") -> [<<"GET">>].
 
 is_authorized("/users/:id", Req) ->
     case leptus_req:method(Req) of
