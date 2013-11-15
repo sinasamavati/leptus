@@ -15,7 +15,7 @@ init(_Transport, Req, State) ->
     {ok, Req, State}.
 
 handle(Req, State) ->
-    {Method, _} = cowboy_req:method(Req),
+    Method = leptus_req:method(Req),
     handle_request(Method, Req, State).
 
 terminate(_Reason, _Req, _State) ->
