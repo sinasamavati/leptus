@@ -38,7 +38,8 @@ is_rqh_exported(Handler, Func) ->
     erlang:function_exported(Handler, Func, 2).
 
 %% the heart of leptus
--spec handle_request(method(), {module(), req()}, route()) -> {ok, req(), route()}.
+-spec handle_request(method(), {module(), req()}, route()) ->
+                            {ok, req(), route()}.
 handle_request(Method, Req, State={Handler, Route}) ->
     %% convert the http method to a lowercase atom
     Func = http_method(Method),
@@ -54,7 +55,8 @@ handle_request(Method, Req, State={Handler, Route}) ->
                                Handler:Func(Route, Req)
                            catch
                                %% TODO: find an alternative way
-                               error:function_clause -> method_not_allowed(State)
+                               error:function_clause ->
+                                   method_not_allowed(State)
                            end;
                        {false, Args1} ->
                            Args1
