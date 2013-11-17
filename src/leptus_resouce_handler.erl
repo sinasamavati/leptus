@@ -12,6 +12,7 @@
 
 
 init(_Transport, Req, State) ->
+    %% TODO: Handler:init/3
     {ok, Req, State}.
 
 handle(Req, State) ->
@@ -19,6 +20,7 @@ handle(Req, State) ->
     handle_request(Method, Req, State).
 
 terminate(_Reason, _Req, _State) ->
+    %% TODO: Handler:terminate/3
     ok.
 
 
