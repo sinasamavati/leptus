@@ -146,4 +146,4 @@ reply(Status, Headers, Body, Req, State) ->
 handler_terminate(Reason, Req, State) ->
     Handler = get_handler(State),
     HandlerState = get_handler_state(State),
-    Handler:terminate(Reason, Req, State).
+    Handler:terminate(Reason, Req, HandlerState).
