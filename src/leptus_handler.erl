@@ -35,9 +35,8 @@ handle(Req, State) ->
     Func = http_method(leptus_req:method(Req)),
     handle_request(Handler, Func, Route, Req, State).
 
-terminate(_Reason, _Req, _State) ->
-    %% TODO: Handler:terminate/3
-    ok.
+terminate(Reason, Req, State) ->
+    handler_terminate(Reason, Req, State).
 
 
 %% internal
@@ -101,12 +100,12 @@ handler_is_authorized(Handler, Route, Req, State) ->
         true ->
             HandlerState = get_handler_state(State),
             case Handler:is_authorized(Route, Req, HandlerState) of
-                {true, State1} ->
-                    {true, State1};
-                {false, Body, State1} ->
-                    {false, {401, Body, State1}};
-                {false, Headers, Body, State1} ->
-                    {false, {401, Headers, Body, State1}}
+                {true, HandlerState1} ->
+                    {true, set_handler_state(State, HandlerState1)};
+                {false, Body, HandlerState1} ->
+                    {false, {401, Body, set_handler_state(State, HandlerState1)}};
+                {false, Headers, Body, HandlerState1} ->
+                    {false, {401, Headers, Body, set_handler_state(State, HandlerState1)}}
             end;
         false ->
             {true, State}
@@ -143,3 +142,8 @@ reply(Status, Headers, Body, Req, State) ->
         end,
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, State}.
+
+handler_terminate(Reason, Req, State) ->
+    Handler = get_handler(State),
+    HandlerState = get_handler_state(State),
+    Handler:terminate(Reason, Req, State).
