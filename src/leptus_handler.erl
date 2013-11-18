@@ -20,9 +20,9 @@ init(_Transport, Req, State) ->
     Handler = get_handler(State),
     Route = get_route(State),
     case handler_init(Handler, Route, Req) of
-        {ok, Req2, HandlerState} ->
-            State2 = set_handler_state(State, HandlerState),
-            {ok, Req2, State2};
+        {ok, HandlerState} ->
+            State1 = set_handler_state(State, HandlerState),
+            {ok, Req, State1};
         Else ->
             Else
     end.
@@ -53,9 +53,6 @@ get_handler_state(State) ->
 set_handler_state(State, HandlerState) ->
     State#state{handler_state=HandlerState}.
 
-handler_init(Handler, Route, Req) ->
-    Handler:init(Route, Req, []).
-
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
 
@@ -68,14 +65,18 @@ http_method(Method) ->
     %% TODO: decide to change or remove it
     list_to_atom([M - $A + $a || <<M>>  <= Method]).
 
+-spec handler_init(handler(), route(), req()) -> {ok, state()}.
+handler_init(Handler, Route, Req) ->
+    Handler:init(Route, Req, []).
+
 handle_request(Handler, Func, Route, Req, State) ->
     Response = case is_defined(Handler, Func) of
                    true ->
                        case handler_is_authorized(Handler, Route, Req, State) of
-                           true ->
+                           {true, State1} ->
                                %% method not allowed if function doesn't match
                                try
-                                   Handler:Func(Route, Req, State)
+                                   Handler:Func(Route, Req, State1)
                                catch
                                    error:function_clause ->
                                        method_not_allowed(Handler, Route)
@@ -90,25 +91,25 @@ handle_request(Handler, Func, Route, Req, State) ->
     reply(Response, Req).
 
 -spec handler_is_authorized(handler(), route(), req(), state()) ->
-                                   true
+                                   {true, state()}
                                        | {false, {401, body(), state()}}
                                        | {false, {401, headers(), body(), state()}}.
 handler_is_authorized(Handler, Route, Req, State) ->
     %% spec: is_authorized(Route, State, Req) ->
-    %%           true | {false, Body} | {false, json, JsonTerm}.
+    %%           {true, State} | {false, Body, State} | {false, Headers, Body, State}.
     case is_defined(Handler, is_authorized) of
         true ->
             HandlerState = get_handler_state(State),
             case Handler:is_authorized(Route, Req, HandlerState) of
-                true ->
-                    true;
-                {false, {Body, State1}} ->
+                {true, State1} ->
+                    {true, State1};
+                {false, Body, State1} ->
                     {false, {401, Body, State1}};
                 {false, Headers, Body, State1} ->
                     {false, {401, Headers, Body, State1}}
             end;
         false ->
-            true
+            {true, State}
     end.
 
 method_not_allowed(Handler, Route) ->
