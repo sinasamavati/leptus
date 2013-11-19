@@ -16,11 +16,12 @@
 
 
 init_per_suite(Config) ->
-    {ok, _} =
-        leptus:start_http(
-          {modules,
-           [leptus_http1, leptus_http2, leptus_http3]
-          }),
+    Handlers = [
+                {leptus_http1, []},
+                {leptus_http2, []},
+                {leptus_http3, []}
+               ],
+    {ok, _} = leptus:start_http(Handlers),
     Config.
 
 end_per_suite(_Config) ->

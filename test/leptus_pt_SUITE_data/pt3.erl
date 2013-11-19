@@ -9,12 +9,13 @@
 -export([delete/3]).
 -export([terminate/3]).
 
-init(_Route, _Req, _State) ->
+init(_Route, _Req, State) ->
+    State = state0,
     {ok, state1}.
 
 get("/", _, State) ->
     State = state1,
-    {200, <<>>, state2}.
+    {<<>>, state2}.
 
 put("/old", _, State) ->
     State = state1,
