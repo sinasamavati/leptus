@@ -11,46 +11,52 @@
 -type status() :: non_neg_integer() | binary().
 -type headers() :: json | cowboy:http_headers().
 -type body() :: binary() | string().
--type state() :: any().
+-type handler_state() :: any().
 
--record(state, {handler, route, handler_state}).
+-record(ctx, {
+          handler :: module(),
+          route :: route(),
+          handler_state :: handler_state()
+         }).
+-type ctx() :: #ctx{}.
 
 
-init(_Transport, Req, State) ->
-    Handler = get_handler(State),
-    Route = get_route(State),
-    case handler_init(Handler, Route, Req) of
-        {ok, HandlerState} ->
-            State1 = set_handler_state(State, HandlerState),
-            {ok, Req, State1};
+init(_Transport, Req, Ctx) ->
+    Handler = get_handler(Ctx),
+    Route = get_route(Ctx),
+    HandlerState = get_handler_state(Ctx),
+    case handler_init(Handler, Route, Req, HandlerState) of
+        {ok, HandlerState1} ->
+            Ctx1 = set_handler_state(Ctx, HandlerState1),
+            {ok, Req, Ctx1};
         Else ->
             Else
     end.
 
-handle(Req, State) ->
-    Handler = get_handler(State),
-    Route = get_route(State),
+handle(Req, Ctx) ->
+    Handler = get_handler(Ctx),
+    Route = get_route(Ctx),
 
     %% convert the http method to a lowercase atom
     Func = http_method(leptus_req:method(Req)),
-    handle_request(Handler, Func, Route, Req, State).
+    handle_request(Handler, Func, Route, Req, Ctx).
 
-terminate(Reason, Req, State) ->
-    handler_terminate(Reason, Req, State).
+terminate(Reason, Req, Ctx) ->
+    handler_terminate(Reason, Req, Ctx).
 
 
 %% internal
-get_handler(State) ->
-    State#state.handler.
+get_handler(Ctx) ->
+    Ctx#ctx.handler.
 
-get_route(State) ->
-    State#state.route.
+get_route(Ctx) ->
+    Ctx#ctx.route.
 
-get_handler_state(State) ->
-    State#state.handler_state.
+get_handler_state(Ctx) ->
+    Ctx#ctx.handler_state.
 
-set_handler_state(State, HandlerState) ->
-    State#state{handler_state=HandlerState}.
+set_handler_state(Ctx, HandlerState) ->
+    Ctx#ctx{handler_state=HandlerState}.
 
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
@@ -64,18 +70,19 @@ http_method(Method) ->
     %% TODO: decide to change or remove it
     list_to_atom([M - $A + $a || <<M>>  <= Method]).
 
--spec handler_init(handler(), route(), req()) -> {ok, state()}.
-handler_init(Handler, Route, Req) ->
-    Handler:init(Route, Req, []).
+-spec handler_init(handler(), route(), req(), handler_state()) -> {ok, handler_state()}.
+handler_init(Handler, Route, Req, HandlerState) ->
+    Handler:init(Route, Req, HandlerState).
 
-handle_request(Handler, Func, Route, Req, State) ->
+handle_request(Handler, Func, Route, Req, Ctx) ->
+    HandlerState = get_handler_state(Ctx),
     Response = case is_defined(Handler, Func) of
                    true ->
-                       case handler_is_authorized(Handler, Route, Req, State) of
-                           {true, State1} ->
+                       case handler_is_authorized(Handler, Route, Req, HandlerState) of
+                           {true, HandlerState1} ->
                                %% method not allowed if function doesn't match
                                try
-                                   Handler:Func(Route, Req, State1)
+                                   Handler:Func(Route, Req, HandlerState1)
                                catch
                                    error:function_clause ->
                                        method_not_allowed(Handler, Route)
@@ -87,28 +94,30 @@ handle_request(Handler, Func, Route, Req, State) ->
                        %% method not allowed if function is not exported
                        method_not_allowed(Handler, Route)
                end,
-    reply(Response, Req).
+    reply(Response, Req, Ctx).
 
--spec handler_is_authorized(handler(), route(), req(), state()) ->
-                                   {true, state()}
-                                       | {false, {401, body(), state()}}
-                                       | {false, {401, headers(), body(), state()}}.
-handler_is_authorized(Handler, Route, Req, State) ->
-    %% spec: is_authorized(Route, State, Req) ->
-    %%           {true, State} | {false, Body, State} | {false, Headers, Body, State}.
+-spec handler_is_authorized(handler(), route(), req(), handler_state()) ->
+                                   {true, handler_state()}
+                                       | {false, {401, body(), handler_state()}}
+                                       | {false, {401, headers(), body(), handler_state()}}.
+handler_is_authorized(Handler, Route, Req, HandlerState) ->
+    %%
+    %% spec:
+    %%   is_authorized(Route, Req, State) ->
+    %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
+    %%
     case is_defined(Handler, is_authorized) of
         true ->
-            HandlerState = get_handler_state(State),
             case Handler:is_authorized(Route, Req, HandlerState) of
                 {true, HandlerState1} ->
-                    {true, set_handler_state(State, HandlerState1)};
+                    {true, HandlerState1};
                 {false, Body, HandlerState1} ->
-                    {false, {401, Body, set_handler_state(State, HandlerState1)}};
+                    {false, {401, Body, HandlerState1}};
                 {false, Headers, Body, HandlerState1} ->
-                    {false, {401, Headers, Body, set_handler_state(State, HandlerState1)}}
+                    {false, {401, Headers, Body, HandlerState1}}
             end;
         false ->
-            {true, State}
+            {true, HandlerState}
     end.
 
 method_not_allowed(Handler, Route) ->
@@ -116,18 +125,18 @@ method_not_allowed(Handler, Route) ->
     <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
     {405, [{<<"Allow">>, Allow}], <<>>}.
 
--spec reply({body(), state()}
-            | {status(), body(), state()}
-            | {status(), headers(), body(), state()}, req()) ->
-                   {ok, req(), state()}.
-reply({Body, State}, Req) ->
-    reply(200, [], Body, Req, State);
-reply({Status, Body, State}, Req) ->
-    reply(Status, [], Body, Req, State);
-reply({Status, Headers, Body, State}, Req) ->
-    reply(Status, Headers, Body, Req, State).
+-spec reply({body(), handler_state()}
+            | {status(), body(), handler_state()}
+            | {status(), headers(), body(), handler_state()}, req(), ctx()) ->
+                   {ok, req(), handler_state()}.
+reply({Body, HandlerState}, Req, Ctx) ->
+    reply(200, [], Body, Req, HandlerState, Ctx);
+reply({Status, Body, HandlerState}, Req, Ctx) ->
+    reply(Status, [], Body, Req, HandlerState, Ctx);
+reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
+    reply(Status, Headers, Body, Req, HandlerState, Ctx).
 
-reply(Status, Headers, Body, Req, State) ->
+reply(Status, Headers, Body, Req, HandlerState, Ctx) ->
     {
       Headers1,
       Body1
@@ -141,9 +150,9 @@ reply(Status, Headers, Body, Req, State) ->
                 {Headers, Body}
         end,
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
-    {ok, Req1, State}.
+    {ok, Req1, set_handler_state(Ctx, HandlerState)}.
 
-handler_terminate(Reason, Req, State) ->
-    Handler = get_handler(State),
-    HandlerState = get_handler_state(State),
+handler_terminate(Reason, Req, Ctx) ->
+    Handler = get_handler(Ctx),
+    HandlerState = get_handler_state(Ctx),
     Handler:terminate(Reason, Req, HandlerState).
