@@ -3,23 +3,35 @@
 
 -export([paths/1]).
 
--type route() :: string().
--type routes_proplist() :: [{module(), route()}].
+-type handler() :: module().
+-type route() :: cowboy_router:route_match().
+-type state() :: any().
 
--spec paths([module()]) -> cowboy_router:dispatch_rules().
-paths(Mods) ->
-    handle_routes(fetch_routes(Mods, []), []).
+-record(ctx,
+        {
+          handler :: handler(),
+          route :: route(),
+          handler_state :: state()
+        }).
+-type ctx() :: #ctx{}.
+
+
+-spec paths([{handler(), state()}]) -> cowboy_router:dispatch_rules().
+paths(Handlers) ->
+    handle_routes(fetch_routes(Handlers, []), []).
 
 %% internal
--spec fetch_routes([module()], []) -> routes_proplist().
+-spec fetch_routes([{handler(), state()}], []) -> [ctx()].
 fetch_routes([], Acc) ->
     Acc;
-fetch_routes([Mod|T], Acc) ->
+fetch_routes([{Handler, State}|T], Acc) ->
     %% each module must have routes/0 -> [string()].
-    fetch_routes(T, Acc ++ [{Mod, Route} || Route <- Mod:routes()]).
+    Ctx = [#ctx{handler=Handler, route=Route, handler_state=State}
+           ||  Route <- Handler:routes()],
+    fetch_routes(T, Acc ++ Ctx).
 
--spec handle_routes(routes_proplist(), []) -> [cowboy_router:route_path()].
+-spec handle_routes([ctx()], []) -> [cowboy_router:route_path()].
 handle_routes([], Acc) ->
     Acc;
-handle_routes([{Mod, Route}|T], Acc) ->
-    handle_routes(T, Acc ++ [{Route, leptus_resouce_handler, {Mod, Route}}]).
+handle_routes([Ctx|T], Acc) ->
+    handle_routes(T, Acc ++ [{Ctx#ctx.route, leptus_handler, Ctx}]).
