@@ -14,7 +14,7 @@
 start_http() ->
     start_http(get_value(handlers, config(), [])).
 
--spec start_http([{module(), any()}]) -> {ok, pid()} | {error, any()}.
+-spec start_http([{module(), State :: any()}]) -> {ok, pid()} | {error, any()}.
 start_http(Handlers) ->
     %% ensure dependencies are started
     ensure_started(crypto),
@@ -44,11 +44,11 @@ stop_http() ->
 
 -spec upgrade() -> ok.
 upgrade() ->
-    upgrade(get_value(modules, config(), [])).
+    upgrade(get_value(handlers, config(), [])).
 
--spec upgrade([module()]) -> ok.
-upgrade(Mods) ->
-    Paths = leptus_router:paths(Mods),
+-spec upgrade([{module(), State :: any()}]) -> ok.
+upgrade(Handlers) ->
+    Paths = leptus_router:paths(Handlers),
     cowboy:set_env(http, dispatch, cowboy_router:compile([{'_', Paths}])).
 
 
