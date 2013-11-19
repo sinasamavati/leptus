@@ -1,4 +1,5 @@
 -module(leptus_handler).
+-author("Sina Samavati <sina.samv@gmail.com>").
 
 %% cowboy callbacks
 -export([init/3]).
@@ -85,14 +86,14 @@ handle_request(Handler, Func, Route, Req, Ctx) ->
                                    Handler:Func(Route, Req, HandlerState1)
                                catch
                                    error:function_clause ->
-                                       method_not_allowed(Handler, Route)
+                                       method_not_allowed(Handler, Route, HandlerState)
                                end;
                            {false, Res} ->
                                Res
                        end;
                    false ->
                        %% method not allowed if function is not exported
-                       method_not_allowed(Handler, Route)
+                       method_not_allowed(Handler, Route, HandlerState)
                end,
     reply(Response, Req, Ctx).
 
@@ -120,23 +121,23 @@ handler_is_authorized(Handler, Route, Req, HandlerState) ->
             {true, HandlerState}
     end.
 
-method_not_allowed(Handler, Route) ->
+method_not_allowed(Handler, Route, HandlerState) ->
     Methods = Handler:allowed_methods(Route),
     <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
-    {405, [{<<"Allow">>, Allow}], <<>>}.
+    {405, [{<<"Allow">>, Allow}], <<>>, HandlerState}.
 
 -spec reply({body(), handler_state()}
             | {status(), body(), handler_state()}
             | {status(), headers(), body(), handler_state()}, req(), ctx()) ->
                    {ok, req(), handler_state()}.
 reply({Body, HandlerState}, Req, Ctx) ->
-    reply(200, [], Body, Req, HandlerState, Ctx);
+    reply(200, [], Body, HandlerState, Req, Ctx);
 reply({Status, Body, HandlerState}, Req, Ctx) ->
-    reply(Status, [], Body, Req, HandlerState, Ctx);
+    reply(Status, [], Body, HandlerState, Req, Ctx);
 reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
-    reply(Status, Headers, Body, Req, HandlerState, Ctx).
+    reply(Status, Headers, Body, HandlerState, Req, Ctx).
 
-reply(Status, Headers, Body, Req, HandlerState, Ctx) ->
+reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     {
       Headers1,
       Body1
