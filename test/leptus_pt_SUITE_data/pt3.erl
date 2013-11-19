@@ -1,19 +1,37 @@
 -module(pt3).
 -compile({parse_transform, leptus_pt}).
 
--export([get/2]).
--export([put/2]).
--export([post/2]).
--export([delete/2]).
+%% leptus callbacks
+-export([init/3]).
+-export([get/3]).
+-export([put/3]).
+-export([post/3]).
+-export([delete/3]).
+-export([terminate/3]).
 
-get("/", _) ->
-    {200, <<>>}.
+init(_Route, _Req, _State) ->
+    {ok, state1}.
 
-put("/old", _) ->
-    {200, <<>>}.
+get("/", _, State) ->
+    State = state1,
+    {200, <<>>, state2}.
 
-post("/new", _) ->
-    {201, <<>>}.
+put("/old", _, State) ->
+    State = state1,
+    {200, <<>>, state3}.
 
-delete("/old", _) ->
-    {204, <<>>}.
+post("/new", _, State) ->
+    State = state1,
+    {201, <<>>, state4}.
+
+delete("/old", _, State) ->
+    State = state1,
+    {204, <<>>, State}.
+
+terminate(_Reason, _Req, State) ->
+    case State of
+        state1 -> ok;
+        state2 -> ok;
+        state3 -> ok;
+        state4 -> ok
+    end.
