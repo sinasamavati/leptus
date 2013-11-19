@@ -12,17 +12,17 @@
 
 -spec start_http() -> {ok, pid()} | {error, any()}.
 start_http() ->
-    start_http({modules, get_value(modules, config(), [])}).
+    start_http(get_value(handlers, config(), [])).
 
--spec start_http({modules, [module()]}) -> {ok, pid()} | {error, any()}.
-start_http({modules, Mods}) ->
+-spec start_http([{module(), any()}]) -> {ok, pid()} | {error, any()}.
+start_http(Handlers) ->
     %% ensure dependencies are started
     ensure_started(crypto),
     ensure_started(ranch),
     ensure_started(cowboy),
 
     %% routes
-    Paths = leptus_router:paths(Mods),
+    Paths = leptus_router:paths(Handlers),
     Dispatch = cowboy_router:compile([{'_', Paths}]),
 
     %% basic http configuration
