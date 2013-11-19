@@ -19,7 +19,7 @@ do_transform([{attribute, _, export, _}=H|T], Acc) ->
             %% export routes/0 if it's not done
             do_transform(T, Acc ++ [export_funcs(H)])
     end;
-do_transform([{function, _, Method, 2, _}=H|T], Acc)
+do_transform([{function, _, Method, 3, _}=H|T], Acc)
   when Method =:= get; Method =:= put; Method =:= post; Method =:= delete ->
     case is_transformed(Method) of
         true ->
@@ -37,7 +37,7 @@ export_funcs({attribute, L, export, Funcs}) ->
     {attribute, L, export, Funcs ++ [{routes, 0}, {allowed_methods, 1}]}.
 
 %% check functions' head
-transform_clause({function, _, Method, 2, Clause}=H) ->
+transform_clause({function, _, Method, 3, Clause}=H) ->
     %% collect routes
     F = fun({clause, _, E, _, _}=Token) ->
                 %% e.g. get("/", _Req)
