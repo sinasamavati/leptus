@@ -1,6 +1,6 @@
 # Leptus [![Build Status](https://travis-ci.org/s1n4/leptus.png?branch=master)](https://travis-ci.org/s1n4/leptus)
 
-Leptus is a micro web framework that runs on top of cowboy.
+Leptus is an Erlang REST framework that runs on top of cowboy.
 
 Leptus aims at simply creating RESTful APIs.
 
@@ -12,7 +12,11 @@ Leptus aims at simply creating RESTful APIs.
 
 ## Installation
 
-Run `make` or add the following to your rebar configuration
+Clone it and just run `make`
+
+OR
+
+If you want to use it as a dependency in your project add the following to your rebar configuration
 
 ```
 {deps, [
@@ -108,7 +112,6 @@ MIT, see LICENSE file for more details.
 
 ## TODO
 
-* Write documentation
 * Add hooks
 * Add examples
 * ...
