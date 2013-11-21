@@ -2,7 +2,7 @@
 
 {application, leptus,
  [
-  {description, "A micro web framework that aims at creating RESTful APIs."},
+  {description, "REST framework that runs on top of cowboy"},
   {vsn, "0.0.3"},
   {registered, []},
   {applications, [
