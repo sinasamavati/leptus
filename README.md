@@ -1,8 +1,8 @@
-# Leptus (work in progress) [![Build Status](https://travis-ci.org/s1n4/leptus.png?branch=master)](https://travis-ci.org/s1n4/leptus)
+# Leptus [![Build Status](https://travis-ci.org/s1n4/leptus.png?branch=master)](https://travis-ci.org/s1n4/leptus)
 
-Leptus is a micro web framework that runs on top of cowboy.
+Leptus is an Erlang REST framework that runs on top of cowboy.
 
-Leptus aims at simply creating RESTful API.
+Leptus aims at simply creating RESTful APIs.
 
 ## Requirements
 
@@ -12,7 +12,11 @@ Leptus aims at simply creating RESTful API.
 
 ## Installation
 
-Run `make` or add it to your rebar configuration
+Clone it and just run `make`
+
+OR
+
+If you want to use it as a dependency in your project add the following to your rebar configuration
 
 ```
 {deps, [
@@ -27,19 +31,24 @@ Run `make` or add it to your rebar configuration
 -module(rq_handler).
 -compile({parse_transform, leptus_pt}).
 
-%% leptus callback
--export([get/2]).
+%% leptus callbacks
+-export([init/3]).
+-export([get/3]).
+-export([terminate/3]).
 
-get("/", _Req) ->
-    Status = 200,
-    Body = <<"Hello, leptus!">>,
-    {Status, Body};
+init(_Route, _Req, State) ->
+    {ok, State}.
 
-get("/hello/:name", Req) ->
+get("/", _Req, State) ->
+    {<<"Hello, leptus!">>, State};
+get("/hello/:name", Req, State) ->
     Status = 200,
     Name = leptus_req:binding(name, Req),
     Body = <<"Hello, ", Name/binary>>,
-    {Status, Body}.
+    {Status, Body, State}.
+
+terminate(_Reason, _Req, _State) ->
+    ok.
 ```
 
 ```
@@ -47,7 +56,9 @@ $ erl -pa ebin deps/*/ebin
 ```
 
 ```erlang
-1> leptus:start_http({modules, [rq_handler]}).
+1> c(rq_handler).
+2> Handlers = [{rq_handler, []}].
+3> leptus:start_http(Handlers).
 ```
 
 ## Configuration
@@ -56,8 +67,8 @@ Leptus configuration file must be named `leptus.config` and put in `priv` direct
 
 There are two types of configuration that can be defined:
 
-  * http
-  * modules (request handlers)
+  * http (basic http configuration)
+  * handlers (request handlers)
 
 #### http
 
@@ -72,9 +83,9 @@ IP address and port number have default values: `127.0.0.1:8000`, but you can ov
 }.
 ```
 
-#### modules
+#### handlers
 
-Leptus must know your request handlers, and they must be defined as `{modules, [module()]}.` in `leptus.config`
+Leptus must know your request handlers and their states, they should be defined as `{handlers, [{module(), state()}]}.` in `leptus.config`
 
 #### leptus.config example
 
@@ -88,8 +99,10 @@ Leptus must know your request handlers, and they must be defined as `{modules, [
  ]
 }.
 
-{modules,
- [rq_handler]
+{handlers,
+ [
+  {rq_handler, []}
+ ]
 }.
 ```
 
@@ -99,7 +112,6 @@ MIT, see LICENSE file for more details.
 
 ## TODO
 
-* Write documentation
 * Add hooks
 * Add examples
 * ...
