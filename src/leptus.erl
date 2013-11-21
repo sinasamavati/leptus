@@ -91,7 +91,7 @@ config() ->
     {ok, Cwd} = file:get_cwd(),
     case file:consult(filename:join([Cwd, "priv", "leptus.config"])) of
         {error, _} ->
-            [];
+            error("priv/leptus.config not found");
         {ok, Terms} ->
             Terms
     end.
