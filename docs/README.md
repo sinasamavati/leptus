@@ -9,6 +9,15 @@ So, I suggest you using the following in your request handlers (modules):
 -compile({parse_transform, leptus_pt}).
 ```
 
+## Types
+
+```erlang
+Status :: non_neg_integer() | binary().
+Body :: string() | binary().
+Headers :: [{binary(), iodata()}] | json.
+State :: any().
+```
+
 ## Table of contents
 
 * [Callbacks](callbacks.md)

@@ -51,7 +51,8 @@ post("/new", Req, State) ->
 
 delete("/:id", Req, State) ->
     ...
-    {204, <<"deleted">>, State}.
+    %% Body as a json
+    {204, json, [{<<"message">>, <<"deleted">>}], State}.
 ```
 
 #### terminate/3
