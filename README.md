@@ -112,6 +112,8 @@ MIT, see LICENSE file for more details.
 
 ## TODO
 
-* Add hooks
+* Add code upgrade functionality
+* Add http streaming support
+* Add hooks capability
 * Add examples
 * ...
