@@ -61,6 +61,11 @@ $ erl -pa ebin deps/*/ebin
 3> leptus:start_http(Handlers).
 ```
 
+```
+$ curl localhost:8000/hi/Leptus
+{"say":"Hi","to":"Leptus"}
+```
+
 ## Configuration
 
 Leptus configuration file must be named `leptus.config` and put in `priv` directory.
