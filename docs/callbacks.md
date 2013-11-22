@@ -16,7 +16,7 @@ Module:init(Route, Req, State) ->
 
 #### is_authorized/3
 
-Exporting this callback in a module means that every request that should come to the request handler needs, authorization.
+Exporting this callback in a module means that every request that should come to the request handler needs authorization.
 
 ```erlang
 Module:is_authorized(Route, Req, State) ->

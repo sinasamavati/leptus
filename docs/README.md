@@ -12,3 +12,4 @@ So, I suggest you using the following in your request handlers (modules):
 ## Table of contents
 
 * [Callbacks](callbacks.md)
+* [Configuration](configuration.md)
