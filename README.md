@@ -41,11 +41,11 @@ init(_Route, _Req, State) ->
 
 get("/", _Req, State) ->
     {<<"Hello, leptus!">>, State};
-get("/hello/:name", Req, State) ->
+get("/hi/:name", Req, State) ->
     Status = 200,
     Name = leptus_req:param(name, Req),
-    Body = <<"Hello, ", Name/binary>>,
-    {Status, Body, State}.
+    Body = [{<<"say">>, <<"Hi">>}, {<<"to">>, Name}],
+    {Status, json, Body, State}.
 
 terminate(_Reason, _Req, _State) ->
     ok.
