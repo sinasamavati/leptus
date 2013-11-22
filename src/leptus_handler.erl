@@ -129,7 +129,7 @@ method_not_allowed(Handler, Route, HandlerState) ->
 -spec reply({body(), handler_state()}
             | {status(), body(), handler_state()}
             | {status(), headers(), body(), handler_state()}, req(), ctx()) ->
-                   {ok, req(), handler_state()}.
+                   {ok, req(), ctx()}.
 reply({Body, HandlerState}, Req, Ctx) ->
     reply(200, [], Body, HandlerState, Req, Ctx);
 reply({Status, Body, HandlerState}, Req, Ctx) ->
