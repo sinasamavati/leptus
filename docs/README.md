@@ -13,15 +13,16 @@ So, I suggest you using the following in your request handlers (modules):
 
 There are three callbacks which are required for every request handler `init/3`, `HttpMethod/3` and `terminate/3`.
 
-* init/3
-* is_authorized/3
-* HttpMethod/3
-* terminate/3
+* [init/3](#init3)
+* [is_authorized/3](#isauthorized_3)
+* [HttpMethod/3](#httpmethod3)
+* [terminate/3](#terminate3)
 
 #### init/3
 
 ```erlang
-Module:init(Route, Req, State) -> {ok, State}.
+Module:init(Route, Req, State) ->
+    {ok, State}.
 ```
 
 #### is_authorized/3
@@ -29,7 +30,8 @@ Module:init(Route, Req, State) -> {ok, State}.
 Exporting this callback in a module means that every request that should come to the request handler needs, authorization.
 
 ```erlang
-Module:is_authorized(Route, Req, State) -> {true, State} | {false, Body, State} | {false, Headers, Body, State}.
+Module:is_authorized(Route, Req, State) ->
+    {true, State} | {false, Body, State} | {false, Headers, Body, State}.
 ```
 
 #### HttpMethod/3
@@ -37,7 +39,8 @@ Module:is_authorized(Route, Req, State) -> {true, State} | {false, Body, State} 
 This means `get/3`, `put/3`, `post/3`, `delete/3`.
 
 ```erlang
-Module:HttpMethod(Route, Req, State) -> {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}.
+Module:HttpMethod(Route, Req, State) ->
+    {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}.
 ```
 
 In this case, `Route` must be a pattern matching.
@@ -45,18 +48,25 @@ In this case, `Route` must be a pattern matching.
 Examples:
 
 ```erlang
-get("/", Req, State)..;
-get("/hello/:name", Req, State)...
+get("/", Req, State) ->
+    ...
+    {<<"index">>, State}.
 
-post("/new", Req, State)...
+put("/:id/edit", Req, State) ->
+    ...
+    {200, <<"edited">>, State}.
 
-put("/:id", Req, State)...
+post("/new", Req, State) ->
+    ...
+    {201, <<"created">>, State}.
 
-delete("/:id", Req, State)...
+delete("/:id", Req, State) ->
+    ...
+    {204, <<"deleted">>, State}.
 ```
 
 #### terminate/3
 
 ```erlang
 Module:terminate(Reason, Req, State) -> ok.
-``
+```
