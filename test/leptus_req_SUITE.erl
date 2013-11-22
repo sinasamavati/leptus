@@ -1,8 +1,8 @@
 -module(leptus_req_SUITE).
 
 -export([all/0]).
--export([binding/1]).
--export([bindings/1]).
+-export([param/1]).
+-export([params/1]).
 -export([qs/1]).
 -export([qs_val/1]).
 -export([uri/1]).
@@ -18,20 +18,20 @@
 
 all() ->
     [
-     binding, bindings, qs, qs_val, uri, version, body, body_raw, body_qs,
+     param, params, qs, qs_val, uri, version, body, body_raw, body_qs,
      header, parse_header, auth, method
     ].
 
-binding(_) ->
-    true = undefined =:= leptus_req:binding(namez, req1()),
-    <<"leptus">> = leptus_req:binding(name, req1()),
-    true = undefined =:= leptus_req:binding(idz, req1()),
-    <<"97dba1">> = leptus_req:binding(id, req1()),
-    undefined = leptus_req:binding(id, req2()).
+param(_) ->
+    true = undefined =:= leptus_req:param(namez, req1()),
+    <<"leptus">> = leptus_req:param(name, req1()),
+    true = undefined =:= leptus_req:param(idz, req1()),
+    <<"97dba1">> = leptus_req:param(id, req1()),
+    undefined = leptus_req:param(id, req2()).
 
-bindings(_) ->
-    [{name, <<"leptus">>}, {id, <<"97dba1">>}] = leptus_req:bindings(req1()),
-    [] = leptus_req:bindings(req2()).
+params(_) ->
+    [{name, <<"leptus">>}, {id, <<"97dba1">>}] = leptus_req:params(req1()),
+    [] = leptus_req:params(req2()).
 
 qs(_) ->
     <<>> = leptus_req:qs(req1()),

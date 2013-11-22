@@ -43,7 +43,7 @@ get("/", _Req, State) ->
     {<<"Hello, leptus!">>, State};
 get("/hello/:name", Req, State) ->
     Status = 200,
-    Name = leptus_req:binding(name, Req),
+    Name = leptus_req:param(name, Req),
     Body = <<"Hello, ", Name/binary>>,
     {Status, Body, State}.
 
@@ -115,4 +115,3 @@ MIT, see LICENSE file for more details.
 * Add hooks
 * Add examples
 * ...
-

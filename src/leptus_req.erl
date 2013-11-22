@@ -1,8 +1,8 @@
 %% a bunch of functions to deal with a request
 -module(leptus_req).
 
--export([binding/2]).
--export([bindings/1]).
+-export([param/2]).
+-export([params/1]).
 -export([qs/1]).
 -export([qs_val/2]).
 -export([uri/1]).
@@ -20,12 +20,12 @@
 -type req() :: cowboy_req:req().
 
 
--spec binding(atom(), req()) -> binary() | undefined.
-binding(Key, Req) ->
+-spec param(atom(), req()) -> binary() | undefined.
+param(Key, Req) ->
     get_value(cowboy_req:binding(Key, Req)).
 
--spec bindings(req()) -> [{atom(), binary()}] | undefined.
-bindings(Req) ->
+-spec params(req()) -> [{atom(), binary()}] | undefined.
+params(Req) ->
     Req#http_req.bindings.
 
 -spec qs(req()) -> binary().
