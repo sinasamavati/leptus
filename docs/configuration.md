@@ -4,8 +4,8 @@ Leptus configuration file must be named `leptus.config` and put in `priv` direct
 
 There are two types of configuration that can be defined:
 
-  * http (basic http configuration)
-  * handlers (request handlers)
+  * [http (basic http configuration)](#http)
+  * [handlers (request handlers)](#handlers)
 
 #### http
 
@@ -24,7 +24,7 @@ IP address and port number have default values: `127.0.0.1:8000`, but you can ov
 
 Leptus must know your request handlers and their states, they should be defined as `{handlers, [{module(), state()}]}.` in `leptus.config`
 
-### leptus.config example
+## Example
 
 ```erlang
 %% leptus.config

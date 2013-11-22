@@ -21,4 +21,11 @@ State :: any().
 ## Table of contents
 
 * [Callbacks](callbacks.md)
+  * [init/3](callbacks.md#init3)
+  * [is_authorized/3](callbacks.md#isauthorized_3)
+  * [HttpMethod/3](callbacks.md#httpmethod3)
+  * [terminate/3](callbacks.md#terminate3)
+
 * [Configuration](configuration.md)
+  * [http (basic http configuration)](configuration.md#http)
+  * [handlers (request handlers)](configuration.md#handlers)
