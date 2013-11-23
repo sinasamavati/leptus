@@ -71,14 +71,14 @@ add_routes_fun(AST) ->
     put(routes, Routes),
     AST1 = AST -- [{eof, L}],
     AST1 ++ [
-             {function, L + 1, routes, 0,
+             {function, L, routes, 0,
               [
-               {clause, L + 1, [], [],
-                [erl_parse:abstract(Routes, [{line, L + 2}])]
+               {clause, L, [], [],
+                [erl_parse:abstract(Routes, [{line, L}])]
                }
               ]
              },
-             {eof, L + 3}
+             {eof, L}
             ].
 
 %% add allowed_methods/1
@@ -86,18 +86,17 @@ add_routes_fun(AST) ->
 add_aw_fun(AST) ->
     {eof, L} = lists:keyfind(eof, 1, AST),
     Routes = get(routes),
-    put(line, L),
     AST1 = AST -- [{eof, L}],
 
     AST1 ++ [
-             {function, L + 1, allowed_methods, 1,
+             {function, L, allowed_methods, 1,
               [
-               {clause, get(line) + 1, [{string, get(line) + 1, R}], [],
-                [erl_parse:abstract(get(R), [{line, get(line) + 2}])]
-               } || R <- Routes, _ <- [put(line, L + 1)]
+               {clause, L, [{string, L, R}], [],
+                [erl_parse:abstract(get(R), [{line, L}])]
+               } || R <- Routes
               ]
              },
-             {eof, get(line) + 1}
+             {eof, L}
             ].
 
 %% give X the value 'true'
