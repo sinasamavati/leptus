@@ -26,5 +26,5 @@ So, I suggest you using the following in your request handlers (modules):
   * [handlers (request handlers)](configuration.md#handlers)
 
 * [Start](start.md)
-  * [For test purposes](#for-test-purposes)
-  * [The OTP way](#the-otp-way)
+  * [For test purposes](start.md#for-test-purposes)
+  * [The OTP way](start.md#the-otp-way)
