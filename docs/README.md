@@ -25,6 +25,8 @@ Status  :: non_neg_integer() | binary()
 Body    :: string() | binary() | json()
 Headers :: [{binary(), iodata()}] | json
 State   :: any()
+
+Handlers :: [{module(), State}]
 ```
 
 ## Table of contents
@@ -38,3 +40,17 @@ State   :: any()
 * [Configuration](configuration.md)
   * [http (basic http configuration)](configuration.md#http)
   * [handlers (request handlers)](configuration.md#handlers)
+
+## Start
+
+There are two functions to start leptus for test purposes:
+  * `leptus:start_http/0`, considers you've got the leptus.config file in your priv directory.
+  * `leptus:start_http/1`, needs the `Handlers` parameter.
+
+The way everyone recommends for starting an OTP application:
+```erlang
+application:start(crypto),
+application:start(ranch),
+application:start(cowboy),
+application:start(leptus). %% priv/leptus.config must be existing
+```

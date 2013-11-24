@@ -1,6 +1,6 @@
 # Callbacks
 
-There are three callbacks which are required for every request handler `init/3`, `HttpMethod/3` and `terminate/3`.
+There are three callbacks which are required for every request handler: `init/3`, `HttpMethod/3` and `terminate/3`.
 
 * [init/3](#init3)
 * [is_authorized/3](#isauthorized_3)
@@ -58,5 +58,6 @@ delete("/:id", Req, State) ->
 #### terminate/3
 
 ```erlang
-Module:terminate(Reason, Req, State) -> ok.
+Module:terminate(Reason, Req, State) ->
+    ok.
 ```
