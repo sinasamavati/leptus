@@ -1,4 +1,6 @@
-# Guide
+# Documentations
+
+## Preface
 
 First off, let me talk about a *thing* that makes Leptus simple. Parse transformation, the *thing* that saves us some headache, so now we've got a rule,
 using the module `leptus_pt` for doing the parse transformation when compiling our request handlers (modules).
@@ -9,27 +11,9 @@ So, I suggest you using the following in your request handlers (modules):
 -compile({parse_transform, leptus_pt}).
 ```
 
-## Types
-
-```erlang
-json() = [json()]
-    | [{binary() | atom(), json_term()}]
-    | true
-    | false
-    | null
-    | integer()
-    | float()
-    | binary()
-
-Status  :: non_neg_integer() | binary()
-Body    :: string() | binary() | json()
-Headers :: [{binary(), iodata()}] | json
-State   :: any()
-
-Handlers :: [{module(), State}]
-```
-
 ## Table of contents
+
+* [Types](types.md)
 
 * [Callbacks](callbacks.md)
   * [init/3](callbacks.md#init3)
@@ -41,16 +25,6 @@ Handlers :: [{module(), State}]
   * [http (basic http configuration)](configuration.md#http)
   * [handlers (request handlers)](configuration.md#handlers)
 
-## Start
-
-There are two functions to start leptus for test purposes:
-  * `leptus:start_http/0`, considers you've got the leptus.config file in your priv directory.
-  * `leptus:start_http/1`, needs the `Handlers` parameter.
-
-The way everyone recommends for starting an OTP application:
-```erlang
-application:start(crypto),
-application:start(ranch),
-application:start(cowboy),
-application:start(leptus). %% priv/leptus.config must be existing
-```
+* [Start](start.md)
+  * [For test purposes](#for-test-purposes)
+  * [The OTP way](#the-otp-way)
