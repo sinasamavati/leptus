@@ -1,8 +1,8 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
+%%! -pa ebin deps/*/ebin
 
 main(_) ->
-    code:add_path("./ebin"),
     Handlers = [H || {H, _} <- get_value(handlers, leptus:config(), [])],
     F = fun(H) ->
                 F1 = fun(R) ->
