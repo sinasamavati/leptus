@@ -10,7 +10,7 @@ parse_transform(AST, _Options) ->
 
 %% internal
 do_transform([], Acc) ->
-    add_aw_fun(add_routes_fun(Acc));
+    add_allowed_methods_fun(add_routes_fun(Acc));
 do_transform([{attribute, _, export, _}=H|T], Acc) ->
     case is_transformed(export_funcs) of
         true ->
@@ -83,7 +83,7 @@ add_routes_fun(AST) ->
 
 %% add allowed_methods/1
 %% e.g allowed_methods("/") -> [<<"GET">>, <<"PUT">>].
-add_aw_fun(AST) ->
+add_allowed_methods_fun(AST) ->
     {eof, L} = lists:keyfind(eof, 1, AST),
     Routes = get(routes),
     AST1 = AST -- [{eof, L}],
