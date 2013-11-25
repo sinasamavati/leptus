@@ -8,6 +8,7 @@
 -export([stop_http/0]).
 -export([upgrade/0]).
 -export([upgrade/1]).
+-export([config/0]).
 
 
 -spec start_http() -> {ok, pid()} | {error, any()}.
