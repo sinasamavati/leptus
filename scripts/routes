@@ -1,0 +1,27 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+
+main(_) ->
+    code:add_path("./ebin"),
+    Handlers = [H || {H, _} <- get_value(handlers, leptus:config(), [])],
+    F = fun(H) ->
+                F1 = fun(R) ->
+                             print(H, R)
+                     end,
+                lists:foreach(F1, H:routes())
+        end,
+    lists:foreach(F, Handlers).
+
+print(Handler, Route) ->
+    io:format("~p ~s ~s~n", [Handler, Route, allowed_methods(Handler, Route)]).
+
+allowed_methods(Handler, Route) ->
+    Methods = Handler:allowed_methods(Route),
+    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
+    Allow.
+
+get_value(Key, Proplist, Default) ->
+    case lists:keyfind(Key, 1, Proplist) of
+        {_, Value} -> Value;
+        _ -> Default
+    end.
