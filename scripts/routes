@@ -10,10 +10,13 @@ main(_) ->
                      end,
                 lists:foreach(F1, H:routes())
         end,
+    io:fwrite("~-30s ~-44s ~15s~n", ["Handler", "Route", "Allowed methods"]),
+    io:fwrite("~.98c~n~n", [$=]),
     lists:foreach(F, Handlers).
 
 print(Handler, Route) ->
-    io:format("~p ~s ~s~n", [Handler, Route, allowed_methods(Handler, Route)]).
+    Terms = [Handler, Route, allowed_methods(Handler, Route)],
+    io:fwrite("~-30s ~-44s ~-22s~n", Terms).
 
 allowed_methods(Handler, Route) ->
     Methods = Handler:allowed_methods(Route),
