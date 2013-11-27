@@ -69,11 +69,3 @@ $ curl localhost:8000/hi/Leptus
 ## License
 
 MIT, see LICENSE file for more details.
-
-## TODOs
-
-* Add code upgrade functionality
-* Add http streaming support
-* Add hooks capability
-* Add examples
-* ...
