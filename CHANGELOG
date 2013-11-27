@@ -1,0 +1,4 @@
+2013-11-27  Sina Samavati  <sina.samv@gmail.com>
+
+	* Add reloader.erl
+	code upgrade functionality now works by re-compiling modules (reloader must be started).
