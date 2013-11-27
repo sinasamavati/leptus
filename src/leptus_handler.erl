@@ -13,6 +13,7 @@
 -type headers() :: json | cowboy:http_headers().
 -type body() :: binary() | string().
 -type handler_state() :: any().
+-type method() :: get | put | post | delete.
 
 -record(ctx, {
           handler :: module(),
@@ -71,10 +72,13 @@ http_method(Method) ->
     %% TODO: decide to change or remove it
     list_to_atom([M - $A + $a || <<M>>  <= Method]).
 
--spec handler_init(handler(), route(), req(), handler_state()) -> {ok, handler_state()}.
+-spec handler_init(handler(), route(), req(), handler_state()) ->
+                          {ok, handler_state()}.
 handler_init(Handler, Route, Req, HandlerState) ->
     Handler:init(Route, Req, HandlerState).
 
+-spec handle_request(handler(), method(), route(), req(), ctx()) ->
+                            {ok, req(), ctx()}.
 handle_request(Handler, Func, Route, Req, Ctx) ->
     HandlerState = get_handler_state(Ctx),
     Response = case is_defined(Handler, Func) of
