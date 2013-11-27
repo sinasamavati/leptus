@@ -1,4 +1,7 @@
 2013-11-27  Sina Samavati  <sina.samv@gmail.com>
 
+	* Change Module:allowed_methods/1 to return a bitstring of HTTP methods
+	e.g. <<"GET, PUT">>
+
 	* Add reloader.erl
 	code upgrade functionality now works by re-compiling modules (reloader must be started).

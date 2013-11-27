@@ -92,7 +92,7 @@ add_allowed_methods_fun(AST) ->
              {function, L, allowed_methods, 1,
               [
                {clause, L, [{string, L, R}], [],
-                [erl_parse:abstract(get(R), [{line, L}])]
+                [erl_parse:abstract(join(get(R)), [{line, L}])]
                } || R <- Routes
               ]
              },
@@ -111,3 +111,7 @@ http_method(get) -> <<"GET">>;
 http_method(put) -> <<"PUT">>;
 http_method(post) -> <<"POST">>;
 http_method(delete) -> <<"DELETE">>.
+
+join(Methods) ->
+    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
+    Allow.

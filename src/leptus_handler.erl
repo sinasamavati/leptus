@@ -127,8 +127,7 @@ handler_is_authorized(Handler, Route, Req, HandlerState) ->
 
 method_not_allowed(Handler, Route, HandlerState) ->
     Methods = Handler:allowed_methods(Route),
-    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
-    {405, [{<<"Allow">>, Allow}], <<>>, HandlerState}.
+    {405, [{<<"Allow">>, Methods}], <<>>, HandlerState}.
 
 -spec reply({body(), handler_state()}
             | {status(), body(), handler_state()}
