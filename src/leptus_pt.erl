@@ -16,7 +16,7 @@ do_transform([{attribute, _, export, _}=H|T], Acc) ->
         true ->
             do_transform(T, Acc ++ [H]);
         _ ->
-            %% export routes/0 if it's not done
+            %% export routes/0 and allowed_methods/1
             do_transform(T, Acc ++ [export_funcs(H)])
     end;
 do_transform([{function, _, Method, 3, _}=H|T], Acc)
@@ -31,7 +31,7 @@ do_transform([{function, _, Method, 3, _}=H|T], Acc)
 do_transform([H|T], Acc) ->
     do_transform(T, Acc ++ [H]).
 
-%% export routes/0 and allowed_methods/1.
+%% export routes/0 and allowed_methods/1
 export_funcs({attribute, L, export, Funcs}) ->
     transformed(export_funcs),
     {attribute, L, export, Funcs ++ [{routes, 0}, {allowed_methods, 1}]}.
@@ -40,7 +40,7 @@ export_funcs({attribute, L, export, Funcs}) ->
 transform_clause({function, _, Method, 3, Clause}=H) ->
     %% collect routes
     F = fun({clause, _, E, _, _}=Token) ->
-                %% e.g. get("/", _Req)
+                %% e.g. get("/", _Req, _State)
                 {string, _, Route} = hd(E),
                 add_route(Route, Method),
                 Token
@@ -81,8 +81,8 @@ add_routes_fun(AST) ->
              {eof, L}
             ].
 
-%% add allowed_methods/1
-%% e.g allowed_methods("/") -> [<<"GET">>, <<"PUT">>].
+%% add allowed_methods/1 to the module
+%% e.g allowed_methods("/") -> <<"GET, PUT">>.
 add_allowed_methods_fun(AST) ->
     {eof, L} = lists:keyfind(eof, 1, AST),
     Routes = get(routes),
