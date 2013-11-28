@@ -69,3 +69,7 @@ $ curl localhost:8000/hi/Leptus
 ## License
 
 MIT, see LICENSE file for more details.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/s1n4/leptus/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
