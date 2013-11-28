@@ -1,0 +1,16 @@
+2013-10-28  Sina Samavati  <sina.samv@gmail.com>
+
+	* Status bindings
+	e.g. not_found -> 404, error -> 500, ok -> 200...
+
+2013-10-28  Sina Samavati  <sina.samv@gmail.com>
+
+	* Customizable logging
+
+2013-10-26  Sina Samavati  <sina.samv@gmail.com>
+
+	* Unit-testing framework
+
+2013-10-26  Sina Samavati  <sina.samv@gmail.com>
+
+	* HTTP streaming support
