@@ -126,8 +126,7 @@ handler_is_authorized(Handler, Route, Req, HandlerState) ->
     end.
 
 method_not_allowed(Handler, Route, HandlerState) ->
-    Methods = Handler:allowed_methods(Route),
-    {405, [{<<"Allow">>, Methods}], <<>>, HandlerState}.
+    {405, [{<<"Allow">>, Handler:allowed_methods(Route)}], <<>>, HandlerState}.
 
 -spec reply({body(), handler_state()}
             | {status(), body(), handler_state()}
@@ -140,6 +139,7 @@ reply({Status, Body, HandlerState}, Req, Ctx) ->
 reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
     reply(Status, Headers, Body, HandlerState, Req, Ctx).
 
+-spec reply(status(), headers(), body(), handler_state(), req(), ctx()) -> {ok, req(), ctx()}.
 reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     {
       Headers1,
@@ -156,6 +156,7 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
 
+-spec handler_terminate(any(), req(), ctx()) -> ok.
 handler_terminate(Reason, Req, Ctx) ->
     Handler = get_handler(Ctx),
     HandlerState = get_handler_state(Ctx),
