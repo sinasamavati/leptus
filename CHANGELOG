@@ -1,3 +1,10 @@
+2013-11-29  Sina Samavati  <sina.samv@gmail.com>
+
+	* 0.1.1: fix parse transformation issue,
+	add ./scripts/routes to display handlers, routes and allowed methods in terminal
+	make code upgrade functionality work with minimal effort,
+	not allowed methods minor change (internal).
+
 2013-11-27  Sina Samavati  <sina.samv@gmail.com>
 
 	* Change Module:allowed_methods/1 to return a bitstring of HTTP methods
