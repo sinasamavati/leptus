@@ -3,7 +3,8 @@
 	* 0.1.1: fix parse transformation issue,
 	add ./scripts/routes to display handlers, routes and allowed methods in terminal
 	make code upgrade functionality work with minimal effort,
-	not allowed methods minor change (internal).
+	not allowed methods minor change (internal),
+	leptus_req.erl: change binding/2 to param/2 and bindings/1 to params/1.
 
 2013-11-27  Sina Samavati  <sina.samv@gmail.com>
 
