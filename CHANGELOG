@@ -1,5 +1,7 @@
 2013-11-29  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus.erl (start_http/1): avoid starting 'reloader'
+
 	* 0.1.1: fix parse transformation issue,
 	add ./scripts/routes to display handlers, routes and allowed methods in terminal
 	make code upgrade functionality work with minimal effort,
