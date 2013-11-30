@@ -1,3 +1,9 @@
+2013-12-01  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_handler.erl: add set_content_type/2
+	change Body spec, now it should be binary() | string() | {json, json_term()}
+	fix Headers issue, no longer needs to be invoked as 'json' when replying in JSON
+
 2013-11-29  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus.erl (start_http/1): avoid starting 'reloader'
