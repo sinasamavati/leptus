@@ -10,10 +10,18 @@
 -type req() :: cowboy_req:req().
 -type route() :: cowboy_router:route_match().
 -type status() :: non_neg_integer() | binary().
--type headers() :: json | cowboy:http_headers().
--type body() :: binary() | string().
+-type headers() :: cowboy:http_headers() | json.
+-type body() :: binary() | string() | json_term().
 -type handler_state() :: any().
 -type method() :: get | put | post | delete.
+-type json_term() :: [json_term()]
+                   | {binary() | atom(), json_term()}
+                   | true
+                   | false
+                   | null
+                   | integer()
+                   | float()
+                   | binary().
 
 -record(ctx, {
           handler :: module(),
@@ -139,7 +147,8 @@ reply({Status, Body, HandlerState}, Req, Ctx) ->
 reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
     reply(Status, Headers, Body, HandlerState, Req, Ctx).
 
--spec reply(status(), headers(), body(), handler_state(), req(), ctx()) -> {ok, req(), ctx()}.
+-spec reply(status(), headers(), body(), handler_state(), req(), ctx()) ->
+                   {ok, req(), ctx()}.
 reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     {
       Headers1,
