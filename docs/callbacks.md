@@ -47,12 +47,12 @@ put("/:id/edit", Req, State) ->
 
 post("/new", Req, State) ->
     ...
-    {201, <<"created">>, State}.
+    {201, [{<<"Location">>, <<"/data/386">>}], <<"created">>, State}.
 
 delete("/:id", Req, State) ->
     ...
     %% Body as a json
-    {204, json, [{<<"message">>, <<"deleted">>}], State}.
+    {204, {json, [{<<"message">>, <<"deleted">>}]}, State}.
 ```
 
 #### terminate/3
