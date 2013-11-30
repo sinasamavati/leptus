@@ -1,17 +1,20 @@
 -module(leptus_http_SUITE).
 
+%% Common Test callbacks
 -export([init_per_suite/1]).
 -export([end_per_suite/1]).
 -export([all/0]).
 
+%% test cases
 -export([http_get/1]).
+-export([http_put/1]).
+-export([http_post/1]).
+-export([http_delete/1]).
 -export([http_404/1]).
 -export([http_405/1]).
--export([http_post/1]).
--export([http_put/1]).
--export([http_delete/1]).
 -export([http_is_authorized/1]).
 
+%% helpers
 -import(helpers, [request/2, request/3, request/4, response_body/1]).
 
 
@@ -29,8 +32,8 @@ end_per_suite(_Config) ->
 
 all() ->
     [
-     http_get, http_404, http_405, http_post, http_put, http_delete,
-     http_is_authorized
+     http_get, http_post, http_put, http_delete,
+     http_404, http_405, http_is_authorized
     ].
 
 http_get(_) ->
@@ -65,6 +68,32 @@ http_get(_) ->
     {200, _, C9} = request(M, "/users/you/profile"),
     B2 = response_body(C9).
 
+http_put(_) ->
+    M = <<"PUT">>,
+    B1 = <<"password=lkjhgf&password_confirmation=lkjhg">>,
+    {403, _, C1} = request(M, "/settings/change-password", [], B1),
+    <<"Passwords didn't match.">> = response_body(C1),
+
+    B2 = <<"password=lkjhgf&password_confirmation=lkjhgf">>,
+    {200, _, C2} = request(M, "/settings/change-password", [], B2),
+    <<"Your password has been changed.">> = response_body(C2).
+
+http_post(_) ->
+    M = <<"POST">>,
+    B1 = <<"username=asdf&email=asdf@a.<...>.com">>,
+    {403, _, C1} = request(M, "/user/register", [], B1),
+    <<"Username is already taken.">> = response_body(C1),
+
+    B2 = <<"username=asdfg&email=something@a.<...>.com">>,
+    {201, _, C2} = request(M, "/user/register", [], B2),
+    <<"Thanks for registration.">> = response_body(C2).
+
+http_delete(_) ->
+    M = <<"DELETE">>,
+    {404, _, _} = request(M, "/users/jack/posts/32601"),
+    {404, _, _} = request(M, "/users/jack/posts/3268"),
+    {204, _, _} = request(M, "/users/jack/posts/219").
+
 http_404(_) ->
     {404, _, _} = request(<<"GET">>, "/asd"),
     {404, _, _} = request(<<"GET">>, "/asdf"),
@@ -91,32 +120,6 @@ http_405(_) ->
     <<"POST">> = F(H5),
     <<"GET, PUT, POST">> = F(H6),
     <<"DELETE">> = F(H7).
-
-http_post(_) ->
-    M = <<"POST">>,
-    B1 = <<"username=asdf&email=asdf@a.<...>.com">>,
-    {403, _, C1} = request(M, "/user/register", [], B1),
-    <<"Username is already taken.">> = response_body(C1),
-
-    B2 = <<"username=asdfg&email=something@a.<...>.com">>,
-    {201, _, C2} = request(M, "/user/register", [], B2),
-    <<"Thanks for registration.">> = response_body(C2).
-
-http_put(_) ->
-    M = <<"PUT">>,
-    B1 = <<"password=lkjhgf&password_confirmation=lkjhg">>,
-    {403, _, C1} = request(M, "/settings/change-password", [], B1),
-    <<"Passwords didn't match.">> = response_body(C1),
-
-    B2 = <<"password=lkjhgf&password_confirmation=lkjhgf">>,
-    {200, _, C2} = request(M, "/settings/change-password", [], B2),
-    <<"Your password has been changed.">> = response_body(C2).
-
-http_delete(_) ->
-    M = <<"DELETE">>,
-    {404, _, _} = request(M, "/users/jack/posts/32601"),
-    {404, _, _} = request(M, "/users/jack/posts/3268"),
-    {204, _, _} = request(M, "/users/jack/posts/219").
 
 http_is_authorized(_) ->
     A1 = base64:encode(<<"123:456">>),

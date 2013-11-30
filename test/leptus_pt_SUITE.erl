@@ -5,6 +5,7 @@
 -export([allowed_methods/1]).
 -export([rq_pt/1]).
 
+%% helpers
 -import(helpers, [request/2]).
 
 
@@ -26,7 +27,7 @@ allowed_methods(_) ->
     <<"PUT, DELETE">> = pt3:allowed_methods("/old").
 
 rq_pt(_) ->
-    {ok, _} = leptus:start_http([{pt3, state0}]),
+    {ok, _} = pt3:start(),
     ["/", "/new", "/old"] = pt3:routes(),
     {200, _, _} = request(<<"GET">>, "/"),
     {200, _, _} = request(<<"PUT">>, "/old"),
