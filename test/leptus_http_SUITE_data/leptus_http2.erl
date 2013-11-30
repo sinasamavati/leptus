@@ -28,7 +28,7 @@ is_authorized("/users/:id", Req, State) ->
         <<"POST">> ->
             case check_auth(Req, State) of
                 {false, _, _} ->
-                    {false, json, [{<<"error">>, <<"unauthorized">>}], State};
+                    {false, {json, [{<<"error">>, <<"unauthorized">>}]}, State};
                 Else ->
                     Else
             end;
@@ -59,7 +59,7 @@ get("/users/:id/profile", Req, State) ->
             {<<"bio">>, <<"Erlanger">>},
             {<<"github">>, leptus_req:param(id, Req)}
            ],
-    {200, json, Body, State}.
+    {200, {json, Body}, State}.
 
 put("/users/:id", _Req, State) ->
     {200, <<"updated">>, State}.

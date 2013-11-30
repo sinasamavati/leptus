@@ -10,8 +10,8 @@
 -type req() :: cowboy_req:req().
 -type route() :: cowboy_router:route_match().
 -type status() :: non_neg_integer() | binary().
--type headers() :: cowboy:http_headers() | json.
--type body() :: binary() | string() | json_term().
+-type headers() :: cowboy:http_headers().
+-type body() :: binary() | string() | {json, json_term()}.
 -type handler_state() :: any().
 -type method() :: get | put | post | delete.
 -type json_term() :: [json_term()]
@@ -153,14 +153,11 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     {
       Headers1,
       Body1
-    } = case Headers of
-            json ->
-                {[{<<"content-type">>, <<"application/json">>}],
-                 jiffy:encode({Body})};
-            [] ->
-                {[{<<"content-type">>, <<"text/plain">>}], Body};
+    } = case Body of
+            {Type, Body2} ->
+                {set_content_type(Type, Headers), jiffy:encode({Body2})};
             _ ->
-                {Headers, Body}
+                {set_content_type(text, Headers), Body}
         end,
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
@@ -170,3 +167,9 @@ handler_terminate(Reason, Req, Ctx) ->
     Handler = get_handler(Ctx),
     HandlerState = get_handler_state(Ctx),
     Handler:terminate(Reason, Req, HandlerState).
+
+-spec set_content_type(text | json, headers()) -> headers().
+set_content_type(text, Headers) ->
+    [{<<"content-type">>, <<"text/plain">>}|Headers];
+set_content_type(json, Headers) ->
+    [{<<"content-type">>, <<"application/json">>}|Headers].
