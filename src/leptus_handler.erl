@@ -154,8 +154,8 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
       Headers1,
       Body1
     } = case Body of
-            {Type, Body2} ->
-                {set_content_type(Type, Headers), jiffy:encode({Body2})};
+            {json, Body2} ->
+                {set_content_type(json, Headers), jiffy:encode({Body2})};
             _ ->
                 {set_content_type(text, Headers), Body}
         end,
