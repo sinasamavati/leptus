@@ -22,6 +22,7 @@
                    | integer()
                    | float()
                    | binary().
+-type data_format() :: text | json.
 
 -record(ctx, {
           handler :: module(),
@@ -154,8 +155,8 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
       Headers1,
       Body1
     } = case Body of
-            {json, Body2} ->
-                {set_content_type(json, Headers), jiffy:encode({Body2})};
+            {Type=json, Body2} ->
+                {set_content_type(Type, Headers), jiffy:encode({Body2})};
             _ ->
                 {set_content_type(text, Headers), Body}
         end,
@@ -168,8 +169,9 @@ handler_terminate(Reason, Req, Ctx) ->
     HandlerState = get_handler_state(Ctx),
     Handler:terminate(Reason, Req, HandlerState).
 
--spec set_content_type(text | json, headers()) -> headers().
-set_content_type(text, Headers) ->
-    [{<<"content-type">>, <<"text/plain">>}|Headers];
-set_content_type(json, Headers) ->
-    [{<<"content-type">>, <<"application/json">>}|Headers].
+-spec set_content_type(data_format(), headers()) -> headers().
+set_content_type(Type, Headers) ->
+    [{<<"Content-Type">>, content_type(Type)}|Headers].
+
+content_type(text) -> <<"text/plain">>;
+content_type(json) -> <<"application/json">>.

@@ -1,3 +1,8 @@
+2013-12-02  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_handler.erl: add content_type/1,
+	change set_content_type/2 to use content_type/1 to avoide repeating a thing
+
 2013-12-01  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_handler.erl: add set_content_type/2
