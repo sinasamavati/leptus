@@ -1,3 +1,4 @@
+* Add https support
 * Add http streaming support
 * Add hooks capability
 * Add examples
