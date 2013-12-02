@@ -10,6 +10,7 @@ json_term() = [json_term()]
               | float()
               | binary()
 
+Req     :: cowboy_req:req()
 Status  :: non_neg_integer() | binary()
 Body    :: string() | binary() | {json, json_term()}
 Headers :: [{binary(), iodata()}]
