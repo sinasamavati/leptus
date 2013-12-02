@@ -72,22 +72,23 @@ set_handler_state(Ctx, HandlerState) ->
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
 
--spec http_method(binary()) -> atom().
+-spec http_method(binary()) -> method() | badarg.
 http_method(<<"GET">>) -> get;
 http_method(<<"PUT">>) -> put;
 http_method(<<"POST">>) -> post;
 http_method(<<"DELETE">>) -> delete;
-http_method(Method) ->
-    %% TODO: decide to change or remove it
-    list_to_atom([M - $A + $a || <<M>>  <= Method]).
+http_method(_) -> badarg.
 
 -spec handler_init(handler(), route(), req(), handler_state()) ->
                           {ok, handler_state()}.
 handler_init(Handler, Route, Req, HandlerState) ->
     Handler:init(Route, Req, HandlerState).
 
--spec handle_request(handler(), method(), route(), req(), ctx()) ->
+-spec handle_request(handler(), method() | badarg, route(), req(), ctx()) ->
                             {ok, req(), ctx()}.
+handle_request(Handler, badarg, Route, Req, Ctx) ->
+    Response = method_not_allowed(Handler, Route, get_handler_state(Ctx)),
+    reply(Response, Req, Ctx);
 handle_request(Handler, Func, Route, Req, Ctx) ->
     HandlerState = get_handler_state(Ctx),
     Response = case is_defined(Handler, Func) of
