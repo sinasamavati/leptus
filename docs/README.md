@@ -41,5 +41,6 @@ So, I suggest you using the following in your request/resource handlers (modules
   * [handlers (request handlers)](configuration.md#handlers)
 
 * [Start](start.md)
-  * [For test purposes](start.md#for-test-purposes)
+  * [start_http/0](start.md#start_http0)
+  * [start_http/1](start.md#start_http1)
   * [The OTP way](start.md#the-otp-way)
