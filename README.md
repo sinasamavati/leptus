@@ -2,7 +2,8 @@
 
 Leptus is an Erlang REST framework that runs on top of cowboy.
 
-Leptus aims at simply creating RESTful APIs.
+Leptus aims at simply creating RESTful APIs with a straightforward principle which is:
+**You get a request and you should give a response without manipulating the request object.**
 
 ## Requirements
 
