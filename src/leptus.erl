@@ -21,6 +21,7 @@ start_http(Handlers) ->
     ensure_started(crypto),
     ensure_started(ranch),
     ensure_started(cowboy),
+    ensure_started(leptus),
 
     %% routes
     Paths = leptus_router:paths(Handlers),
