@@ -1,3 +1,8 @@
+2013-12-04  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_app.erl (start/2): no longer calls leptus:start_http/0,
+	only starts the top-level supervisor
+
 2013-12-03  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_req.erl: add invoke/2 for calling cowboy_req:F(A) and getting the value using get_value/1
