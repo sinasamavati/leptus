@@ -107,8 +107,9 @@ Returns received body (decoding might apply to it).
 body(Req) -> binary() | json_term()
 
 %% e.g.
-body(Req) -> <<"blah,blah...">>
+body(Req) -> <<"foo=bar">>
 
+%% when content-type is set to applicaation/json
 body(Req) -> [{<<"function">>, <<"body/1">>}]
 ```
 
@@ -121,4 +122,50 @@ body_raw(Req) -> binary()
 
 %% e.g.
 body_raw(Req) -> <<"{\"function\": \"body/1\"}">>
+```
+
+#### body_qs/1
+
+Returns body but in query string format.
+
+```erlang
+body_qs(Req) -> [{binary(), binary() | true}]
+
+%% e.g.
+body_qs(Req) -> [{<<"foo">>, <<"bar">>}]
+```
+
+#### header/2
+
+Returns the given header value.
+
+```erlang
+header(binary(), Req) -> binary()
+
+%% e.g.
+header(<<"content-type">>, Req) -> <<"application/x-www-form-urlencoded">>
+```
+
+#### parse_header/2
+
+Parses the given header.
+
+```erlang
+parse_header(binary(), Req) -> any() | <<>>
+
+%% e.g.
+parse_header(<<"content-type">>, Req) -> {<<"application">>, <<"json">>, []}
+```
+
+#### auth/2
+
+Checks for the given authorization method.
+
+NOTE: basic authentication is only supported at the moment.
+
+```erlang
+auth(<<"basic">>, Req) -> {binary(), binary()} | <<>> | error
+
+%% e.g.
+auth(<<"basic">>, Req) -> {<<"username">>, <<"p4ssw0rd">>}
 ```
