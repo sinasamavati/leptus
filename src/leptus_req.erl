@@ -22,7 +22,7 @@
 
 -spec param(atom(), req()) -> binary() | undefined.
 param(Key, Req) ->
-    get_value(cowboy_req:binding(Key, Req)).
+    invoke(binding, [Key, Req]).
 
 -spec params(req()) -> [{atom(), binary()}] | undefined.
 params(Req) ->
@@ -34,7 +34,7 @@ qs(Req) ->
 
 -spec qs_val(binary(), req()) -> binary() | undefined.
 qs_val(Key, Req) ->
-    get_value(cowboy_req:qs_val(Key, Req)).
+    invoke(qs_val, [Key, Req]).
 
 -spec uri(req()) -> binary().
 uri(Req) ->
@@ -69,19 +69,19 @@ body(Req) ->
 
 -spec body_raw(req()) -> binary().
 body_raw(Req) ->
-    get_value(cowboy_req:body(infinity, Req)).
+    invoke(body, [infinity, Req]).
 
 -spec body_qs(req()) -> [{binary(), binary() | true}].
 body_qs(Req) ->
-    get_value(cowboy_req:body_qs(infinity, Req)).
+    invoke(body_qs, [infinity, Req]).
 
 -spec header(binary(), req()) -> binary().
 header(Name, Req) ->
-    get_value(cowboy_req:header(Name, Req, <<>>)).
+    invoke(header, [Name, Req, <<>>]).
 
 -spec parse_header(binary(), req()) -> any() | <<>>.
 parse_header(Name, Req) ->
-    get_value(cowboy_req:parse_header(Name, Req, <<>>)).
+    invoke(parse_header, [Name, Req, <<>>]).
 
 -spec auth(binary(), req()) -> {binary(), binary()} | <<>> | error.
 auth(<<"basic">>, Req) ->
@@ -94,6 +94,9 @@ auth(<<"basic">>, Req) ->
 
 
 %% internal
+invoke(F, A) ->
+    get_value(apply(cowboy_req, F, A)).
+
 get_value({Value, _}) ->
     Value;
 get_value({ok, Value, _}) ->

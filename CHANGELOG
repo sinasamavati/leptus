@@ -1,5 +1,7 @@
 2013-12-03  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus_req.erl: add invoke/2 for calling cowboy_req:F(A) and getting the value using get_value/1
+
 	* src/leptus_handler.erl: change http_method/1 to return method() | badarg,
 	change handle_request/5 to call method_not_allowed/3 when getting badarg from http_method/1
 
