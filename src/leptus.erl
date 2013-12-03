@@ -32,7 +32,7 @@ start_http(Handlers) ->
     Port = http_port(Config),
 
     cowboy:start_http(
-      http, 100, [{ip, IP}, {port, Port}],
+      leptus_http, 100, [{ip, IP}, {port, Port}],
       [
        {env, [{dispatch, Dispatch}]},
        {onresponse, fun leptus_hooks:console_log/4}
@@ -41,7 +41,7 @@ start_http(Handlers) ->
 
 -spec stop_http() -> ok | {error, not_found}.
 stop_http() ->
-    cowboy:stop_listener(http).
+    cowboy:stop_listener(leptus_http).
 
 -spec upgrade() -> ok.
 upgrade() ->
@@ -50,7 +50,7 @@ upgrade() ->
 -spec upgrade([{module(), State :: any()}]) -> ok.
 upgrade(Handlers) ->
     Paths = leptus_router:paths(Handlers),
-    cowboy:set_env(http, dispatch, cowboy_router:compile([{'_', Paths}])).
+    cowboy:set_env(leptus_http, dispatch, cowboy_router:compile([{'_', Paths}])).
 
 
 %% internal

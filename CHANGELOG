@@ -1,5 +1,7 @@
 2013-12-04  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus.erl: change http ref name to leptus_http
+
 	* src/leptus_app.erl (start/2): no longer calls leptus:start_http/0,
 	only starts the top-level supervisor
 
