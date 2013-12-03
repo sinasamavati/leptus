@@ -16,11 +16,11 @@ Module:init(Route, Req, State) ->
 
 #### is_authorized/3
 
-Exporting this callback in a module means that every request that should come to the request handler needs authorization.
+Exporting this callback in a module means that every request that should come to the handler needs authorization.
 
 ```erlang
 Module:is_authorized(Route, Req, State) ->
-    {true, State} | {false, Body, State} | {false, Headers, Body, State}.
+    {true, State} | {false, Body, State} | {false, Headers, Body, State}
 ```
 
 #### HttpMethod/3
@@ -29,7 +29,7 @@ This means `get/3`, `put/3`, `post/3`, `delete/3`.
 
 ```erlang
 Module:HttpMethod(Route, Req, State) ->
-    {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}.
+    {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}
 ```
 
 In this case, `Route` must be a pattern matching.
@@ -58,6 +58,5 @@ delete("/:id", Req, State) ->
 #### terminate/3
 
 ```erlang
-Module:terminate(Reason, Req, State) ->
-    ok.
+Module:terminate(Reason, Req, State) -> ok
 ```
