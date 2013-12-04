@@ -72,7 +72,7 @@ $ curl localhost:8000/hi/Leptus
 * Supports `GET`, `PUT`, `POST` and `DELETE` HTTP methods
 * Can respond in plain text or JSON
 * Supports basic authentication
-* Can upgrade the code while it's running (no stopping is required)
+* Can be upgraded while it's running (no stopping is required)
 
 ## Documentation
 
