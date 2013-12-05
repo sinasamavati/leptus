@@ -36,13 +36,8 @@ init(_Transport, Req, Ctx) ->
     Handler = get_handler(Ctx),
     Route = get_route(Ctx),
     HandlerState = get_handler_state(Ctx),
-    case handler_init(Handler, Route, Req, HandlerState) of
-        {ok, HandlerState1} ->
-            Ctx1 = set_handler_state(Ctx, HandlerState1),
-            {ok, Req, Ctx1};
-        Else ->
-            Else
-    end.
+    {ok, HandlerState1} = handler_init(Handler, Route, Req, HandlerState),
+    {ok, Req, set_handler_state(Ctx, HandlerState1)}.
 
 handle(Req, Ctx) ->
     Handler = get_handler(Ctx),

@@ -1,5 +1,7 @@
 2013-12-05  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus_handler.erl (init/3): change handler_init/4 call since {ok, State} only works at the moment
+
 	* src/leptus_router.erl (handle_routes/2): fix spec
 
 2013-12-04  Sina Samavati  <sina.samv@gmail.com>
