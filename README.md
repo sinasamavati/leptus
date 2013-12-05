@@ -26,6 +26,16 @@ If you want to use it as a dependency in your project add the following to your 
        ]}.
 ```
 
+NOTE: if you prefer [jsx](https://github.com/talentdeficit/jsx) rather than [jiffy](https://github.com/davisp/jiffy)
+the environment variable `USE_JSX` must be set to `true` when getting dependencies and/or compiling using rebar.
+
+i.e.
+```
+USE_JSX=true make
+# OR
+USE_JSX=true rebar-get deps compile
+```
+
 ## Quickstart
 
 ```erlang
