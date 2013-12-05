@@ -62,7 +62,7 @@ body(Req) ->
     case header(<<"content-type">>, Req) of
         %% decode body if content-type is json
         <<"application/json">> ->
-            element(1, jiffy:decode(Body));
+            leptus_json:decode(Body);
         _ ->
             Body
     end.

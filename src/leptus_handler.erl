@@ -152,7 +152,7 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
       Body1
     } = case Body of
             {Type=json, Body2} ->
-                {set_content_type(Type, Headers), jiffy:encode({Body2})};
+                {set_content_type(Type, Headers), leptus_json:encode(Body2)};
             _ ->
                 {set_content_type(text, Headers), Body}
         end,
