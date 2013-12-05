@@ -1,4 +1,6 @@
 2013-12-05  Sina Samavati  <sina.samv@gmail.com>
+	* 0.2.0: fix application behaviour,
+	add leptus_json bridge to work with either jiffy or jsx
 
 	* src/leptus_handler.erl (init/3): change handler_init/4 call since {ok, State} only works at the moment
 
