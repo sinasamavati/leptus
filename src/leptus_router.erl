@@ -30,7 +30,8 @@ fetch_routes([{Handler, State}|T], Acc) ->
            ||  Route <- Handler:routes()],
     fetch_routes(T, Acc ++ Ctx).
 
--spec handle_routes([ctx()], []) -> [cowboy_router:route_path()].
+-spec handle_routes([ctx()], [none() | {route(), leptus_handler, ctx()}])
+                   ->[cowboy_router:route_path()].
 handle_routes([], Acc) ->
     Acc;
 handle_routes([Ctx|T], Acc) ->
