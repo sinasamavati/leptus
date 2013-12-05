@@ -1,0 +1,46 @@
+%%-*- mode: erlang -*-
+
+Deps = fun() ->
+               case lists:keyfind(deps, 1, CONFIG) of
+                   false ->
+                       [];
+                   Else ->
+                       Else
+               end
+       end.
+
+RemoveJsx = fun() ->
+                    {deps, L} = Deps(),
+                    Config1 = CONFIG -- [{deps, L}],
+                    L1 = case lists:keyfind(jsx, 1, L) of
+                             false ->
+                                 L;
+                             Jsx ->
+                                 L -- [Jsx]
+                         end,
+                    Config1 ++ [{deps, L1}]
+            end.
+
+RemoveJiffy = fun() ->
+                      {deps, L} = Deps(),
+                      Config1 = CONFIG -- [{deps, L}],
+                      L1 = case lists:keyfind(jiffy, 1, L) of
+                               false ->
+                                   L;
+                               Jiffy ->
+                                   L -- [Jiffy]
+                           end,
+                      Config1 ++ [{deps, L1}]
+              end.
+
+case lists:keyfind(erl_opts, 1, CONFIG) of
+    {erl_opts, Opts} ->
+        case lists:keyfind('JSX', 2, Opts) of
+            {d, 'JSX'} ->
+                RemoveJiffy();
+            _ ->
+                RemoveJsx()
+        end;
+    _ ->
+        RemoveJsx()
+end.
