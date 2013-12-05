@@ -8,7 +8,6 @@ Deps = fun() ->
                        Else
                end
        end.
-
 RemoveJsx = fun() ->
                     {deps, L} = Deps(),
                     Config1 = CONFIG -- [{deps, L}],
@@ -20,7 +19,6 @@ RemoveJsx = fun() ->
                          end,
                     Config1 ++ [{deps, L1}]
             end.
-
 RemoveJiffy = fun() ->
                       {deps, L} = Deps(),
                       Config1 = CONFIG -- [{deps, L}],
@@ -30,17 +28,11 @@ RemoveJiffy = fun() ->
                                Jiffy ->
                                    L -- [Jiffy]
                            end,
-                      Config1 ++ [{deps, L1}]
+                      [{deps, L1}, {erl_opts, [{d, 'USE_JSX'}]}|CONFIG]
               end.
-
-case lists:keyfind(erl_opts, 1, CONFIG) of
-    {erl_opts, Opts} ->
-        case lists:keyfind('JSX', 2, Opts) of
-            {d, 'JSX'} ->
-                RemoveJiffy();
-            _ ->
-                RemoveJsx()
-        end;
+case os:getenv("USE_JSX") of
+    false ->
+        RemoveJsx();
     _ ->
-        RemoveJsx()
+        RemoveJiffy()
 end.
