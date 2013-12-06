@@ -13,7 +13,7 @@
           route :: route(),
           handler_state :: state()
         }).
--type ctx() :: #ctx{}.
+-opaque ctx() :: #ctx{}.
 
 
 -spec paths([{handler(), state()}]) -> cowboy_router:dispatch_rules().

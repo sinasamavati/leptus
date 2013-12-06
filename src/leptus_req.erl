@@ -17,7 +17,7 @@
 
 -include("leptus.hrl").
 
--type req() :: cowboy_req:req().
+-opaque req() :: cowboy_req:req().
 
 
 -spec param(atom(), req()) -> binary() | undefined.
