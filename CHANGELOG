@@ -1,4 +1,11 @@
+2013-12-07  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_req.erl: fix specs
+
+	* include/leptus.hrl: include cowboy_req:req()
+
 2013-12-05  Sina Samavati  <sina.samv@gmail.com>
+
 	* 0.2.0: fix application behaviour,
 	add leptus_json bridge to work with either jiffy or jsx
 

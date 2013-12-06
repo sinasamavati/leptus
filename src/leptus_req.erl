@@ -17,26 +17,24 @@
 
 -include("leptus.hrl").
 
--type req() :: cowboy_req:req().
 
-
--spec param(atom(), req()) -> binary() | undefined.
+-spec param(atom(), Req) -> binary() | undefined when Req::req().
 param(Key, Req) ->
     invoke(binding, [Key, Req]).
 
--spec params(req()) -> [{atom(), binary()}] | undefined.
+-spec params(Req) -> [{atom(), binary()}] | undefined when Req::req().
 params(Req) ->
     Req#http_req.bindings.
 
--spec qs(req()) -> binary().
+-spec qs(Req) -> binary() when Req::req().
 qs(Req) ->
     Req#http_req.qs.
 
--spec qs_val(binary(), req()) -> binary() | undefined.
+-spec qs_val(binary(), Req) -> binary() | undefined when Req::req().
 qs_val(Key, Req) ->
     invoke(qs_val, [Key, Req]).
 
--spec uri(req()) -> binary().
+-spec uri(Req) -> binary() when Req::req().
 uri(Req) ->
     Path = Req#http_req.path,
     QS = qs(Req),
@@ -48,15 +46,15 @@ uri(Req) ->
         _ -> <<Path/binary, "?", QS/binary>>
     end.
 
--spec version(req()) -> cowboy:http_version().
+-spec version(Req) -> cowboy:http_version() when Req::req().
 version(Req) ->
     Req#http_req.version.
 
--spec method(req()) -> binary().
+-spec method(Req) -> binary() when Req::req().
 method(Req) ->
     Req#http_req.method.
 
--spec body(req()) -> binary().
+-spec body(cowboy_req:req()) -> binary().
 body(Req) ->
     Body = body_raw(Req),
     case header(<<"content-type">>, Req) of
@@ -67,23 +65,23 @@ body(Req) ->
             Body
     end.
 
--spec body_raw(req()) -> binary().
+-spec body_raw(cowboy_req:req()) -> binary().
 body_raw(Req) ->
     invoke(body, [infinity, Req]).
 
--spec body_qs(req()) -> [{binary(), binary() | true}].
+-spec body_qs(cowboy_req:req()) -> [{binary(), binary() | true}].
 body_qs(Req) ->
     invoke(body_qs, [infinity, Req]).
 
--spec header(binary(), req()) -> binary().
+-spec header(binary(), cowboy_req:req()) -> binary().
 header(Name, Req) ->
     invoke(header, [Name, Req, <<>>]).
 
--spec parse_header(binary(), req()) -> any() | <<>>.
+-spec parse_header(binary(), cowboy_req:req()) -> any() | <<>>.
 parse_header(Name, Req) ->
     invoke(parse_header, [Name, Req, <<>>]).
 
--spec auth(binary(), req()) -> {binary(), binary()} | <<>> | error.
+-spec auth(binary(), cowboy_req:req()) -> {binary(), binary()} | <<>> | error.
 auth(<<"basic">>, Req) ->
     case parse_header(<<"authorization">>, Req) of
         {<<"basic">>, UserPass} ->
