@@ -29,7 +29,7 @@
           route :: route(),
           handler_state :: handler_state()
          }).
--opaque ctx() :: #ctx{}.
+-type ctx() :: #ctx{}.
 
 
 init(_Transport, Req, Ctx) ->
