@@ -33,7 +33,7 @@ i.e.
 ```
 USE_JSX=true make
 # OR
-USE_JSX=true rebar-get deps compile
+USE_JSX=true rebar get-deps compile
 ```
 
 ## Quickstart
