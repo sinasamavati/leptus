@@ -7,7 +7,6 @@
 -export([terminate/3]).
 
 -type handler() :: module().
--type req() :: cowboy_req:req().
 -type route() :: cowboy_router:route_match().
 -type status() :: non_neg_integer() | binary().
 -type headers() :: cowboy:http_headers().
@@ -23,6 +22,9 @@
                    | float()
                    | binary().
 -type data_format() :: text | json.
+-type response() :: {body(), handler_state()}
+                  | {status(), body(), handler_state()}
+                  | {status(), headers(), body(), handler_state()}.
 
 -record(ctx, {
           handler :: module(),
@@ -32,6 +34,8 @@
 -type ctx() :: #ctx{}.
 
 
+-spec init({module(), http}, Req, Ctx) ->
+                  {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
 init(_Transport, Req, Ctx) ->
     Handler = get_handler(Ctx),
     Route = get_route(Ctx),
@@ -39,6 +43,8 @@ init(_Transport, Req, Ctx) ->
     {ok, HandlerState1} = handler_init(Handler, Route, Req, HandlerState),
     {ok, Req, set_handler_state(Ctx, HandlerState1)}.
 
+
+-spec handle(Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
 handle(Req, Ctx) ->
     Handler = get_handler(Ctx),
     Route = get_route(Ctx),
@@ -47,23 +53,29 @@ handle(Req, Ctx) ->
     Func = http_method(leptus_req:method(Req)),
     handle_request(Handler, Func, Route, Req, Ctx).
 
+-spec terminate(any(), cowboy_req:req(), ctx()) -> ok.
 terminate(Reason, Req, Ctx) ->
     handler_terminate(Reason, Req, Ctx).
 
 
 %% internal
+-spec get_handler(ctx()) -> handler().
 get_handler(Ctx) ->
     Ctx#ctx.handler.
 
+-spec get_route(ctx()) -> route().
 get_route(Ctx) ->
     Ctx#ctx.route.
 
+-spec get_handler_state(ctx()) -> any().
 get_handler_state(Ctx) ->
     Ctx#ctx.handler_state.
 
+-spec set_handler_state(Ctx, any()) -> Ctx when Ctx::ctx().
 set_handler_state(Ctx, HandlerState) ->
     Ctx#ctx{handler_state=HandlerState}.
 
+-spec is_defined(module(), atom()) -> boolean().
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
 
@@ -74,13 +86,14 @@ http_method(<<"POST">>) -> post;
 http_method(<<"DELETE">>) -> delete;
 http_method(_) -> badarg.
 
--spec handler_init(handler(), route(), req(), handler_state()) ->
-                          {ok, handler_state()}.
+-spec handler_init(handler(), route(), Req, handler_state()) ->
+                          {ok, handler_state()} when Req::cowboy_req:req().
 handler_init(Handler, Route, Req, HandlerState) ->
     Handler:init(Route, Req, HandlerState).
 
--spec handle_request(handler(), method() | badarg, route(), req(), ctx()) ->
-                            {ok, req(), ctx()}.
+-spec handle_request(handler(), method() | badarg, route(), Req, Ctx) ->
+                            {ok, Req, Ctx} when Req::cowboy_req:req(),
+                                                Ctx::ctx().
 handle_request(Handler, badarg, Route, Req, Ctx) ->
     Response = method_not_allowed(Handler, Route, get_handler_state(Ctx)),
     reply(Response, Req, Ctx);
@@ -106,10 +119,8 @@ handle_request(Handler, Func, Route, Req, Ctx) ->
                end,
     reply(Response, Req, Ctx).
 
--spec handler_is_authorized(handler(), route(), req(), handler_state()) ->
-                                   {true, handler_state()}
-                                       | {false, {401, body(), handler_state()}}
-                                       | {false, {401, headers(), body(), handler_state()}}.
+-spec handler_is_authorized(handler(), route(), cowboy_req:req(), handler_state()) ->
+                                   {true, handler_state()} | {false, response()}.
 handler_is_authorized(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
@@ -130,13 +141,18 @@ handler_is_authorized(Handler, Route, Req, HandlerState) ->
             {true, HandlerState}
     end.
 
+-spec method_not_allowed(handler(), route(), handler_state()) -> response().
 method_not_allowed(Handler, Route, HandlerState) ->
+    %%
+    %% spec:
+    %%   allowed_methods(Route) -> binary()
+    %% e.g.
+    %%   allowed_methods("/") -> <<"GET, "POST">>
+    %%
     {405, [{<<"Allow">>, Handler:allowed_methods(Route)}], <<>>, HandlerState}.
 
--spec reply({body(), handler_state()}
-            | {status(), body(), handler_state()}
-            | {status(), headers(), body(), handler_state()}, req(), ctx()) ->
-                   {ok, req(), ctx()}.
+-spec reply(response(), Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(),
+                                                         Ctx::ctx().
 reply({Body, HandlerState}, Req, Ctx) ->
     reply(200, [], Body, HandlerState, Req, Ctx);
 reply({Status, Body, HandlerState}, Req, Ctx) ->
@@ -144,30 +160,31 @@ reply({Status, Body, HandlerState}, Req, Ctx) ->
 reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
     reply(Status, Headers, Body, HandlerState, Req, Ctx).
 
--spec reply(status(), headers(), body(), handler_state(), req(), ctx()) ->
-                   {ok, req(), ctx()}.
+-spec reply(status(), headers(), body(), handler_state(), Req, Ctx) ->
+                   {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
 reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     {
       Headers1,
       Body1
     } = case Body of
-            {Type=json, Body2} ->
-                {set_content_type(Type, Headers), leptus_json:encode(Body2)};
+            {json, Body2} ->
+                {set_content_type(json, Headers), leptus_json:encode(Body2)};
             _ ->
                 {set_content_type(text, Headers), Body}
         end,
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
 
--spec handler_terminate(any(), req(), ctx()) -> ok.
+-spec handler_terminate(any(), cowboy_req:req(), ctx()) -> ok.
 handler_terminate(Reason, Req, Ctx) ->
     Handler = get_handler(Ctx),
     HandlerState = get_handler_state(Ctx),
     Handler:terminate(Reason, Req, HandlerState).
 
--spec set_content_type(data_format(), headers()) -> headers().
+-spec set_content_type(Type::data_format(), headers()) -> headers().
 set_content_type(Type, Headers) ->
     [{<<"Content-Type">>, content_type(Type)}|Headers].
 
+-spec content_type(data_format()) -> binary().
 content_type(text) -> <<"text/plain">>;
 content_type(json) -> <<"application/json">>.
