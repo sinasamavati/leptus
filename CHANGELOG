@@ -1,3 +1,7 @@
+2013-12-08  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_req.erl: improve specs
+
 2013-12-07  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_req.erl: fix specs

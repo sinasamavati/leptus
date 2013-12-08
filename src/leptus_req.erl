@@ -18,26 +18,26 @@
 -include("leptus.hrl").
 
 
--spec param(atom(), Req) -> binary() | undefined when Req::req().
+-spec param(atom(), cowboy_req:req()) -> binary() | undefined.
 param(Key, Req) ->
     invoke(binding, [Key, Req]).
 
--spec params(Req) -> [{atom(), binary()}] | undefined when Req::req().
+-spec params(cowboy_req:req()) -> [{atom(), binary()}] | undefined.
 params(Req) ->
     Req#http_req.bindings.
 
--spec qs(Req) -> binary() when Req::req().
+-spec qs(cowboy_req:req()) -> binary().
 qs(Req) ->
     Req#http_req.qs.
 
--spec qs_val(binary(), Req) -> binary() | undefined when Req::req().
+-spec qs_val(binary(), cowboy_req:req()) -> binary() | undefined.
 qs_val(Key, Req) ->
     invoke(qs_val, [Key, Req]).
 
--spec uri(Req) -> binary() when Req::req().
+-spec uri(cowboy_req:req()) -> binary().
 uri(Req) ->
     Path = Req#http_req.path,
-    QS = qs(Req),
+    QS = Req#http_req.qs,
 
     %% e.g <<"/path?query=string">>
 
@@ -46,11 +46,11 @@ uri(Req) ->
         _ -> <<Path/binary, "?", QS/binary>>
     end.
 
--spec version(Req) -> cowboy:http_version() when Req::req().
+-spec version(cowboy_req:req()) -> cowboy:http_version().
 version(Req) ->
     Req#http_req.version.
 
--spec method(Req) -> binary() when Req::req().
+-spec method(cowboy_req:req()) -> binary().
 method(Req) ->
     Req#http_req.method.
 
