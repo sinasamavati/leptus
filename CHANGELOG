@@ -1,5 +1,8 @@
 2013-12-09  Sina Samavati  <sina.samv@gmail.com>
 
+	* 0.2.2: type specifications improvement
+	add leptus:start_http/2
+
 	* src/leptus.erl: add start_http/2 that requires handlers() and cowboy_protocol:opts()
 
 2013-12-08  Sina Samavati  <sina.samv@gmail.com>
