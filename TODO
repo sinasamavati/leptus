@@ -1,4 +1,7 @@
 * Add https support
-* Add http streaming support
-* Add hooks capability
+* Add http streaming support (not sure about it)
+* Add hooks capability (not sure about it)
 * Add examples
+* Add a proper configuration layer
+* Add configurable prefix for handlers/routes
+* Improve the code upgrade functioniality
