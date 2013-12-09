@@ -1,3 +1,7 @@
+2013-12-09  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus.erl: add start_http/2 that requires handlers() and cowboy_protocol:opts()
+
 2013-12-08  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_handler.erl: improve specs

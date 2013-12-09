@@ -5,18 +5,26 @@
 
 -export([start_http/0]).
 -export([start_http/1]).
+-export([start_http/2]).
 -export([stop_http/0]).
 -export([upgrade/0]).
 -export([upgrade/1]).
 -export([config/0]).
+
+-type handler() :: {module(), State::any()}.
+-type handlers() :: [handler()].
 
 
 -spec start_http() -> {ok, pid()} | {error, any()}.
 start_http() ->
     start_http(get_value(handlers, config(), [])).
 
--spec start_http([{module(), State :: any()}]) -> {ok, pid()} | {error, any()}.
+-spec start_http(handlers()) -> {ok, pid()} | {error, any()}.
 start_http(Handlers) ->
+    start_http(Handlers, []).
+
+-spec start_http(handlers(), cowboy_protocol:opts()) -> {ok, pid()} | {error, any()}.
+start_http(Handlers, ProtoOpts) ->
     %% ensure dependencies are started
     ensure_started(crypto),
     ensure_started(ranch),
@@ -37,7 +45,7 @@ start_http(Handlers) ->
       [
        {env, [{dispatch, Dispatch}]},
        {onresponse, fun leptus_hooks:console_log/4}
-      ]
+      ] ++ ProtoOpts
      ).
 
 -spec stop_http() -> ok | {error, not_found}.
