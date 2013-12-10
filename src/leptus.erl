@@ -13,6 +13,7 @@
 
 -type handler() :: {module(), State::any()}.
 -type handlers() :: [handler()].
+-export_type([handlers/0]).
 
 
 -spec start_http() -> {ok, pid()} | {error, any()}.
