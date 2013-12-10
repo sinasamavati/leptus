@@ -1,5 +1,5 @@
 PROJECT = leptus
-CT_SUITES = leptus_router leptus_req leptus_http leptus_pt
+CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config
 
 .PHONY: all deps compile shell
 
