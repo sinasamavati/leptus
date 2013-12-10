@@ -17,6 +17,9 @@
 -export([get/2]).
 -export([set/2]).
 -export([set/3]).
+-export([ip_addr/0]).
+-export([port_num/0]).
+-export([handlers/0]).
 
 
 -spec start_link() -> {ok, pid()} | {error, any()}.
@@ -27,26 +30,57 @@ start_link() ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+-spec get(any()) -> any() | undefined.
 get(Key) ->
     get(undefined, Key).
 
+-spec get(any(), any()) -> any() | undefined.
 get(Section, Key) ->
     get(Section, Key, undefined).
 
+-spec get(any(), any(), Default) -> any() | Default.
 get(Section, Key, Default) ->
     case ets:match_object(?MODULE, {Section, Key, '_'}) of
         [] ->
+            Default;
+        [{_, _, undefined}] ->
             Default;
         [{_, _, V}] ->
             V
     end.
 
+-spec set(any(), any()) -> ok.
 set(Key, Value) ->
     set(undefined, Key, Value).
 
+-spec set(any(), any(), any()) -> ok.
 set(Section, Key, Value) ->
     gen_server:call(?MODULE, {set, {Section, Key, Value}}).
 
+%% get IP address to bind to
+ip_addr() ->
+    Default = {127, 0, 0, 1},
+    case get(http, ip) of
+        undefined ->
+            Default;
+        Else ->
+            case inet_parse:address(Else) of
+                {ok, IP} ->
+                    IP;
+                {error, _} ->
+                    Default
+            end
+    end.
+
+%% get http port to listen on
+-spec port_num() -> non_neg_integer() | 8080.
+port_num() ->
+    get(http, port, 8080).
+
+%% get handlers
+-spec handlers() -> leptus:handlers() | [].
+handlers() ->
+    get(undefined, handlers, []).
 
 %% gen_server
 init([]) ->
