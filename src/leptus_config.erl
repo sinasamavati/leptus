@@ -13,10 +13,9 @@
 
 -export([start_link/0]).
 -export([stop/0]).
--export([get/1]).
--export([get/2]).
+-export([lookup/1]).
+-export([lookup/2]).
 -export([set/2]).
--export([set/3]).
 -export([ip_addr/0]).
 -export([port_num/0]).
 -export([handlers/0]).
@@ -30,61 +29,51 @@ start_link() ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
--spec get(any()) -> any() | undefined.
-get(Key) ->
-    get(undefined, Key).
+-spec lookup(any()) -> any() | undefined.
+lookup(Key) ->
+    lookup(Key, undefined).
 
--spec get(any(), any()) -> any() | undefined.
-get(Section, Key) ->
-    get(Section, Key, undefined).
-
--spec get(any(), any(), Default) -> any() | Default.
-get(Section, Key, Default) ->
-    case ets:match_object(?MODULE, {Section, Key, '_'}) of
+-spec lookup(any(), Default) -> any() | Default.
+lookup(Key, Default) ->
+    case ets:lookup(?MODULE, Key) of
         [] ->
             Default;
-        [{_, _, undefined}] ->
+        [{_, undefined}] ->
             Default;
-        [{_, _, V}] ->
+        [{_, V}] ->
             V
     end.
 
 -spec set(any(), any()) -> ok.
 set(Key, Value) ->
-    set(undefined, Key, Value).
-
--spec set(any(), any(), any()) -> ok.
-set(Section, Key, Value) ->
-    gen_server:call(?MODULE, {set, {Section, Key, Value}}).
+    gen_server:call(?MODULE, {set, {Key, Value}}).
 
 %% get IP address to bind to
 ip_addr() ->
     Default = {127, 0, 0, 1},
-    case get(http, ip) of
-        undefined ->
-            Default;
-        Else ->
-            case inet_parse:address(Else) of
-                {ok, IP} ->
-                    IP;
-                {error, _} ->
-                    Default
-            end
-    end.
+    get_value(ip, lookup(http), Default).
+
 
 %% get http port to listen on
 -spec port_num() -> non_neg_integer() | 8080.
 port_num() ->
-    get(http, port, 8080).
+    Default = 8080,
+    get_value(port, lookup(http), Default).
 
 %% get handlers
 -spec handlers() -> leptus:handlers() | [].
 handlers() ->
-    get(undefined, handlers, []).
+    Default = [],
+    lookup(handlers, Default).
 
 %% gen_server
 init([]) ->
-    ets:new(?MODULE, [set, named_table, protected, {keypos, 2}]),
+    ets:new(?MODULE, [set, named_table, protected]),
+    Conf = config_file(),
+    Http = get_value(http, Conf),
+    Handlers = get_value(handlers, Conf),
+    ets:insert(?MODULE, {http, Http}),
+    ets:insert(?MODULE, {handlers, Handlers}),
     {ok, ?MODULE}.
 
 handle_call({set, Arg}, _From, TabId) ->
@@ -106,3 +95,24 @@ terminate(_Reason, _TabId) ->
 
 code_change(_OldVsn, TabId, _Extra) ->
     {ok, TabId}.
+
+
+%% read priv/leptus.config file
+config_file() ->
+    {ok, Cwd} = file:get_cwd(),
+    case file:consult(filename:join([Cwd, "priv", "leptus.config"])) of
+        {error, _} ->
+            [];
+        {ok, Terms} ->
+            Terms
+    end.
+
+get_value(Key, Proplist) ->
+    get_value(Key, Proplist, undefined).
+
+get_value(Key, Proplist, Default) ->
+    case lists:keyfind(Key, 1, Proplist) of
+        {_, undefined} -> Default;
+        {_, Value} -> Value;
+        _ -> Default
+    end.
