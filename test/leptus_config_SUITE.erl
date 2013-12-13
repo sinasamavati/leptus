@@ -11,12 +11,8 @@
 
 
 init_per_suite(Config) ->
-    case leptus_config:start_link() of
-        {ok, Pid} ->
-            unlink(Pid);
-        {error, {already_started, Pid}} ->
-            unlink(Pid)
-    end,
+    leptus_config:stop(), %% because it might be started in other suites
+    leptus_config:start(),
     Config.
 
 end_per_suite(_Config) ->
