@@ -29,10 +29,12 @@ start_link() ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%% find a k/v
 -spec lookup(any()) -> any() | undefined.
 lookup(Key) ->
     lookup(Key, undefined).
 
+%% find a k/v and return Default if not found
 -spec lookup(any(), Default) -> any() | Default.
 lookup(Key, Default) ->
     case ets:lookup(?MODULE, Key) of
@@ -44,6 +46,7 @@ lookup(Key, Default) ->
             V
     end.
 
+%% set a k/v
 -spec set(any(), any()) -> ok.
 set(Key, Value) ->
     gen_server:call(?MODULE, {set, {Key, Value}}).
@@ -66,9 +69,11 @@ handlers() ->
     Default = [],
     lookup(handlers, Default).
 
+
 %% gen_server
 init([]) ->
     ets:new(?MODULE, [set, named_table, protected]),
+    %% read leptus.config and insert configurations to ets
     Conf = config_file(),
     Http = get_value(http, Conf),
     Handlers = get_value(handlers, Conf),
@@ -77,7 +82,7 @@ init([]) ->
     {ok, ?MODULE}.
 
 handle_call({set, Arg}, _From, TabId) ->
-    true = ets:insert(?MODULE, Arg),
+    true = ets:insert(TabId, Arg),
     {reply, ok, TabId};
 handle_call(_Msg, _From, TabId) ->
     {noreply, TabId}.
