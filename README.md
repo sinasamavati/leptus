@@ -9,7 +9,8 @@ Leptus aims at simply creating RESTful APIs with a straightforward principle whi
 
   * Erlang/OTP R15B or newer
   * [cowboy](https://github.com/extend/cowboy)
-  * [jiffy](https://github.com/davisp/jiffy)
+  * [jiffy](https://github.com/davisp/jiffy) or [jsx](https://github.com/talentdeficit/jsx)
+  * [msgpack](https://github.com/msgpack/msgpack-erlang)
 
 ## Installation
 
@@ -73,14 +74,14 @@ $ erl -pa ebin deps/*/ebin
 ```
 
 ```
-$ curl localhost:8000/hi/Leptus
+$ curl localhost:8080/hi/Leptus
 {"say":"Hi","to":"Leptus"}
 ```
 
 ## Features
 
 * Supports `GET`, `PUT`, `POST` and `DELETE` HTTP methods
-* Can respond in plain text or JSON
+* Can respond in plain text, JSON or MessagePack
 * Supports basic authentication
 * Can be upgraded while it's running (no stopping is required)
 

@@ -58,9 +58,11 @@ method(Req) ->
 body(Req) ->
     Body = body_raw(Req),
     case header(<<"content-type">>, Req) of
-        %% decode body if content-type is json
+        %% decode body if content-type is json or msgpack
         <<"application/json">> ->
             leptus_json:decode(Body);
+        <<"application/x-msgpack">> ->
+            msgpack:unpack(Body);
         _ ->
             Body
     end.

@@ -10,7 +10,7 @@
 -type route() :: cowboy_router:route_match().
 -type status() :: non_neg_integer() | binary().
 -type headers() :: cowboy:http_headers().
--type body() :: binary() | string() | {json, json_term()}.
+-type body() :: binary() | string() | {json | msgpack, json_term()}.
 -type handler_state() :: any().
 -type method() :: get | put | post | delete.
 -type json_term() :: [json_term()]
@@ -21,10 +21,10 @@
                    | integer()
                    | float()
                    | binary().
--type data_format() :: text | json.
 -type response() :: {body(), handler_state()}
                   | {status(), body(), handler_state()}
                   | {status(), headers(), body(), handler_state()}.
+-type data_format() :: text | json | msgpack.
 
 -record(ctx, {
           handler :: module(),
@@ -169,6 +169,8 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     } = case Body of
             {json, Body2} ->
                 {set_content_type(json, Headers), leptus_json:encode(Body2)};
+            {msgpack, Body2}->
+                {set_content_type(msgpack, Headers), msgpack:pack({Body2}, [jiffy])};
             _ ->
                 {set_content_type(text, Headers), Body}
         end,
@@ -181,10 +183,10 @@ handler_terminate(Reason, Req, Ctx) ->
     HandlerState = get_handler_state(Ctx),
     Handler:terminate(Reason, Req, HandlerState).
 
--spec set_content_type(Type::data_format(), headers()) -> headers().
+-spec set_content_type(data_format(), headers()) -> headers().
 set_content_type(Type, Headers) ->
-    [{<<"Content-Type">>, content_type(Type)}|Headers].
+    [{<<"content-type">>, content_type(Type)}|Headers].
 
--spec content_type(data_format()) -> binary().
 content_type(text) -> <<"text/plain">>;
-content_type(json) -> <<"application/json">>.
+content_type(json) -> <<"application/json">>;
+content_type(msgpack) -> <<"application/x-msgpack">>.

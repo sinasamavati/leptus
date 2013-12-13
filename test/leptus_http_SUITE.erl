@@ -13,6 +13,7 @@
 -export([http_404/1]).
 -export([http_405/1]).
 -export([http_is_authorized/1]).
+-export([http_msgpack/1]).
 
 %% helpers
 -import(helpers, [request/2, request/3, request/4, response_body/1]).
@@ -22,7 +23,8 @@ init_per_suite(Config) ->
     Handlers = [
                 {leptus_http1, []},
                 {leptus_http2, []},
-                {leptus_http3, []}
+                {leptus_http3, []},
+                {leptus_http4, []}
                ],
     {ok, _} = leptus:start_http(Handlers),
     Config.
@@ -33,7 +35,7 @@ end_per_suite(_Config) ->
 all() ->
     [
      http_get, http_post, http_put, http_delete,
-     http_404, http_405, http_is_authorized
+     http_404, http_405, http_is_authorized, http_msgpack
     ].
 
 http_get(_) ->
@@ -66,7 +68,11 @@ http_get(_) ->
     {200, _, C8} = request(M, "/users/asdf/profile"),
     B1 = response_body(C8),
     {200, _, C9} = request(M, "/users/you/profile"),
-    B2 = response_body(C9).
+    B2 = response_body(C9),
+
+    B3 = <<129,163,109,115,103,168,119,104,97,116,101,118,101,114>>,
+    {200, _, C10} = request(M, "/msgpack/whatever"),
+    B3 = response_body(C10).
 
 http_put(_) ->
     M = <<"PUT">>,
@@ -138,3 +144,18 @@ http_is_authorized(_) ->
     <<"{\"error\":\"unauthorized\"}">> = response_body(C),
     <<"application/json">> = proplists:get_value(<<"content-type">>, H1),
     <<"{\"error\":\"unauthorized\"}">> = response_body(C1).
+
+http_msgpack(_) ->
+    M = <<"GET">>,
+    ContentType = <<"application/x-msgpack">>,
+    B1 = <<129,163,109,115,103,168,119,104,97,116,101,118,101,114>>,
+    B2 = <<129,163,109,115,103,181,99,111,111,108,45,104,109,109,
+           45,109,115,103,112,97,99,107,45,99,111,111,108>>,
+
+    {200, H1, C1} = request(M, "/msgpack/whatever"),
+    {200, H2, C2} = request(M, "/msgpack/cool-hmm-msgpack-cool"),
+
+    B1 = response_body(C1),
+    B2 = response_body(C2),
+    ContentType = proplists:get_value(<<"content-type">>, H1),
+    ContentType = proplists:get_value(<<"content-type">>, H2).
