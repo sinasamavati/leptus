@@ -11,8 +11,12 @@
 
 
 init_per_suite(Config) ->
-    {ok, P} = leptus_config:start_link(),
-    unlink(P),
+    case leptus_config:start_link() of
+        {ok, Pid} ->
+            unlink(Pid);
+        {error, {already_started, Pid}} ->
+            unlink(Pid)
+    end,
     Config.
 
 end_per_suite(_Config) ->
