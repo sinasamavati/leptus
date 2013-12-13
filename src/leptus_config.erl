@@ -11,6 +11,7 @@
 -export([terminate/2]).
 -export([code_change/3]).
 
+-export([start/0]).
 -export([start_link/0]).
 -export([stop/0]).
 -export([lookup/1]).
@@ -20,6 +21,11 @@
 -export([port_num/0]).
 -export([handlers/0]).
 
+
+%% for test purposes
+-spec start() -> {ok, pid()} | {error, any()}.
+start() ->
+    gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
 -spec start_link() -> {ok, pid()} | {error, any()}.
 start_link() ->
@@ -95,7 +101,7 @@ handle_cast(_Msg, TabId) ->
 handle_info(_Msg, TabId) ->
     {noreply, TabId}.
 
-terminate(_Reason, _TabId) ->
+terminate(normal, _TabId) ->
     ok.
 
 code_change(_OldVsn, TabId, _Extra) ->
@@ -115,6 +121,10 @@ config_file() ->
 get_value(Key, Proplist) ->
     get_value(Key, Proplist, undefined).
 
+get_value(_, undefined, Default) ->
+    Default;
+get_value(_, [], Default) ->
+    Default;
 get_value(Key, Proplist, Default) ->
     case lists:keyfind(Key, 1, Proplist) of
         {_, undefined} -> Default;
