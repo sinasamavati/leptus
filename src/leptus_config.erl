@@ -58,13 +58,14 @@ set(Key, Value) ->
     gen_server:call(?MODULE, {set, {Key, Value}}).
 
 %% get IP address to bind to
+-spec ip_addr() -> inet:ip_address().
 ip_addr() ->
     Default = {127, 0, 0, 1},
     get_value(ip, lookup(http), Default).
 
 
 %% get http port to listen on
--spec port_num() -> non_neg_integer() | 8080.
+-spec port_num() -> inet:port_number().
 port_num() ->
     Default = 8080,
     get_value(port, lookup(http), Default).

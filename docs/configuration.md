@@ -9,20 +9,20 @@ There are two types of configuration that can be defined:
 
 #### http
 
-IP address and port number have default values: `127.0.0.1:8000`, but you can override them as follows:
+IP address and port number have default values: `127.0.0.1:8080`, but you can override them as follows:
 
 ```erlang
 {http,
  [
-  {ip, string()},
-  {port, integer()}
+  {ip, inet:ip_address()},
+  {port, inet:port_number()}
  ]
 }.
 ```
 
 #### handlers
 
-Leptus must know your request handlers and their states, they should be defined as `{handlers, [{module(), state()}]}.` in `leptus.config`
+Leptus must know your request handlers and their states, they should be defined as `{handlers, [{module(), State::any()}]}.` in `leptus.config`
 
 ## Example
 
@@ -31,14 +31,14 @@ Leptus must know your request handlers and their states, they should be defined 
 
 {http,
  [
-  {ip, "0.0.0.0"},
-  {port, 8080}
+  {ip, {0, 0, 0, 0}},
+  {port, 4000}
  ]
 }.
 
 {handlers,
  [
-  {rq_handler, []}
+  {rq_handler, undefined_state}
  ]
 }.
 ```
