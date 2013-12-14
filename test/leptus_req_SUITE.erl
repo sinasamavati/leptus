@@ -54,10 +54,18 @@ version(_) ->
 body(_) ->
     <<>> = leptus_req:body(req1()),
     <<"AAAAAAAAAAA">> = leptus_req:body(req3()),
+
+    %% when content-type is application/json
     [
      {<<"firstname">>, <<"Sina">>},
      {<<"lastname">>, <<"Samavati">>}
-    ] = leptus_req:body(req5()).
+    ] = leptus_req:body(req5()),
+
+    %% when content-type is application/x-msgpack
+    [
+     {<<"abc">>, 123},
+     {456, <<"def">>}
+    ] = leptus_req:body(req7()).
 
 body_raw(_) ->
     <<>> = leptus_req:body_raw(req1()),
@@ -194,4 +202,18 @@ req6() ->
          {<<"content-length">>,<<"45">>}],
      [],undefined,[],waiting,undefined,
      <<"{\"firstname\": \"Sina\", \"lastname\": \"Samavati\"}">>,
+     false,waiting,[],<<>>,console_log}.
+
+req7() ->
+    {http_req,port,ranch_tcp,keepalive,pid,<<"POST">>,
+     'HTTP/1.1',
+     {{127,0,0,1},60773},
+     <<"localhost">>,undefined,8080,<<"/msgpack">>,undefined,<<>>,
+     undefined,[],
+     [{<<"content-length">>,<<"13">>},
+      {<<"host">>,<<"localhost:8080">>},
+      {<<"user-agent">>,<<"Cow">>},
+      {<<"content-type">>,<<"application/x-msgpack">>}],
+     [],undefined,[],waiting,undefined,
+     <<130,163,97,98,99,123,205,1,200,163,100,101,102>>,
      false,waiting,[],<<>>,console_log}.

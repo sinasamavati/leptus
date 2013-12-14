@@ -54,7 +54,8 @@ version(Req) ->
 method(Req) ->
     Req#http_req.method.
 
--spec body(cowboy_req:req()) -> binary().
+-spec body(cowboy_req:req()) -> binary() | leptus_handler:json_term() |
+                                msgpack:msgpack_term() | {error, any()}.
 body(Req) ->
     Body = body_raw(Req),
     case header(<<"content-type">>, Req) of
@@ -62,7 +63,12 @@ body(Req) ->
         <<"application/json">> ->
             leptus_json:decode(Body);
         <<"application/x-msgpack">> ->
-            msgpack:unpack(Body);
+            case msgpack:unpack(Body) of
+                {ok, {UnpackedBody}} ->
+                    UnpackedBody;
+                Else ->
+                    Else
+            end;
         _ ->
             Body
     end.
