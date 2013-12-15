@@ -98,10 +98,10 @@ parse_header(_) ->
     } = leptus_req:parse_header(<<"content-type">>, req5()).
 
 auth(_) ->
-    <<>> = leptus_req:auth(<<"basic">>, req1()),
-    <<>> = leptus_req:auth(<<"basic">>, req3()),
-    {<<"123">>, <<"456">>} = leptus_req:auth(<<"basic">>, req5()),
-    error = leptus_req:auth(<<"basic">>, req6()).
+    <<>> = leptus_req:auth(basic, req1()),
+    <<>> = leptus_req:auth(basic, req3()),
+    {<<"123">>, <<"456">>} = leptus_req:auth(basic, req5()),
+    error = leptus_req:auth(basic, req6()).
 
 method(_) ->
     <<"GET">> = leptus_req:method(req1()),

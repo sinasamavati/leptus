@@ -70,7 +70,7 @@ post("/users/:id", _Req, State) ->
 
 %% internal
 check_auth(Req, State) ->
-    case leptus_req:auth(<<"basic">>, Req) of
+    case leptus_req:auth(basic, Req) of
         {<<"sina">>, <<"wrote_me">>} ->
             {true, State};
         _ ->

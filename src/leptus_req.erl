@@ -89,8 +89,8 @@ header(Name, Req) ->
 parse_header(Name, Req) ->
     invoke(parse_header, [Name, Req, <<>>]).
 
--spec auth(binary(), cowboy_req:req()) -> {binary(), binary()} | <<>> | error.
-auth(<<"basic">>, Req) ->
+-spec auth(basic, cowboy_req:req()) -> {binary(), binary()} | <<>> | error.
+auth(basic, Req) ->
     case parse_header(<<"authorization">>, Req) of
         {<<"basic">>, UserPass} ->
             UserPass;
