@@ -80,14 +80,17 @@ handlers() ->
 %% gen_server
 init([]) ->
     ets:new(?MODULE, [set, named_table, protected]),
+    {ok, ?MODULE}.
+
+handle_call({set, {priv_dir, Dir}}, _From, TabId) ->
+    true = ets:insert(TabId, {priv_dir, Dir}),
     %% read leptus.config and insert configurations to ets
-    Conf = config_file(),
+    Conf = config_file(Dir),
     Http = get_value(http, Conf),
     Handlers = get_value(handlers, Conf),
     ets:insert(?MODULE, {http, Http}),
     ets:insert(?MODULE, {handlers, Handlers}),
-    {ok, ?MODULE}.
-
+    {reply, ok, TabId};
 handle_call({set, Arg}, _From, TabId) ->
     true = ets:insert(TabId, Arg),
     {reply, ok, TabId};
@@ -110,9 +113,8 @@ code_change(_OldVsn, TabId, _Extra) ->
 
 
 %% read priv/leptus.config file
-config_file() ->
-    {ok, Cwd} = file:get_cwd(),
-    case file:consult(filename:join([Cwd, "priv", "leptus.config"])) of
+config_file(PrivDir) ->
+    case file:consult(filename:join([PrivDir, "leptus.config"])) of
         {error, _} ->
             [];
         {ok, Terms} ->
