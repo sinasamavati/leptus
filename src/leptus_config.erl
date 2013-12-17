@@ -82,10 +82,10 @@ init([]) ->
     ets:new(?MODULE, [set, named_table, protected]),
     {ok, ?MODULE}.
 
-handle_call({set, {priv_dir, Dir}}, _From, TabId) ->
-    true = ets:insert(TabId, {priv_dir, Dir}),
+handle_call({set, {priv_dir, App}}, _From, TabId) ->
+    true = ets:insert(TabId, {priv_dir, App}),
     %% read leptus.config and insert configurations to ets
-    Conf = config_file(Dir),
+    Conf = config_file(App),
     Http = get_value(http, Conf),
     Handlers = get_value(handlers, Conf),
     ets:insert(?MODULE, {http, Http}),
@@ -113,8 +113,8 @@ code_change(_OldVsn, TabId, _Extra) ->
 
 
 %% read priv/leptus.config file
-config_file(PrivDir) ->
-    case file:consult(filename:join([PrivDir, "leptus.config"])) of
+config_file(App) ->
+    case file:consult(filename:join([priv_dir(App), "leptus.config"])) of
         {error, _} ->
             [];
         {ok, Terms} ->
@@ -133,4 +133,13 @@ get_value(Key, Proplist, Default) ->
         {_, undefined} -> Default;
         {_, Value} -> Value;
         _ -> Default
+    end.
+
+priv_dir(App) ->
+    case code:priv_dir(App) of
+        {error, bad_name} ->
+            Ebin = filename:dirname(code:which(App)),
+            filename:join(filename:dirname(Ebin), "priv");
+        PrivDir ->
+            PrivDir
     end.
