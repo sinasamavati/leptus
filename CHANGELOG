@@ -1,3 +1,8 @@
+2013-12-20  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_config.erl: export config_file/2
+	avoide initializing configuration based on setting priv_dir
+
 2013-12-16  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_req.erl (auth/2): change it to get the atom 'basic' as the first argument

@@ -20,6 +20,7 @@
 -export([ip_addr/0]).
 -export([port_num/0]).
 -export([handlers/0]).
+-export([config_file/1]).
 
 
 %% for test purposes
@@ -76,21 +77,21 @@ handlers() ->
     Default = [],
     lookup(handlers, Default).
 
+%% read priv/leptus.config file
+config_file(App) ->
+    case file:consult(filename:join([priv_dir(App), "leptus.config"])) of
+        {error, _} ->
+            [];
+        {ok, Terms} ->
+            Terms
+    end.
+
 
 %% gen_server
 init([]) ->
     ets:new(?MODULE, [set, named_table, protected]),
     {ok, ?MODULE}.
 
-handle_call({set, {priv_dir, App}}, _From, TabId) ->
-    true = ets:insert(TabId, {priv_dir, App}),
-    %% read leptus.config and insert configurations to ets
-    Conf = config_file(App),
-    Http = get_value(http, Conf),
-    Handlers = get_value(handlers, Conf),
-    ets:insert(?MODULE, {http, Http}),
-    ets:insert(?MODULE, {handlers, Handlers}),
-    {reply, ok, TabId};
 handle_call({set, Arg}, _From, TabId) ->
     true = ets:insert(TabId, Arg),
     {reply, ok, TabId};
@@ -111,18 +112,6 @@ terminate(normal, _TabId) ->
 code_change(_OldVsn, TabId, _Extra) ->
     {ok, TabId}.
 
-
-%% read priv/leptus.config file
-config_file(App) ->
-    case file:consult(filename:join([priv_dir(App), "leptus.config"])) of
-        {error, _} ->
-            [];
-        {ok, Terms} ->
-            Terms
-    end.
-
-get_value(Key, Proplist) ->
-    get_value(Key, Proplist, undefined).
 
 get_value(_, undefined, Default) ->
     Default;
