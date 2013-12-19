@@ -1,5 +1,8 @@
 2013-12-20  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus.erl: remove start_http/0 since it was unreliable
+	update start_http/2 that now takes two arguments, Handlers and Options
+
 	* src/leptus_config.erl: export config_file/2
 	avoide initializing configuration based on setting priv_dir
 
