@@ -30,9 +30,17 @@ RemoveJiffy = fun() ->
                            end,
                       [{deps, L1}, {erl_opts, [{d, 'USE_JSX'}]}|CONFIG]
               end.
-case os:getenv("USE_JSX") of
-    false ->
+
+case (catch leptus_json:parser()) of
+    jiffy ->
         RemoveJsx();
+    jsx ->
+        RemoveJiffy();
     _ ->
-        RemoveJiffy()
+        case os:getenv("USE_JSX") of
+            false ->
+                RemoveJsx();
+            _ ->
+                RemoveJiffy()
+        end
 end.
