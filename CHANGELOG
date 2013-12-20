@@ -2,6 +2,7 @@
 
 	* src/leptus.erl: remove start_http/0 since it was unreliable
 	update start_http/2 that now takes two arguments, Handlers and Options
+	add start_https/0,1 start_spdy/0,1 stop_https/0 stop_spdy/0 to handle starting/stopping https and spdy
 
 	* src/leptus_config.erl: export config_file/2
 	avoide initializing configuration based on setting priv_dir
