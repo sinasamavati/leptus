@@ -17,8 +17,8 @@
 -export([lookup/1]).
 -export([lookup/2]).
 -export([set/2]).
--export([ip_addr/0]).
--export([port_num/0]).
+-export([ip_addr/1]).
+-export([port_num/1]).
 -export([handlers/0]).
 -export([config_file/1]).
 -export([priv_dir/1]).
@@ -60,17 +60,17 @@ set(Key, Value) ->
     gen_server:call(?MODULE, {set, {Key, Value}}).
 
 %% get IP address to bind to
--spec ip_addr() -> inet:ip_address().
-ip_addr() ->
+-spec ip_addr(atom()) -> inet:ip_address().
+ip_addr(Section) ->
     Default = {127, 0, 0, 1},
-    get_value(ip, lookup(http), Default).
+    get_value(ip, lookup(Section), Default).
 
 
 %% get http port to listen on
--spec port_num() -> inet:port_number().
-port_num() ->
+-spec port_num(atom()) -> inet:port_number().
+port_num(Section) ->
     Default = 8080,
-    get_value(port, lookup(http), Default).
+    get_value(port, lookup(Section), Default).
 
 %% get handlers
 -spec handlers() -> leptus:handlers() | [].

@@ -36,28 +36,40 @@ lookup(_) ->
     [{port_num, 8080}, {ip_addr, "127.0.0.1"}] = leptus_config:lookup(http).
 
 ip_addr(_) ->
-    {127, 0, 0, 1} = leptus_config:ip_addr(),
+    {127, 0, 0, 1} = leptus_config:ip_addr(http),
 
     leptus_config:set(http, [{ip, {0, 0, 0, 0}}]),
-    {0, 0, 0, 0} = leptus_config:ip_addr(),
-
-    leptus_config:set(http, [{ip, {10, 10, 0, 1}}]),
-    {10, 10, 0, 1} = leptus_config:ip_addr(),
+    {0, 0, 0, 0} = leptus_config:ip_addr(http),
 
     leptus_config:set(http, [{ip, undefined}]),
-    {127, 0, 0, 1} = leptus_config:ip_addr().
+    {127, 0, 0, 1} = leptus_config:ip_addr(http),
+
+    leptus_config:set(https, [{ip, {10, 10, 0, 1}}]),
+    {10, 10, 0, 1} = leptus_config:ip_addr(https),
+
+    leptus_config:set(spdy, [{ip, {10, 10, 0, 5}}]),
+    {10, 10, 0, 5} = leptus_config:ip_addr(spdy),
+
+    {127, 0, 0, 1} = leptus_config:ip_addr(http),
+    {10, 10, 0, 1} = leptus_config:ip_addr(https).
 
 port_num(_) ->
-    8080 = leptus_config:port_num(),
+    8080 = leptus_config:port_num(http),
 
     leptus_config:set(http, [{port, 9000}]),
-    9000 = leptus_config:port_num(),
-
-    leptus_config:set(http, [{port, 4000}]),
-    4000 = leptus_config:port_num(),
+    9000 = leptus_config:port_num(http),
 
     leptus_config:set(http, [{port, undefined}]),
-    8080 = leptus_config:port_num().
+    8080 = leptus_config:port_num(http),
+
+    leptus_config:set(https, [{port, 4443}]),
+    4443 = leptus_config:port_num(https),
+
+    leptus_config:set(spdy, [{port, 9876}]),
+    9876 = leptus_config:port_num(spdy),
+
+    8080 = leptus_config:port_num(http),
+    4443 = leptus_config:port_num(https).
 
 handlers(_) ->
     [] = leptus_config:handlers(),

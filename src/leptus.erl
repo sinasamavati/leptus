@@ -119,8 +119,8 @@ start_listener(Listener, Handlers, Options) ->
     Dispatch = cowboy_router:compile([{'_', Paths}]),
 
     %% basic http configuration
-    IP = leptus_config:ip_addr(),
-    Port = leptus_config:port_num(),
+    IP = leptus_config:ip_addr(Listener),
+    Port = leptus_config:port_num(Listener),
 
     ListenerFunc = get_listener_func(Listener),
     Ref = get_ref_name(Listener),
