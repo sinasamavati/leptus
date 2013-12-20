@@ -21,6 +21,7 @@
 -export([port_num/0]).
 -export([handlers/0]).
 -export([config_file/1]).
+-export([priv_dir/1]).
 
 
 %% for test purposes
@@ -86,6 +87,16 @@ config_file(App) ->
             Terms
     end.
 
+%% find the path to the priv directory in an application
+priv_dir(App) ->
+    case code:priv_dir(App) of
+        {error, bad_name} ->
+            Ebin = filename:dirname(code:which(App)),
+            filename:join(filename:dirname(Ebin), "priv");
+        PrivDir ->
+            PrivDir
+    end.
+
 
 %% gen_server
 init([]) ->
@@ -122,13 +133,4 @@ get_value(Key, Proplist, Default) ->
         {_, undefined} -> Default;
         {_, Value} -> Value;
         _ -> Default
-    end.
-
-priv_dir(App) ->
-    case code:priv_dir(App) of
-        {error, bad_name} ->
-            Ebin = filename:dirname(code:which(App)),
-            filename:join(filename:dirname(Ebin), "priv");
-        PrivDir ->
-            PrivDir
     end.
