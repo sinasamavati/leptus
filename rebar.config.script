@@ -7,7 +7,7 @@ Deps = fun() ->
                    Else ->
                        Else
                end
-       end.
+       end,
 RemoveJsx = fun() ->
                     {deps, L} = Deps(),
                     Config1 = CONFIG -- [{deps, L}],
@@ -18,7 +18,7 @@ RemoveJsx = fun() ->
                                  L -- [Jsx]
                          end,
                     Config1 ++ [{deps, L1}]
-            end.
+            end,
 RemoveJiffy = fun() ->
                       {deps, L} = Deps(),
                       Config1 = CONFIG -- [{deps, L}],
@@ -29,7 +29,7 @@ RemoveJiffy = fun() ->
                                    L -- [Jiffy]
                            end,
                       [{deps, L1}, {erl_opts, [{d, 'USE_JSX'}]}|CONFIG]
-              end.
+              end,
 
 case (catch leptus_json:parser()) of
     jiffy ->
