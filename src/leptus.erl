@@ -5,9 +5,7 @@
 
 -export([start_http/1]).
 -export([start_http/2]).
--export([start_https/1]).
 -export([start_https/2]).
--export([start_spdy/1]).
 -export([start_spdy/2]).
 -export([stop_http/0]).
 -export([stop_https/0]).
@@ -32,17 +30,9 @@ start_http(Handlers) ->
 start_http(Handlers, Options) ->
     start_listener(http, Handlers, Options).
 
--spec start_https(handlers()) -> {ok, pid()} | {error, any()}.
-start_https(Handlers) ->
-    start_listener(https, Handlers, []).
-
 -spec start_https(handlers(), options()) -> {ok, pid()} | {error, any()}.
 start_https(Handlers, Options) ->
     start_listener(https, Handlers, Options).
-
--spec start_spdy(handlers()) -> {ok, pid()} | {error, any()}.
-start_spdy(Handlers) ->
-    start_listener(spdy, Handlers, []).
 
 -spec start_spdy(handlers(), options()) -> {ok, pid()} | {error, any()}.
 start_spdy(Handlers, Options) ->
