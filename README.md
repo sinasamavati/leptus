@@ -84,6 +84,7 @@ $ curl localhost:8080/hi/Leptus
 * Can respond in plain text, JSON or MessagePack
 * Supports basic authentication
 * Can be upgraded while it's running (no stopping is required)
+* Supports HTTPS and SPDY
 
 ## Documentation
 
