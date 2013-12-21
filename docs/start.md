@@ -18,7 +18,7 @@ Options :: [{priv_dir, App :: atom()}]
 leptus:start_http(Handlers, Options) -> {ok, pid()}
 ```
 
-Note that if you declared `Handlers` in your `leptus.config` file, you should leave the first argument as en empty list,
+Note that if you declared `Handlers` in your `leptus.config` file, you should leave the first argument as an empty list,
 also it should be declared that which `priv` directory `leptus.config` should be read from.
 
 #### start_https/2
