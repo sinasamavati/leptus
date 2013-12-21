@@ -1,20 +1,46 @@
 # Start
 
-#### start_http/0
-
-Starts leptus and it's dependencies, also note that priv/leptus.config must be existing
-
-```erlang
-leptus:start_http() -> {ok, pid()}
-```
-
 #### start_http/1
 
-Such as [start_http/0](#start_http0), but requires the `Handlers` argument.
+Starts leptus' dependencies and an HTTP listener.
 
 ```erlang
+Handlers :: [{module(), State :: any()}]
 leptus:start_http(Handlers) -> {ok, pid()}
 ```
+
+#### start_http/2
+
+Such as [start_http/1](#start_http1), but requires the `Options` argument too.
+
+```erlang
+Options :: [{priv_dir, App :: atom()}]
+leptus:start_http(Handlers, Options) -> {ok, pid()}
+```
+
+Note that if you declared `Handlers` in your `leptus.config` file, you should leave the first argument as en empty list,
+also it should be declared that which `priv` directory `leptus.config` should be read from.
+
+#### start_https/2
+
+Starts leptus' dependencies and an HTTPS listener.
+
+```erlang
+leptus:start_https(Handlers, Options) -> {ok, pid()}
+```
+
+Works like [start_http/2](#start_http2), requires specifying `cacertfile`, `certfile`
+and `keyfile` as well. Check out the [listener](configuration.md#listener) part of configuration for more information about these three options.
+
+#### start_spdy/2
+
+Starts leptus' dependencies and an SPDY listener.
+
+```erlang
+leptus:start_spdy(Handlers, Options) -> {ok, pid()}
+```
+
+Requires the same things as [start_https/2](#start_https2).
 
 ## The OTP way
 
@@ -25,4 +51,4 @@ application:start(ranch),
 application:start(cowboy),
 application:start(leptus).
 ```
-and then [start_http/0](#start_http0) or [start_http/1](#start_http1) should be called.
+and then one of the functions that are described above should be called to start a listener.

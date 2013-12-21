@@ -2,8 +2,8 @@
 
 ## Preface
 
-Let me talk about a *thing* that makes Leptus simple. Parse transformation, the *thing* that saves us some headache, so now we've got a rule,
-using the module `leptus_pt` for doing the parse transformation when compiling our request/resource handlers (modules).
+Let me talk about a *thing* that makes Leptus simple. Parse transform, the *thing* that saves us some headache, so now we've got a rule,
+using the module `leptus_pt` for doing the parse transform when compiling our request/resource handlers (modules).
 
 So, I suggest you using the following in your request/resource handlers (modules):
 
@@ -37,10 +37,12 @@ So, I suggest you using the following in your request/resource handlers (modules
   * [auth/2](request.md#auth2)
 
 * [Configuration](configuration.md)
-  * [http (basic http configuration)](configuration.md#http)
+  * [listener (basic listener configuration)](configuration.md#listener)
   * [handlers (request handlers)](configuration.md#handlers)
 
 * [Start](start.md)
-  * [start_http/0](start.md#start_http0)
   * [start_http/1](start.md#start_http1)
+  * [start_http/2](start.md#start_http2)
+  * [start_https/2](start.md#start_https2)
+  * [start_spdy/2](start.md#start_spdy2)
   * [The OTP way](start.md#the-otp-way)
