@@ -56,6 +56,8 @@ upgrade() ->
 
 -spec upgrade(handlers()) -> ok.
 upgrade(Handlers) ->
+    leptus_config:set(handlers, Handlers),
+    Handlers = leptus_config:handlers(),  %% make sure it's been set
     Paths = leptus_router:paths(Handlers),
     cowboy:set_env(leptus_http, dispatch, cowboy_router:compile([{'_', Paths}])).
 
