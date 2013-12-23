@@ -72,13 +72,16 @@ upgrade(Handlers) ->
 
 %% internal
 start_listener(Listener, App) when is_atom(App) ->
-    ensure_deps_started(),
-    ensure_started(leptus),
-
-    leptus_config:set(priv_dir, App),
     Options = leptus_config:config_file(App),
-    start_listener(Listener, Options);
+    Ref = get_ref_name(Listener),
+    start_listener(Ref, Listener, Options);
 start_listener(Listener, Options) when is_list(Options) ->
+    Ref = get_ref_name(Listener),
+    start_listener(Ref, Listener, Options);
+start_listener(_, _) ->
+    error(badarg).
+
+start_listener(Ref, Listener, Options) ->
     ensure_deps_started(),
     ensure_started(leptus),
 
@@ -99,15 +102,12 @@ start_listener(Listener, Options) when is_list(Options) ->
     Port = get_value(port, ListenerOpts, 8080),
 
     ListenerFunc = get_listener_func(Listener),
-    Ref = get_ref_name(Listener),
     cowboy:ListenerFunc(Ref, 100,
                         [{ip, IP}, {port, Port}] ++ get_extra_opts(ListenerOpts),
                         [
                          {env, [{dispatch, Dispatch}]},
                          {onresponse, fun leptus_hooks:console_log/4}
-                        ]);
-start_listener(_, _) ->
-    error(badarg).
+                        ]).
 
 get_listener_func(http) -> start_http;
 get_listener_func(https) -> start_https;
