@@ -59,10 +59,10 @@ set(Key, Value) ->
 %% read priv/leptus.config file
 config_file(App) ->
     case file:consult(filename:join([priv_dir(App), "leptus.config"])) of
-        {error, _} ->
-            [];
         {ok, Terms} ->
-            Terms
+            Terms;
+        Else ->
+            Else
     end.
 
 %% find the path to the priv directory in an application
