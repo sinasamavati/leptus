@@ -80,6 +80,10 @@ ensure_deps_started() ->
 get_value(Key, Opts) ->
     get_value(Key, Opts, undefined).
 
+get_value(_, [], Default) ->
+    Default;
+get_value(_, undefined, Default) ->
+    Default;
 get_value(Key, Opts, Default) ->
     case lists:keyfind(Key, 1, Opts) of
         {_, V} -> V;
@@ -108,7 +112,8 @@ start_listener(Listener, Handlers, Options) ->
 
     %% routes
     Paths = leptus_router:paths(leptus_config:handlers()),
-    Dispatch = cowboy_router:compile([{'_', Paths}]),
+    HostMatch = get_value(hostmatch, leptus_config:lookup(Listener), '_'),
+    Dispatch = cowboy_router:compile([{HostMatch, Paths}]),
 
     %% basic http configuration
     IP = leptus_config:ip_addr(Listener),

@@ -11,13 +11,14 @@ There are two types of configuration that can be defined:
 
 This means `http`, `https` and/or `spdy`.
 
-IP address and port number have default values: `127.0.0.1:8080`, but you can override them as follows:
+IP address and port number have default values: `127.0.0.1:8080`, also host match is set to `'_'` by default, but you can override them as follows:
 
 ```erlang
 {Listener :: http | https | spdy,
  [
   {ip, inet:ip_address()},
-  {port, inet:port_number()}
+  {port, inet:port_number()},
+  {hostmatch, cowboy_router:dispatch_match()}
  ]
 }.
 ```
@@ -49,7 +50,8 @@ Leptus must know your request handlers and their states, they should be defined 
 {http,
  [
   {ip, {0, 0, 0, 0}},
-  {port, 4000}
+  {port, 4000},
+  {hostmatch, "api.example.org"},
  ]
 }.
 
@@ -57,6 +59,7 @@ Leptus must know your request handlers and their states, they should be defined 
  [
   {ip, {0, 0, 0, 0}},
   {port, 4443},
+  {hostmatch, "api.example.org"},
   {cacertfile, "ssl/ca.crt"},
   {certfile, "ssl/server.crt"},
   {keyfile, "ssl/server.key"}
@@ -67,6 +70,7 @@ Leptus must know your request handlers and their states, they should be defined 
  [
   {ip, {0, 0, 0, 0}},
   {port, 4444},
+  {hostmatch, "api.example.org"},
   {cacertfile, "ssl/ca.crt"},
   {certfile, "ssl/server.crt"},
   {keyfile, "ssl/server.key"}
