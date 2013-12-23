@@ -17,9 +17,6 @@
 -export([lookup/1]).
 -export([lookup/2]).
 -export([set/2]).
--export([ip_addr/1]).
--export([port_num/1]).
--export([handlers/0]).
 -export([config_file/1]).
 -export([priv_dir/1]).
 
@@ -58,25 +55,6 @@ lookup(Key, Default) ->
 -spec set(any(), any()) -> ok.
 set(Key, Value) ->
     gen_server:call(?MODULE, {set, {Key, Value}}).
-
-%% get IP address to bind to
--spec ip_addr(atom()) -> inet:ip_address().
-ip_addr(Section) ->
-    Default = {127, 0, 0, 1},
-    get_value(ip, lookup(Section), Default).
-
-
-%% get http port to listen on
--spec port_num(atom()) -> inet:port_number().
-port_num(Section) ->
-    Default = 8080,
-    get_value(port, lookup(Section), Default).
-
-%% get handlers
--spec handlers() -> leptus:handlers() | [].
-handlers() ->
-    Default = [],
-    lookup(handlers, Default).
 
 %% read priv/leptus.config file
 config_file(App) ->
@@ -122,15 +100,3 @@ terminate(normal, _TabId) ->
 
 code_change(_OldVsn, TabId, _Extra) ->
     {ok, TabId}.
-
-
-get_value(_, undefined, Default) ->
-    Default;
-get_value(_, [], Default) ->
-    Default;
-get_value(Key, Proplist, Default) ->
-    case lists:keyfind(Key, 1, Proplist) of
-        {_, undefined} -> Default;
-        {_, Value} -> Value;
-        _ -> Default
-    end.
