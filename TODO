@@ -1,5 +1,2 @@
-* Add https support
 * Add examples
 * Add configurable prefix for handlers/routes
-* Improve the code upgrade functioniality
-* Fix finding the right priv_dir without using CWD
