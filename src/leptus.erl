@@ -56,14 +56,18 @@ stop_spdy() ->
 
 -spec upgrade() -> ok.
 upgrade() ->
-    upgrade(leptus_config:handlers()).
+    upgrade(leptus_config:lookup(handlers)).
 
 -spec upgrade(handlers()) -> ok.
 upgrade(Handlers) ->
     leptus_config:set(handlers, Handlers),
-    Handlers = leptus_config:handlers(),  %% make sure it's been set
+    Handlers = leptus_config:lookup(handlers), %% make sure it's been set
+    Listener = leptus_config:lookup(listener),
     Paths = leptus_router:paths(Handlers),
-    cowboy:set_env(leptus_http, dispatch, cowboy_router:compile([{'_', Paths}])).
+    HostMatch = get_value(hostmatch, leptus_config:lookup(Listener), '_'),
+    Dispatch = cowboy_router:compile([{HostMatch, Paths}]),
+    Ref = get_ref_name(Listener),
+    cowboy:set_env(Ref, dispatch, Dispatch).
 
 
 %% internal
@@ -77,7 +81,8 @@ start_listener(Listener, Options) when is_list(Options) ->
 
     Handlers = get_value(handlers, Options, []),
     ListenerOpts = get_value(Listener, Options, []),
-    %% initialize 'handlers' and Listener k/v
+    %% initialize 'listener', 'handlers' and Listener k/v
+    leptus_config:set(listener, Listener),
     leptus_config:set(Listener, ListenerOpts),
     leptus_config:set(handlers, Handlers),
 
@@ -132,9 +137,6 @@ ensure_deps_started() ->
     ensure_started(crypto),
     ensure_started(ranch),
     ensure_started(cowboy).
-
-get_value(Key, Opts) ->
-    get_value(Key, Opts, undefined).
 
 get_value(_, [], Default) ->
     Default;
