@@ -4,9 +4,8 @@
 -author("Sina Samavati <sina.samv@gmail.com>").
 
 -export([start_http/1]).
--export([start_http/2]).
--export([start_https/2]).
--export([start_spdy/2]).
+-export([start_https/1]).
+-export([start_spdy/1]).
 -export([stop_http/0]).
 -export([stop_https/0]).
 -export([stop_spdy/0]).
@@ -17,26 +16,31 @@
 -type handlers() :: [handler()].
 -export_type([handlers/0]).
 
--type option() :: {priv_dir, atom()}.
+-type listener() :: http | https | spdy.
+-type listener_option() :: {ip, inet:ip_address()}
+                         | {port, inet:port_number()}
+                         | {hostmatch, cowboy_router:dispatch_match()}
+                         | {cacertfile, file:name_all()}
+                         | {certfile, file:name_all()}
+                         | {keyfile, file:name_all()}.
+-type option() :: {handlers, handlers()} | {listener(), [listener_option()]}.
 -type options() :: [option()].
 -export_type([options/0]).
 
+-type app_name() :: atom().
 
--spec start_http(handlers()) -> {ok, pid()} | {error, any()}.
-start_http(Handlers) ->
-    start_listener(http, Handlers, []).
 
--spec start_http(handlers(), options()) -> {ok, pid()} | {error, any()}.
-start_http(Handlers, Options) ->
-    start_listener(http, Handlers, Options).
+-spec start_http(options() | app_name()) -> {ok, pid()} | {error, any()}.
+start_http(OptionsOrApp) ->
+    start_listener(http, OptionsOrApp).
 
--spec start_https(handlers(), options()) -> {ok, pid()} | {error, any()}.
-start_https(Handlers, Options) ->
-    start_listener(https, Handlers, Options).
+-spec start_https(options() | app_name()) -> {ok, pid()} | {error, any()}.
+start_https(OptionsOrApp) ->
+    start_listener(https, OptionsOrApp).
 
--spec start_spdy(handlers(), options()) -> {ok, pid()} | {error, any()}.
-start_spdy(Handlers, Options) ->
-    start_listener(spdy, Handlers, Options).
+-spec start_spdy(options() | app_name()) -> {ok, pid()} | {error, any()}.
+start_spdy(OptionsOrApp) ->
+    start_listener(spdy, OptionsOrApp).
 
 -spec stop_http() -> ok | {error, not_found}.
 stop_http() ->
@@ -63,6 +67,58 @@ upgrade(Handlers) ->
 
 
 %% internal
+start_listener(Listener, App) when is_atom(App) ->
+    leptus_config:set(priv_dir, App),
+    Options = leptus_config:config_file(App),
+    start_listener(Listener, Options);
+start_listener(Listener, Options) when is_list(Options) ->
+    ensure_deps_started(),
+    ensure_started(leptus),
+
+    Handlers = get_value(handlers, Options, []),
+    ListenerOpts = get_value(Listener, Options, []),
+    %% initialize 'handlers' and Listener k/v
+    leptus_config:set(Listener, ListenerOpts),
+    leptus_config:set(handlers, Handlers),
+
+    %% routes
+    Paths = leptus_router:paths(Handlers),
+    HostMatch = get_value(hostmatch, ListenerOpts, '_'),
+    Dispatch = cowboy_router:compile([{HostMatch, Paths}]),
+
+    %% basic listener configuration
+    IP = get_value(ip, ListenerOpts, {127, 0, 0, 1}),
+    Port = get_value(port, ListenerOpts, 8080),
+
+    ListenerFunc = get_listener_func(Listener),
+    Ref = get_ref_name(Listener),
+    cowboy:ListenerFunc(Ref, 100,
+                        [{ip, IP}, {port, Port}] ++ get_extra_opts(ListenerOpts),
+                        [
+                         {env, [{dispatch, Dispatch}]},
+                         {onresponse, fun leptus_hooks:console_log/4}
+                        ]);
+start_listener(_, _) ->
+    error(badarg).
+
+get_listener_func(http) -> start_http;
+get_listener_func(https) -> start_https;
+get_listener_func(spdy) -> start_spdy.
+
+get_ref_name(http) -> leptus_http;
+get_ref_name(https) -> leptus_https;
+get_ref_name(spdy) -> leptus_spdy.
+
+%% get extra options based on listener
+get_extra_opts(http) -> [];
+get_extra_opts(Listener) ->
+    Opts = leptus_config:lookup(Listener),
+    [
+     {cacertfile, get_value(cacertfile, Opts, "")},
+     {certfile, get_value(certfile, Opts, "")},
+     {keyfile, get_value(keyfile, Opts, "")}
+    ].
+
 ensure_started(App) ->
     case application:start(App) of
         ok ->
@@ -89,62 +145,3 @@ get_value(Key, Opts, Default) ->
         {_, V} -> V;
         _ -> Default
     end.
-
-start_listener(Listener, Handlers, Options) ->
-    ensure_deps_started(),
-    ensure_started(leptus),
-
-    leptus_config:set(handlers, Handlers),
-    case get_value(priv_dir, Options) of
-        undefined ->
-            ok;
-        App ->
-            %% set priv_dir
-            leptus_config:set(priv_dir, App),
-            %% read leptus.config and insert configurations to ets
-            Conf = leptus_config:config_file(App),
-            ListenerOpts = get_value(Listener, Conf),
-            Handlers1 = get_value(handlers, Conf, Handlers),
-            %% initialize 'handlers' and Listener k/v
-            leptus_config:set(Listener, ListenerOpts),
-            leptus_config:set(handlers, Handlers1)
-    end,
-
-    %% routes
-    Paths = leptus_router:paths(leptus_config:handlers()),
-    HostMatch = get_value(hostmatch, leptus_config:lookup(Listener), '_'),
-    Dispatch = cowboy_router:compile([{HostMatch, Paths}]),
-
-    %% basic http configuration
-    IP = leptus_config:ip_addr(Listener),
-    Port = leptus_config:port_num(Listener),
-
-    ListenerFunc = get_listener_func(Listener),
-    Ref = get_ref_name(Listener),
-    ExtraOpts = get_extra_opts(Listener, leptus_config:lookup(priv_dir)),
-    cowboy:ListenerFunc(Ref, 100,
-                        [{ip, IP}, {port, Port}] ++ ExtraOpts,
-                        [
-                         {env, [{dispatch, Dispatch}]},
-                         {onresponse, fun leptus_hooks:console_log/4}
-                        ]).
-
-get_listener_func(http) -> start_http;
-get_listener_func(https) -> start_https;
-get_listener_func(spdy) -> start_spdy.
-
-get_ref_name(http) -> leptus_http;
-get_ref_name(https) -> leptus_https;
-get_ref_name(spdy) -> leptus_spdy.
-
-%% get extra optionns based on listener and priv_dir app
-get_extra_opts(_, undefined) -> [];
-get_extra_opts(Listener, App) when Listener == https; Listener == spdy ->
-    Opts = leptus_config:lookup(Listener),
-    PrivDir = leptus_config:priv_dir(App),
-    [
-     {cacertfile, filename:join(PrivDir, get_value(cacertfile, Opts))},
-     {certfile, filename:join(PrivDir, get_value(certfile, Opts))},
-     {keyfile, filename:join(PrivDir, get_value(keyfile, Opts))}
-    ];
-get_extra_opts(_, _) -> [].

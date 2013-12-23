@@ -1,3 +1,9 @@
+2013-12-23  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus.erl: remove start_http/2, start_https/2 start_spdy/2
+	add start_http/1, start_https/1, start_spdy/1 that requires options or app name,
+	if app name would be specified, leptus will look at app_name/priv/leptus.config to read options
+
 2013-12-20  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_config.erl: change port_num/0 ip_addr/0 to port_num/1 ip_addr/1 to find value by section

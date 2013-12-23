@@ -26,7 +26,7 @@ init_per_suite(Config) ->
                 {leptus_http3, []},
                 {leptus_http4, []}
                ],
-    {ok, _} = leptus:start_http(Handlers),
+    {ok, _} = leptus:start_http([{handlers, Handlers}]),
     Config.
 
 end_per_suite(_Config) ->

@@ -12,7 +12,7 @@
 -export([terminate/3]).
 
 start() ->
-    leptus:start_http([{?MODULE, state0}]).
+    leptus:start_http([{handlers, [{?MODULE, state0}]}]).
 
 init(_Route, _Req, State) ->
     State = state0,
