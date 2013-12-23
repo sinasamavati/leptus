@@ -12,7 +12,7 @@
 
 init_per_suite(Config) ->
     leptus_config:stop(), %% because it might be started in other suites
-    gen_server:start({local, leptus_config}, leptus_config, []),
+    leptus_config:start(),
     Config.
 
 end_per_suite(_Config) ->

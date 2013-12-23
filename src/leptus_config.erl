@@ -11,6 +11,7 @@
 -export([terminate/2]).
 -export([code_change/3]).
 
+-export([start/0]).
 -export([start_link/0]).
 -export([stop/0]).
 -export([lookup/1]).
@@ -22,6 +23,11 @@
 -export([config_file/1]).
 -export([priv_dir/1]).
 
+
+%% for test purposes
+-spec start() -> {ok, pid()} | {error, any()}.
+start() ->
+    gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
 -spec start_link() -> {ok, pid()} | {error, any()}.
 start_link() ->
