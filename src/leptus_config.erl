@@ -81,22 +81,22 @@ init([]) ->
     ets:new(?MODULE, [set, named_table, protected]),
     {ok, ?MODULE}.
 
-handle_call({set, Arg}, _From, TabId) ->
-    true = ets:insert(TabId, Arg),
-    {reply, ok, TabId};
-handle_call(_Msg, _From, TabId) ->
-    {noreply, TabId}.
+handle_call({set, Arg}, _From, Tab) ->
+    true = ets:insert(Tab, Arg),
+    {reply, ok, Tab};
+handle_call(_Msg, _From, Tab) ->
+    {noreply, Tab}.
 
-handle_cast(stop, TabId) ->
-    {stop, normal, TabId};
-handle_cast(_Msg, TabId) ->
-    {noreply, TabId}.
+handle_cast(stop, Tab) ->
+    {stop, normal, Tab};
+handle_cast(_Msg, Tab) ->
+    {noreply, Tab}.
 
-handle_info(_Msg, TabId) ->
-    {noreply, TabId}.
+handle_info(_Msg, Tab) ->
+    {noreply, Tab}.
 
-terminate(normal, _TabId) ->
+terminate(normal, _Tab) ->
     ok.
 
-code_change(_OldVsn, TabId, _Extra) ->
-    {ok, TabId}.
+code_change(_OldVsn, Tab, _Extra) ->
+    {ok, Tab}.

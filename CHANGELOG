@@ -1,5 +1,13 @@
 2013-12-23  Sina Samavati  <sina.samv@gmail.com>
 
+	* 0.3.0: add the facility to respond in messagepack
+	harness cowboy's ssl and spdy capabilities
+	add leptus_config to keep settings in memory, improve the code upgrade functionality
+	a number of bugs have been fixed
+	add the ability to change HostMatch
+	change the api for starting a listener to start_http/1 start_https/1 start_spdy/1,
+	that require the Options argument or app name to read priv/leptus.config file from
+
 	* src/leptus.erl: remove start_http/2, start_https/2 start_spdy/2
 	add start_http/1, start_https/1, start_spdy/1 that requires options or app name,
 	if app name would be specified, leptus will look at app_name/priv/leptus.config to read options

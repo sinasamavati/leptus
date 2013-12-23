@@ -1,5 +1,3 @@
-%% @author Sina Samavati <sina.samv@gmail.com>
-
 -module(leptus).
 -author("Sina Samavati <sina.samv@gmail.com>").
 
@@ -12,7 +10,7 @@
 -export([upgrade/0]).
 -export([upgrade/1]).
 
--type handler() :: {module(), State::any()}.
+-type handler() :: {module(), State :: any()}.
 -type handlers() :: [handler()].
 -export_type([handlers/0]).
 
