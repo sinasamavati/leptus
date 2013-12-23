@@ -72,6 +72,9 @@ upgrade(Handlers) ->
 
 %% internal
 start_listener(Listener, App) when is_atom(App) ->
+    ensure_deps_started(),
+    ensure_started(leptus),
+
     leptus_config:set(priv_dir, App),
     Options = leptus_config:config_file(App),
     start_listener(Listener, Options);
