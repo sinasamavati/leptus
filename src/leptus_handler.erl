@@ -24,6 +24,7 @@
 -type response() :: {body(), handler_state()}
                   | {status(), body(), handler_state()}
                   | {status(), headers(), body(), handler_state()}.
+-type terminate_reason() :: {normal, timeout | shutdown} | {error, atom()}.
 -type data_format() :: text | json | msgpack.
 
 -record(ctx, {
@@ -53,7 +54,7 @@ handle(Req, Ctx) ->
     Func = http_method(leptus_req:method(Req)),
     handle_request(Handler, Func, Route, Req, Ctx).
 
--spec terminate(any(), cowboy_req:req(), ctx()) -> ok.
+-spec terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
 terminate(Reason, Req, Ctx) ->
     handler_terminate(Reason, Req, Ctx).
 
@@ -177,7 +178,7 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
     {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
 
--spec handler_terminate(any(), cowboy_req:req(), ctx()) -> ok.
+-spec handler_terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
 handler_terminate(Reason, Req, Ctx) ->
     Handler = get_handler(Ctx),
     HandlerState = get_handler_state(Ctx),
