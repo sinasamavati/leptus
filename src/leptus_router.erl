@@ -5,23 +5,23 @@
 
 -type handler() :: module().
 -type route() :: cowboy_router:route_match().
--type state() :: any().
+-type handler_state() :: any().
 
 -record(ctx,
         {
           handler :: handler(),
           route :: route(),
-          handler_state :: state()
+          handler_state :: handler_state()
         }).
 -type ctx() :: #ctx{}.
 
 
--spec paths([{handler(), state()}]) -> cowboy_router:dispatch_rules().
+-spec paths([{handler(), handler_state()}]) -> cowboy_router:dispatch_rules().
 paths(Handlers) ->
     handle_routes(fetch_routes(Handlers, []), []).
 
 %% internal
--spec fetch_routes([{handler(), state()}], []) -> [ctx()].
+-spec fetch_routes([{handler(), handler_state()}], []) -> [ctx()].
 fetch_routes([], Acc) ->
     Acc;
 fetch_routes([{Handler, State}|T], Acc) ->
