@@ -150,7 +150,7 @@ method_not_allowed(Handler, Route, HandlerState) ->
     %% e.g.
     %%   allowed_methods("/") -> <<"GET, "POST">>
     %%
-    {405, [{<<"Allow">>, Handler:allowed_methods(Route)}], <<>>, HandlerState}.
+    {405, [{<<"allow">>, Handler:allowed_methods(Route)}], <<>>, HandlerState}.
 
 -spec reply(response(), Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(),
                                                          Ctx::ctx().
