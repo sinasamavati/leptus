@@ -6,30 +6,30 @@
 
 parse_transform(AST, _Options) ->
     put(routes, []),
-    do_transform(AST, []).
+    walk_ast(AST, []).
 
 %% internal
-do_transform([], Acc) ->
+walk_ast([], Acc) ->
     add_allowed_methods_fun(add_routes_fun(Acc));
-do_transform([{attribute, _, export, _}=H|T], Acc) ->
+walk_ast([{attribute, _, export, _}=H|T], Acc) ->
     case is_transformed(export_funcs) of
         true ->
-            do_transform(T, Acc ++ [H]);
+            walk_ast(T, Acc ++ [H]);
         _ ->
             %% export routes/0 and allowed_methods/1
-            do_transform(T, Acc ++ [export_funcs(H)])
+            walk_ast(T, Acc ++ [export_funcs(H)])
     end;
-do_transform([{function, _, Method, 3, _}=H|T], Acc)
+walk_ast([{function, _, Method, 3, _}=H|T], Acc)
   when Method =:= get; Method =:= put; Method =:= post; Method =:= delete ->
     case is_transformed(Method) of
         true ->
-            do_transform(T, Acc ++ [H]);
+            walk_ast(T, Acc ++ [H]);
         _ ->
             %% collect routes
-            do_transform(T, Acc ++ [transform_clause(H)])
+            walk_ast(T, Acc ++ [check_clauses(H)])
     end;
-do_transform([H|T], Acc) ->
-    do_transform(T, Acc ++ [H]).
+walk_ast([H|T], Acc) ->
+    walk_ast(T, Acc ++ [H]).
 
 %% export routes/0 and allowed_methods/1
 export_funcs({attribute, L, export, Funcs}) ->
@@ -37,7 +37,7 @@ export_funcs({attribute, L, export, Funcs}) ->
     {attribute, L, export, Funcs ++ [{routes, 0}, {allowed_methods, 1}]}.
 
 %% check functions' head
-transform_clause({function, _, Method, 3, Clause}=H) ->
+check_clauses({function, _, Method, 3, Clause}=H) ->
     %% collect routes
     F = fun({clause, _, E, _, _}=Token) ->
                 %% e.g. get("/", _Req, _State)
