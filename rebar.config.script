@@ -28,7 +28,7 @@ RemoveJiffy = fun() ->
                                Jiffy ->
                                    L -- [Jiffy]
                            end,
-                      [{deps, L1}, {erl_opts, [{d, 'USE_JSX'}]}|CONFIG]
+                      [{deps, L1}, {erl_opts, [{d, 'USE_JSX'}]}|Config1]
               end,
 
 case (catch leptus_json:parser()) of
