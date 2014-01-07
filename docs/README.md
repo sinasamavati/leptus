@@ -42,7 +42,6 @@ So, I suggest you using the following in your request/resource handlers (modules
 
 * [Start](start.md)
   * [start_http/1](start.md#start_http1)
-  * [start_http/2](start.md#start_http2)
-  * [start_https/2](start.md#start_https2)
-  * [start_spdy/2](start.md#start_spdy2)
+  * [start_https/1](start.md#start_https1)
+  * [start_spdy/1](start.md#start_spdy1)
   * [The OTP way](start.md#the-otp-way)

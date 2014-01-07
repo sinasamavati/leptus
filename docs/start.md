@@ -1,46 +1,58 @@
 # Start
 
+## Types
+
+```erlang
+handler() = {module(), State :: any()}
+handlers() = [handler()]
+
+listener() = http | https | spdy
+listener_option() = {ip, inet:ip_address()}
+                  | {port, inet:port_number()}
+                  | {hostmatch, cowboy_router:dispatch_match()}
+                  | {cacertfile, file:name_all()}
+                  | {certfile, file:name_all()}
+                  | {keyfile, file:name_all()}
+
+option() = {handlers, handlers()} | {listener(), [listener_option()]}
+options() = [option()]
+
+app_name() = atom()
+```
+
 #### start_http/1
 
 Starts leptus' dependencies and an HTTP listener.
 
 ```erlang
-Handlers :: [{module(), State :: any()}]
-leptus:start_http(Handlers) -> {ok, pid()}
+leptus:start_http(OptionsOrAppName) -> {ok, pid()}
+OptionsOrAppName = options() | app_name()
 ```
 
-#### start_http/2
+Note that if you use `app_name()`, Leptus will try to read `app_name/priv/leptus.config` file
+which should contain `options()`.
 
-Such as [start_http/1](#start_http1), but requires the `Options` argument too.
-
-```erlang
-Options :: [{priv_dir, App :: atom()}]
-leptus:start_http(Handlers, Options) -> {ok, pid()}
-```
-
-Note that if you declared `Handlers` in your `leptus.config` file, you should leave the first argument as an empty list,
-also it should be declared that which `priv` directory `leptus.config` should be read from.
-
-#### start_https/2
+#### start_https/1
 
 Starts leptus' dependencies and an HTTPS listener.
 
 ```erlang
-leptus:start_https(Handlers, Options) -> {ok, pid()}
+leptus:start_https(OptionsOrAppName) -> {ok, pid()}
+OptionsOrAppName = options() | app_name()
 ```
 
-Works like [start_http/2](#start_http2), requires specifying `cacertfile`, `certfile`
-and `keyfile` as well. Check out the [listener](configuration.md#listener) part of configuration for more information about these three options.
+This requires specifying `cacertfile`, `certfile` and `keyfile`.
 
-#### start_spdy/2
+#### start_spdy/1
 
 Starts leptus' dependencies and an SPDY listener.
 
 ```erlang
 leptus:start_spdy(Handlers, Options) -> {ok, pid()}
+OptionsOrAppName = options() | app_name()
 ```
 
-Requires the same things as [start_https/2](#start_https2).
+Requires the same things as [start_https/1](#start_https1).
 
 ## The OTP way
 
