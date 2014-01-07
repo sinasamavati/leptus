@@ -69,8 +69,8 @@ $ erl -pa ebin deps/*/ebin
 
 ```erlang
 1> c(rq_handler).
-2> Handlers = [{rq_handler, []}].
-3> leptus:start_http(Handlers).
+2> Options = [{handlers, [{rq_handler, state}]}].
+3> leptus:start_http(Options).
 ```
 
 ```
