@@ -2,35 +2,25 @@
 
 Deps = fun() ->
                case lists:keyfind(deps, 1, CONFIG) of
-                   false ->
-                       [];
+                   {deps, V} ->
+                       V;
                    Else ->
                        Else
                end
        end,
 RemoveJsx = fun() ->
-                    {deps, L} = Deps(),
-                    Config1 = CONFIG -- [{deps, L}],
-                    L1 = case lists:keyfind(jsx, 1, L) of
-                             false ->
-                                 L;
-                             Jsx ->
-                                 L -- [Jsx]
-                         end,
-                    Config1 ++ [{deps, L1}]
+                    L = Deps(),
+                    CONFIG1 = lists:keydelete(deps, 1, CONFIG),
+                    L1 = lists:keydelete(jsx, 1, L),
+                    [{deps, L1}|CONFIG1]
             end,
 RemoveJiffy = fun() ->
-                      {deps, L} = Deps(),
-                      Config1 = CONFIG -- [{deps, L}],
-                      L1 = case lists:keyfind(jiffy, 1, L) of
-                               false ->
-                                   L;
-                               Jiffy ->
-                                   L -- [Jiffy]
-                           end,
-                      [{deps, L1}, {erl_opts, [{d, 'USE_JSX'}]}|Config1]
+                      L = Deps(),
+                      CONFIG1 = lists:keydelete(deps, 1, CONFIG),
+                      L1 = lists:keydelete(jiffy, 1, L),
+                      [{deps, L1}, {erl_opts, [{d, 'USE_JSX'}]}|CONFIG1]
               end,
-
+code:add_path("ebin"),
 case (catch leptus_json:parser()) of
     jiffy ->
         RemoveJsx();
