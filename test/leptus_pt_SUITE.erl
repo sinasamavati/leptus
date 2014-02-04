@@ -28,7 +28,6 @@ allowed_methods(_) ->
 
 rq_pt(_) ->
     {ok, _} = pt3:start(),
-    ["/", "/new", "/old"] = pt3:routes(),
     {200, _, _} = request(<<"GET">>, "/"),
     {200, _, _} = request(<<"PUT">>, "/old"),
     {201, _, _} = request(<<"POST">>, "/new"),
