@@ -142,6 +142,7 @@ ensure_started(App) ->
 ensure_deps_started() ->
     ensure_started(crypto),
     ensure_started(ranch),
+    ensure_started(cowlib),
     ensure_started(cowboy).
 
 get_value(_, [], Default) ->
