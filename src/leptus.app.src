@@ -6,7 +6,7 @@
 {application, leptus,
  [
   {description, "REST framework that runs on top of cowboy"},
-  {vsn, "0.3.3"},
+  {vsn, "0.3.4"},
   {registered, []},
   {applications, [
                   kernel,
