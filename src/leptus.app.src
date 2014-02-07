@@ -1,5 +1,8 @@
 %%-*- mode: erlang -*-
 
+%% This file is part of leptus, and released under the MIT license.
+%% See LICENSE for more information.
+
 {application, leptus,
  [
   {description, "REST framework that runs on top of cowboy"},

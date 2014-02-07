@@ -1,3 +1,6 @@
+%% This file is part of leptus, and released under the MIT license.
+%% See LICENSE for more information.
+
 %% a bunch of functions to deal with a request
 -module(leptus_req).
 

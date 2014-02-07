@@ -1,5 +1,8 @@
 %%-*- mode: erlang -*-
 
+%% This file is part of leptus, and released under the MIT license.
+%% See LICENSE for more information.
+
 Deps = fun() ->
                case lists:keyfind(deps, 1, CONFIG) of
                    {deps, V} ->

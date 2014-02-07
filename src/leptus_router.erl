@@ -1,3 +1,6 @@
+%% This file is part of leptus, and released under the MIT license.
+%% See LICENSE for more information.
+
 -module(leptus_router).
 -author("Sina Samavati <sina.samv@gmail.com>").
 
@@ -38,7 +41,7 @@ handle_routes([], Acc) ->
 handle_routes([Ctx|T], Acc) ->
     handle_routes(T, Acc ++ [{Ctx#ctx.route, leptus_handler, Ctx}]).
 
-%% API
+%% public
 %% order routes the way it matters in cowboy
 -spec sort_dispatch(cowboy_router:dispatch_rules()) ->
                            cowboy_router:dispatch_rules().

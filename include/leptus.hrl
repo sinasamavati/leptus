@@ -1,3 +1,6 @@
+%% This file is part of leptus, and released under the MIT license.
+%% See LICENSE for more information.
+
 -record(http_req, {
           %% Transport.
           socket,
