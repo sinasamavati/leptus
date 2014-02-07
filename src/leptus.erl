@@ -94,11 +94,8 @@ start_listener(Ref, Listener, Options) ->
     Paths = leptus_router:paths(Handlers),
     HostMatch = get_value(hostmatch, ListenerOpts, '_'),
     Dispatch = cowboy_router:compile([{HostMatch, Paths}]),
-
     %% sort compiled routes
-    [{HostMatch1, Constraints, PathRules}] = Dispatch,
-    PathRules1 = sort_by_priority(PathRules, [], []),
-    Dispatch1 = [{HostMatch1, Constraints, PathRules1}],
+    Dispatch1 = leptus_router:sort_dispatch(Dispatch),
 
     %% basic listener configuration
     IP = get_value(ip, ListenerOpts, {127, 0, 0, 1}),
@@ -154,22 +151,3 @@ get_value(Key, Opts, Default) ->
         {_, V} -> V;
         _ -> Default
     end.
-
-
-list_has_atom([]) ->
-    false;
-list_has_atom([H|_]) when is_atom(H)->
-    true;
-list_has_atom([_|T]) ->
-    list_has_atom(T).
-
-sort_by_priority([], High, Low) ->
-    High ++ Low;
-sort_by_priority([{Binds, _, _, _}=H|T], High, Low) ->
-    {High1, Low1} = case list_has_atom(Binds) of
-                        true ->
-                            {High, Low ++ [H]};
-                        false ->
-                            {High ++ [H], Low}
-                    end,
-    sort_by_priority(T, High1, Low1).
