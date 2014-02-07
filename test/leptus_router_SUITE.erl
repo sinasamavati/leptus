@@ -2,12 +2,13 @@
 
 -export([all/0]).
 -export([paths/1]).
+-export([sort_dispatch/1]).
 
 -record(ctx, {handler, route, handler_state}).
 
 
 all() ->
-    [paths].
+    [paths, sort_dispatch].
 
 paths(_) ->
     Ctx1 = #ctx{handler=leptus_routes1, route="/", handler_state=[]},
@@ -33,3 +34,23 @@ paths(_) ->
      {"/users/:id", leptus_handler, Ctx7},
      {"/users/:id/info", leptus_handler, Ctx8}
     ] = leptus_router:paths([{leptus_routes1, []}, {leptus_routes2, aha}, {leptus_routes3, i_see}]).
+
+sort_dispatch(_) ->
+    Routes = [
+              {"/:bucket", handler, undefined},
+              {"/_version", handler, undefined},
+              {"/:bucket/:key", handler, undefined},
+              {"/:bucket/_keys", handler, undefined},
+              {"/_buckets", handler, undefined},
+              {"/", handler, undefined}
+             ],
+    Dispatch = cowboy_router:compile([{'_', Routes}]),
+    [
+     {'_',[],
+      [{[],[],handler,undefined},
+       {[<<"_version">>],[],handler,undefined},
+       {[<<"_buckets">>],[],handler,undefined},
+       {[bucket],[],handler,undefined},
+       {[bucket,<<"_keys">>],[],handler,undefined},
+       {[bucket,key],[],handler,undefined}]}
+    ] = leptus_router:sort_dispatch(Dispatch).

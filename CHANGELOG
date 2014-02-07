@@ -1,3 +1,8 @@
+2014-02-08  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_router.erl: add sort_dispatch/1, sort_dispatch/2, sort_path_rules/1 and
+	sort_path_rules/4 to order routes the way it matters in cowboy
+
 2014-02-06  Sina Samavati  <sina.samv@gmail.com>
 
 	* 0.3.3: update cowboy to 0.9.0
