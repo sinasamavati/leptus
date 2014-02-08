@@ -59,9 +59,9 @@ sort_dispatch([{HM, C, PathRules}|Rest], Acc) ->
 sort_path_rules(PathRules) ->
     sort_path_rules(PathRules, [], [], []).
 
-sort_path_rules([], High, Medium, Low) ->
-    High ++ Medium ++ Low;
-sort_path_rules([{Segments, _, _, _}=PathRule|Rest], High, Medium, Low) ->
+sort_path_rules([], Top, Mid, Bot) ->
+    Top ++ Mid ++ Bot;
+sort_path_rules([{Segments, _, _, _}=PathRule|Rest], Top, Mid, Bot) ->
     F = fun(Segment, {NBSQ, BSQ}) ->
                 %% NBSQ :: non-binding segment quantity
                 %% BSQ :: binding-segment quantity
@@ -71,18 +71,18 @@ sort_path_rules([{Segments, _, _, _}=PathRule|Rest], High, Medium, Low) ->
                     true -> {NBSQ, BSQ + 1}
                 end
         end,
-    {High1, Medium1, Low1} = case lists:foldl(F, {0, 0}, Segments) of
-                                 {0, 0} ->
-                                     {[PathRule|High], Medium, Low};
-                                 {0, 1} ->
-                                     {High, Medium ++ [PathRule], Low};
-                                 {N1, N2} ->
-                                     if N1 > N2 ->
-                                             {High ++ [PathRule], Medium, Low};
-                                        N1 =:= N2 ->
-                                             {High, Medium ++ [PathRule], Low};
-                                        N1 < N2 ->
-                                             {High, Medium, Low ++ [PathRule]}
-                                     end
-                             end,
-    sort_path_rules(Rest, High1, Medium1, Low1).
+    {Top1, Mid1, Bot1} = case lists:foldl(F, {0, 0}, Segments) of
+                             {0, 0} ->
+                                 {[PathRule|Top], Mid, Bot};
+                             {0, 1} ->
+                                 {Top, Mid ++ [PathRule], Bot};
+                             {N1, N2} ->
+                                 if N1 > N2 ->
+                                         {Top ++ [PathRule], Mid, Bot};
+                                    N1 =:= N2 ->
+                                         {Top, Mid ++ [PathRule], Bot};
+                                    N1 < N2 ->
+                                         {Top, Mid, Bot ++ [PathRule]}
+                                 end
+                         end,
+    sort_path_rules(Rest, Top1, Mid1, Bot1).
