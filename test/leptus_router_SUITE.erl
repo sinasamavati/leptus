@@ -56,4 +56,25 @@ sort_dispatch(_) ->
        {[bucket],[],handler,undefined},
        {[bucket,<<"_keys">>],[],handler,undefined},
        {[bucket,key],[],handler,undefined}]}
-    ] = leptus_router:sort_dispatch(Dispatch).
+    ] = leptus_router:sort_dispatch(Dispatch),
+
+    Routes1 = [{"/:a/:b", handler, undefined},
+               {"/:a/:b/x/:d", handler, undefined},
+               {"/:a", handler, undefined},
+               {"/:a/:b/:c", handler, undefined},
+               {"/", handler, undefined},
+               {"/:a/:b/x", handler, undefined},
+               {"/:a/x/:c/:d", handler, undefined},
+               {"/:a/x", handler, undefined}],
+    Dispatch1 = cowboy_router:compile([{'_', Routes1}]),
+    [{'_', [],
+      [
+       {[], [], handler, undefined},
+       {[a], [], handler, undefined},
+       {[a, <<"x">>], [], handler, undefined},
+       {[a, b],[], handler, undefined},
+       {[a, b, <<"x">>], [], handler, undefined},
+       {[a, b, c], [], handler, undefined},
+       {[a, b, <<"x">>, d], [], handler, undefined},
+       {[a, <<"x">>, c, d], [], handler, undefined}
+      ]}] = leptus_router:sort_dispatch(Dispatch1).

@@ -1,3 +1,8 @@
+2014-02-11  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_router.erl: add lt/2, egt/2, segments_length/2 and path_rule/0 type
+	improve sort_path_rules/1
+
 2014-02-08  Sina Samavati  <sina.samv@gmail.com>
 
 	* 0.3.4: fix the order of routes issue -- order them the way it matters in cowboy
