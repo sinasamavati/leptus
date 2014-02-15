@@ -8,12 +8,6 @@
 -export([sort_dispatch/1]).
 
 -include("leptus.hrl").
-
--type route() :: cowboy_router:route_match().
--type handler() :: module().
--type handler_state() :: any().
-
--type path() :: {term(), [{route(), handler(), handler_state()}]}.
 -type path_rule() :: {[atom() | binary()], term(), module(), any()}.
 
 
@@ -22,7 +16,6 @@ paths(Handlers) ->
     handle_routes(Handlers, []).
 
 %% internal
--spec handle_routes(leptus:handlers(), []) -> [path()].
 handle_routes([], Acc) ->
     Acc;
 handle_routes([{HostMatch, X}|T], Acc) ->
@@ -38,14 +31,12 @@ ctx(Route, Handler, HandlerState) ->
 
 %% public
 %% order routes the way it matters in cowboy
--spec sort_dispatch(cowboy_router:dispatch_rules()) ->
-                           cowboy_router:dispatch_rules().
+-spec sort_dispatch(Dispatch) ->
+                           Dispatch when Dispatch::cowboy_router:dispatch_rules().
 sort_dispatch(Dispatch) ->
     sort_dispatch(Dispatch, []).
 
 %% internal
--spec sort_dispatch(cowboy_router:dispatch_rules(), []) ->
-                           cowboy_router:dispatch_rules().
 sort_dispatch([], Acc) ->
     Acc;
 sort_dispatch([{HM, C, PathRules}|Rest], Acc) ->
