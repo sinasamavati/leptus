@@ -27,16 +27,19 @@ paths(_) ->
                 handler_state=i_see},
     Ctx8 = #ctx{handler=leptus_routes3, route="/users/:id/info",
                 handler_state=i_see},
-    [
-     {"/", leptus_handler, Ctx1},
-     {"/blah", leptus_handler, Ctx2},
-     {"/hello/:name", leptus_handler, Ctx3},
-     {"/some-url/to/some-path", leptus_handler, Ctx4},
-     {"/something/:key", leptus_handler, Ctx5},
-     {"/something/else", leptus_handler, Ctx6},
-     {"/users/:id", leptus_handler, Ctx7},
-     {"/users/:id/info", leptus_handler, Ctx8}
-    ] = leptus_router:paths([{leptus_routes1, []}, {leptus_routes2, aha}, {leptus_routes3, i_see}]).
+    [{'_', [
+            {"/", leptus_handler, Ctx1},
+            {"/blah", leptus_handler, Ctx2},
+            {"/hello/:name", leptus_handler, Ctx3},
+            {"/some-url/to/some-path", leptus_handler, Ctx4},
+            {"/something/:key", leptus_handler, Ctx5},
+            {"/something/else", leptus_handler, Ctx6},
+            {"/users/:id", leptus_handler, Ctx7},
+            {"/users/:id/info", leptus_handler, Ctx8}
+           ]
+     }]= leptus_router:paths([{'_', [{leptus_routes1, []},
+                                     {leptus_routes2, aha},
+                                     {leptus_routes3, i_see}]}]).
 
 sort_dispatch(_) ->
     Routes = [

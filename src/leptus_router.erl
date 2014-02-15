@@ -7,40 +7,34 @@
 -export([paths/1]).
 -export([sort_dispatch/1]).
 
--type handler() :: module().
+-include("leptus.hrl").
+
 -type route() :: cowboy_router:route_match().
+-type handler() :: module().
 -type handler_state() :: any().
 
--record(ctx,
-        {
-          handler :: handler(),
-          route :: route(),
-          handler_state :: handler_state()
-        }).
--type ctx() :: #ctx{}.
+-type path() :: {term(), [{route(), handler(), handler_state()}]}.
 -type path_rule() :: {[atom() | binary()], term(), module(), any()}.
 
 
--spec paths([{handler(), handler_state()}]) -> cowboy_router:dispatch_rules().
+-spec paths(leptus:handlers()) -> cowboy_router:dispatch_rules().
 paths(Handlers) ->
-    handle_routes(fetch_routes(Handlers, []), []).
+    handle_routes(Handlers, []).
 
 %% internal
--spec fetch_routes([{handler(), handler_state()}], []) -> [ctx()].
-fetch_routes([], Acc) ->
-    Acc;
-fetch_routes([{Handler, State}|T], Acc) ->
-    %% each module must have routes/0 -> [string()].
-    Ctx = [#ctx{handler=Handler, route=Route, handler_state=State}
-           ||  Route <- Handler:routes()],
-    fetch_routes(T, Acc ++ Ctx).
-
--spec handle_routes([ctx()], [none() | {route(), leptus_handler, ctx()}])
-                   -> [cowboy_router:route_path()].
+-spec handle_routes(leptus:handlers(), []) -> [path()].
 handle_routes([], Acc) ->
     Acc;
-handle_routes([Ctx|T], Acc) ->
-    handle_routes(T, Acc ++ [{Ctx#ctx.route, leptus_handler, Ctx}]).
+handle_routes([{HostMatch, X}|T], Acc) ->
+    %% each module must have routes/0 -> [string()].
+    F = fun({Handler, State}, AccIn) ->
+                AccIn ++ [{Route, leptus_handler, ctx(Route, Handler, State)}
+                          || Route <- Handler:routes()]
+        end,
+    handle_routes(T, Acc ++ [{HostMatch, lists:foldl(F, [], X)}]).
+
+ctx(Route, Handler, HandlerState) ->
+    #ctx{route=Route, handler=Handler, handler_state=HandlerState}.
 
 %% public
 %% order routes the way it matters in cowboy
