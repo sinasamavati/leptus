@@ -30,12 +30,7 @@
 -type terminate_reason() :: {normal, timeout | shutdown} | {error, atom()}.
 -type data_format() :: text | json | msgpack.
 
--record(ctx, {
-          handler :: module(),
-          route :: route(),
-          handler_state :: handler_state()
-         }).
--type ctx() :: #ctx{}.
+-include("leptus.hrl").
 
 
 -spec init({module(), http}, Req, Ctx) ->
