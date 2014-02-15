@@ -18,8 +18,6 @@
 -export([parse_header/2]).
 -export([auth/2]).
 
--include("leptus.hrl").
-
 
 -spec param(atom(), cowboy_req:req()) -> binary() | undefined.
 param(Key, Req) ->
@@ -27,11 +25,11 @@ param(Key, Req) ->
 
 -spec params(cowboy_req:req()) -> [{atom(), binary()}] | undefined.
 params(Req) ->
-    Req#http_req.bindings.
+    invoke(bindings, [Req]).
 
 -spec qs(cowboy_req:req()) -> binary().
 qs(Req) ->
-    Req#http_req.qs.
+    invoke(qs, [Req]).
 
 -spec qs_val(binary(), cowboy_req:req()) -> binary() | undefined.
 qs_val(Key, Req) ->
@@ -39,8 +37,8 @@ qs_val(Key, Req) ->
 
 -spec uri(cowboy_req:req()) -> binary().
 uri(Req) ->
-    Path = Req#http_req.path,
-    QS = Req#http_req.qs,
+    Path = invoke(path, [Req]),
+    QS = invoke(qs, [Req]),
 
     %% e.g <<"/path?query=string">>
 
@@ -51,11 +49,11 @@ uri(Req) ->
 
 -spec version(cowboy_req:req()) -> cowboy:http_version().
 version(Req) ->
-    Req#http_req.version.
+    invoke(version, [Req]).
 
 -spec method(cowboy_req:req()) -> binary().
 method(Req) ->
-    Req#http_req.method.
+    invoke(method, [Req]).
 
 -spec body(cowboy_req:req()) -> binary() | leptus_handler:json_term() |
                                 msgpack:msgpack_term() | {error, any()}.
