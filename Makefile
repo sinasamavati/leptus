@@ -1,5 +1,5 @@
 PROJECT = leptus
-CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config
+CT_SUITES = leptus_router leptus_http leptus_pt leptus_config leptus_eunit
 
 .PHONY: all deps compile shell
 
@@ -47,9 +47,6 @@ erlc_verbose = $(erlc_verbose_$(V))
 xyrl_verbose_0 = @echo " XYRL  " $(filter %.xrl %.yrl,$(?F));
 xyrl_verbose = $(xyrl_verbose_$(V))
 
-dtl_verbose_0 = @echo " DTL   " $(filter %.dtl,$(?F));
-dtl_verbose = $(dtl_verbose_$(V))
-
 gen_verbose_0 = @echo " GEN   " $@;
 gen_verbose = $(gen_verbose_$(V))
 
@@ -83,7 +80,7 @@ app: ebin/$(PROJECT).app
 	$(eval MODULES := $(shell find ebin -type f -name \*.beam \
 		| sed 's/ebin\///;s/\.beam/,/' | sed '$$s/.$$//'))
 	$(appsrc_verbose) cat src/$(PROJECT).app.src \
-		| sed 's/{modules, \[\]}/{modules, \[$(MODULES)\]}/' \
+		| sed 's/{modules,[[:space:]]*\[\]}/{modules, \[$(MODULES)\]}/' \
 		> ebin/$(PROJECT).app
 
 define compile_erl
@@ -97,29 +94,16 @@ define compile_xyrl
 	@rm ebin/*.erl
 endef
 
-define compile_dtl
-	$(dtl_verbose) erl -noshell -pa ebin/ $(DEPS_DIR)/erlydtl/ebin/ -eval ' \
-		Compile = fun(F) -> \
-			Module = list_to_atom( \
-				string:to_lower(filename:basename(F, ".dtl")) ++ "_dtl"), \
-			erlydtl_compiler:compile(F, Module, [{out_dir, "ebin/"}]) \
-		end, \
-		_ = [Compile(F) || F <- string:tokens("$(1)", " ")], \
-		init:stop()'
-endef
 
 ebin/$(PROJECT).app: $(shell find src -type f -name \*.erl) \
 		$(shell find src -type f -name \*.core) \
 		$(shell find src -type f -name \*.xrl) \
-		$(shell find src -type f -name \*.yrl) \
-		$(shell find templates -type f -name \*.dtl 2>/dev/null)
+		$(shell find src -type f -name \*.yrl)
 	@mkdir -p ebin/
 	$(if $(strip $(filter %.erl %.core,$?)), \
 		$(call compile_erl,$(filter %.erl %.core,$?)))
 	$(if $(strip $(filter %.xrl %.yrl,$?)), \
 		$(call compile_xyrl,$(filter %.xrl %.yrl,$?)))
-	$(if $(strip $(filter %.dtl,$?)), \
-		$(call compile_dtl,$(filter %.dtl,$?)))
 
 clean:
 	$(gen_verbose) rm -rf ebin/ test/*.beam erl_crash.dump
