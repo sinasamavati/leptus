@@ -14,5 +14,6 @@
                   cowboy
                  ]},
   {mod, {leptus_app, []}},
-  {env, []}
+  {env, []},
+  {modules, []}
  ]}.
