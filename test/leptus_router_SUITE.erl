@@ -7,7 +7,7 @@
 -export([paths/1]).
 -export([sort_dispatch/1]).
 
--record(ctx, {handler, route, handler_state}).
+-record(ctx, {route, handler, handler_state}).
 
 
 all() ->
