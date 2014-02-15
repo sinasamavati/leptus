@@ -9,12 +9,11 @@
 -export([handle/2]).
 -export([terminate/3]).
 
--type handler() :: module().
--type route() :: cowboy_router:route_match().
+-include("leptus.hrl").
+
 -type status() :: non_neg_integer() | binary().
 -type headers() :: cowboy:http_headers().
 -type body() :: binary() | string() | {json | msgpack, json_term()}.
--type handler_state() :: any().
 -type method() :: get | put | post | delete.
 -type json_term() :: [json_term()]
                    | {binary() | atom(), json_term()}
@@ -29,8 +28,6 @@
                   | {status(), headers(), body(), handler_state()}.
 -type terminate_reason() :: {normal, timeout | shutdown} | {error, atom()}.
 -type data_format() :: text | json | msgpack.
-
--include("leptus.hrl").
 
 
 -spec init({module(), http}, Req, Ctx) ->
