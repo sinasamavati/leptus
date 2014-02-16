@@ -5,6 +5,7 @@
 -compile({parse_transform, leptus_pt}).
 
 -export([start/0]).
+-export([stop/0]).
 
 %% leptus callbacks
 -export([init/3]).
@@ -15,7 +16,10 @@
 -export([terminate/3]).
 
 start() ->
-    leptus:start_http([{handlers, [{?MODULE, state0}]}]).
+    leptus:start_listener(http, [{'_', [{?MODULE, state0}]}]).
+
+stop() ->
+    leptus:stop_listener(http).
 
 init(_Route, _Req, State) ->
     State = state0,

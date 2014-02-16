@@ -35,4 +35,4 @@ rq_pt(_) ->
     {200, _, _} = request(<<"PUT">>, "/old"),
     {201, _, _} = request(<<"POST">>, "/new"),
     {204, _, _} = request(<<"DELETE">>, "/old"),
-    ok = leptus:stop_http().
+    ok = pt3:stop().

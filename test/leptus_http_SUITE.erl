@@ -29,11 +29,11 @@ init_per_suite(Config) ->
                 {leptus_http3, []},
                 {leptus_http4, []}
                ],
-    {ok, _} = leptus:start_http([{handlers, Handlers}]),
+    {ok, _} = leptus:start_listener(http, [{'_', Handlers}], []),
     Config.
 
 end_per_suite(_Config) ->
-    ok = leptus:stop_http().
+    ok = leptus:stop_listener(http).
 
 all() ->
     [
