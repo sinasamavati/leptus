@@ -69,7 +69,7 @@ get_ref(https) -> leptus_https;
 get_ref(spdy) -> leptus_spdy.
 
 %% get extra options based on listener
--spec get_extra_opts(listener(), options()) -> [none() | options()].
+-spec get_extra_opts(listener(), options()) -> options().
 get_extra_opts(http, _) -> [];
 get_extra_opts(_, Opts) ->
     [
