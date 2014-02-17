@@ -21,12 +21,13 @@ handle_routes([], Acc) ->
 handle_routes([{HostMatch, X}|T], Acc) ->
     %% each module must have routes/0 -> [string()].
     F = fun({Handler, State}, AccIn) ->
-                AccIn ++ [{Route, leptus_handler, ctx(Route, Handler, State)}
+                AccIn ++ [{Route, leptus_handler, new_ctx(Route, Handler, State)}
                           || Route <- Handler:routes()]
         end,
     handle_routes(T, Acc ++ [{HostMatch, lists:foldl(F, [], X)}]).
 
-ctx(Route, Handler, HandlerState) ->
+-spec new_ctx(route(), handler(), handler_state()) -> ctx().
+new_ctx(Route, Handler, HandlerState) ->
     #ctx{route=Route, handler=Handler, handler_state=HandlerState}.
 
 %% public
