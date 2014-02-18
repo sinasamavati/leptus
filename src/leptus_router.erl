@@ -9,9 +9,10 @@
 
 -include("leptus.hrl").
 -type path_rule() :: {[atom() | binary()], term(), module(), any()}.
+-type dispatch() :: cowboy_router:dispatch_rules().
 
 
--spec paths(leptus:handlers()) -> cowboy_router:dispatch_rules().
+-spec paths(leptus:handlers()) -> dispatch().
 paths(Handlers) ->
     handle_routes(Handlers, []).
 
@@ -32,8 +33,7 @@ new_ctx(Route, Handler, HandlerState) ->
 
 %% public
 %% order routes the way it matters in cowboy
--spec sort_dispatch(Dispatch) ->
-                           Dispatch when Dispatch::cowboy_router:dispatch_rules().
+-spec sort_dispatch(Dispatch) -> Dispatch when Dispatch :: dispatch().
 sort_dispatch(Dispatch) ->
     sort_dispatch(Dispatch, []).
 
