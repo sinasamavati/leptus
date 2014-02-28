@@ -46,6 +46,7 @@
                   | {status(), headers(), body(), handler_state()}.
 -type terminate_reason() :: {normal, timeout | shutdown} | {error, atom()}.
 -type data_format() :: text | json | msgpack.
+-type status_code() :: 100..101 | 200..206 | 300..307 | 400..417 | 500..505.
 
 
 -spec init({module(), http}, Req, Ctx) ->
@@ -177,6 +178,7 @@ reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
 -spec reply(status(), headers(), body(), handler_state(), Req, Ctx) ->
                    {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
 reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
+    %% encode Body and set content-type
     {
       Headers1,
       Body1
@@ -188,7 +190,7 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
             _ ->
                 {set_content_type(text, Headers), Body}
         end,
-    {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
+    {ok, Req1} = cowboy_req:reply(status(Status), Headers1, Body1, Req),
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
 
 -spec handler_terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
@@ -204,3 +206,52 @@ set_content_type(Type, Headers) ->
 content_type(text) -> <<"text/plain">>;
 content_type(json) -> <<"application/json">>;
 content_type(msgpack) -> <<"application/x-msgpack">>.
+
+-spec status(atom() | S) -> status_code() | S when S :: any().
+%% informational
+status(continue) -> 100;
+status(switching_protocols) -> 101;
+%% successful
+status(ok) -> 200;
+status(created) -> 201;
+status(accepted) -> 202;
+status(non_authoritative_information) -> 203;
+status(no_content) -> 204;
+status(reset_content) -> 205;
+status(partial_content) -> 206;
+%% redirection
+status(multiple_choices) -> 300;
+status(moved_permanently) -> 301;
+status(found) -> 302;
+status(see_other) -> 303;
+status(not_modified) -> 304;
+status(use_proxy) -> 305;
+status(switch_proxy) -> 306;
+status(temporary_redirect) -> 307;
+%% client error
+status(bad_request) -> 400;
+status(unauthorized) -> 401;
+status(payment_required) -> 402;
+status(forbidden) -> 403;
+status(not_found) -> 404;
+status(not_allowed) -> 405;
+status(not_acceptable) -> 406;
+status(proxy_authentication_required) -> 407;
+status(request_timeout) -> 408;
+status(conflict) -> 409;
+status(gone) -> 410;
+status(length_required) -> 411;
+status(precondition_failed) -> 412;
+status(request_entity_too_large) -> 413;
+status(request_uri_too_long) -> 414;
+status(unsupported_media_type) -> 415;
+status(requested_range_not_satisfiable) -> 416;
+status(expectation_failed) -> 417;
+%% server error
+status(internal_server_error) -> 500;
+status(not_implemented) -> 501;
+status(bad_gateway) -> 502;
+status(service_unavailable) -> 503;
+status(gateway_timeout) -> 504;
+status(http_version_not_supported) -> 505;
+status(S) -> S.
