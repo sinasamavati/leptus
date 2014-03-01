@@ -39,9 +39,9 @@ routes() ->
 init(_Route, _Req, _State) ->
     {ok, blah}.
 
-allowed_methods("/users/:id") -> <<"GET, PUT, POST">>;
-allowed_methods("/users/:id/interests") -> <<"GET">>;
-allowed_methods("/users/:id/profile") -> <<"GET">>.
+allowed_methods("/users/:id") -> [<<"GET">>, <<"PUT">>, <<"POST">>];
+allowed_methods("/users/:id/interests") -> [<<"GET">>];
+allowed_methods("/users/:id/profile") -> [<<"GET">>].
 
 is_authorized("/users/:id", Req, State) ->
     case leptus_req:method(Req) of

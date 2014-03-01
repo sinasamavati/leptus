@@ -38,9 +38,9 @@ routes() ->
 init(_Route, _Req, _State) ->
     {ok, my_state}.
 
-allowed_methods("/user/register") -> <<"POST">>;
-allowed_methods("/settings/change-password") -> <<"PUT">>;
-allowed_methods(_) -> <<"DELETE">>.
+allowed_methods("/user/register") -> [<<"POST">>];
+allowed_methods("/settings/change-password") -> [<<"PUT">>];
+allowed_methods(_) -> [<<"DELETE">>].
 
 post("/user/register", Req, State) ->
     Body = leptus_req:body_qs(Req),

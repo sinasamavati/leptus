@@ -164,7 +164,8 @@ method_not_allowed(Handler, Route, HandlerState) ->
     %% e.g.
     %%   allowed_methods("/") -> <<"GET, "POST">>
     %%
-    {405, [{<<"allow">>, Handler:allowed_methods(Route)}], <<>>, HandlerState}.
+    {405, [{<<"allow">>, join_http_methods(Handler:allowed_methods(Route))}],
+     <<>>, HandlerState}.
 
 -spec reply(response(), Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(),
                                                          Ctx::ctx().
@@ -255,3 +256,8 @@ status(service_unavailable) -> 503;
 status(gateway_timeout) -> 504;
 status(http_version_not_supported) -> 505;
 status(S) -> S.
+
+-spec join_http_methods([binary()]) -> binary().
+join_http_methods(Methods) ->
+    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
+    Allow.
