@@ -29,7 +29,7 @@
 -export([terminate/3]).
 
 routes() -> ["/msgpack/:msg"].
-allowed_methods("/msgpack/:msg") -> <<"GET">>.
+allowed_methods("/msgpack/:msg") -> [<<"GET">>].
 init(_Route, _Req, State) -> {ok, State}.
 
 get("/msgpack/:msg", Req, State) ->
