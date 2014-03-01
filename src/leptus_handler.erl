@@ -114,22 +114,15 @@ handle_request(Handler, badarg, Route, Req, Ctx) ->
     reply(Response, Req, Ctx);
 handle_request(Handler, Func, Route, Req, Ctx) ->
     HandlerState = get_handler_state(Ctx),
-    Response = case is_defined(Handler, Func) of
+    Response = case is_allowed(Handler, Func, Route, Req) of
                    true ->
                        case handler_is_authorized(Handler, Route, Req, HandlerState) of
                            {true, HandlerState1} ->
-                               %% method not allowed if function doesn't match
-                               try
-                                   Handler:Func(Route, Req, HandlerState1)
-                               catch
-                                   error:function_clause ->
-                                       method_not_allowed(Handler, Route, HandlerState)
-                               end;
+                               Handler:Func(Route, Req, HandlerState1);
                            {false, Res} ->
                                Res
                        end;
                    false ->
-                       %% method not allowed if function is not exported
                        method_not_allowed(Handler, Route, HandlerState)
                end,
     reply(Response, Req, Ctx).
@@ -154,6 +147,21 @@ handler_is_authorized(Handler, Route, Req, HandlerState) ->
             end;
         false ->
             {true, HandlerState}
+    end.
+
+-spec is_allowed(handler(), method(), route(), cowboy_req:req()) -> boolean().
+is_allowed(Handler, Func, Route, Req) ->
+    %% check if Handler:Func/3 is exported
+    case is_defined(Handler, Func) of
+        true ->
+            %% check if the http method is existing in allowed methods list
+            %%
+            %% e.g.
+            %%   lists:member(<<"GET">>, [<<"GET">>, <<"DELETE">>])
+            %%
+            lists:member(leptus_req:method(Req), Handler:allowed_methods(Route));
+        false ->
+            false
     end.
 
 -spec method_not_allowed(handler(), route(), handler_state()) -> response().
