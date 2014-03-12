@@ -29,7 +29,7 @@
 
 -include("leptus.hrl").
 
--type status() :: non_neg_integer() | binary().
+-type status() :: non_neg_integer() | binary() | atom().
 -type headers() :: cowboy:http_headers().
 -type body() :: binary() | string() | {json | msgpack, json_term()}.
 -type method() :: get | put | post | delete.
@@ -111,7 +111,7 @@ handler_init(Handler, Route, Req, HandlerState) ->
                                                 Ctx::ctx().
 handle_request(Handler, badarg, Route, Req, Ctx) ->
     Response = method_not_allowed(Handler, Route, get_handler_state(Ctx)),
-    reply(Response, Req, Ctx);
+    reply(Handler, Route, Response, Req, Ctx);
 handle_request(Handler, Func, Route, Req, Ctx) ->
     HandlerState = get_handler_state(Ctx),
     Response = case is_allowed(Handler, Func, Route, Req) of
@@ -125,9 +125,10 @@ handle_request(Handler, Func, Route, Req, Ctx) ->
                    false ->
                        method_not_allowed(Handler, Route, HandlerState)
                end,
-    reply(Response, Req, Ctx).
+    reply(Handler, Route, Response, Req, Ctx).
 
--spec handler_is_authorized(handler(), route(), cowboy_req:req(), handler_state()) ->
+-spec handler_is_authorized(handler(), route(), cowboy_req:req(),
+                            handler_state()) ->
                                    {true, handler_state()} | {false, response()}.
 handler_is_authorized(Handler, Route, Req, HandlerState) ->
     %%
@@ -175,18 +176,18 @@ method_not_allowed(Handler, Route, HandlerState) ->
     {405, [{<<"allow">>, join_http_methods(Handler:allowed_methods(Route))}],
      <<>>, HandlerState}.
 
--spec reply(response(), Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(),
-                                                         Ctx::ctx().
-reply({Body, HandlerState}, Req, Ctx) ->
-    reply(200, [], Body, HandlerState, Req, Ctx);
-reply({Status, Body, HandlerState}, Req, Ctx) ->
-    reply(Status, [], Body, HandlerState, Req, Ctx);
-reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
-    reply(Status, Headers, Body, HandlerState, Req, Ctx).
-
--spec reply(status(), headers(), body(), handler_state(), Req, Ctx) ->
+-spec reply(handler(), route(), response(), Req, Ctx) ->
                    {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
-reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
+reply(Handler, Route, {Body, HandlerState}, Req, Ctx) ->
+    reply(Handler, Route, 200, [], Body, HandlerState, Req, Ctx);
+reply(Handler, Route, {Status, Body, HandlerState}, Req, Ctx) ->
+    reply(Handler, Route, Status, [], Body, HandlerState, Req, Ctx);
+reply(Handler, Route, {Status, Headers, Body, HandlerState}, Req, Ctx) ->
+    reply(Handler, Route, Status, Headers, Body, HandlerState, Req, Ctx).
+
+-spec reply(handler(), route(), status(), headers(), body(), handler_state(),
+            Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
+reply(Handler, Route, Status, Headers, Body, HandlerState, Req, Ctx) ->
     %% encode Body and set content-type
     {
       Headers1,
@@ -199,8 +200,29 @@ reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
             _ ->
                 {set_content_type(text, Headers), Body}
         end,
-    {ok, Req1} = cowboy_req:reply(status(Status), Headers1, Body1, Req),
+    %% enable or disable cross-domain requests
+    Headers2 = case handler_cross_domain(Handler, Route, Req, HandlerState) of
+                   false ->
+                       Headers1;
+                   true ->
+                       Headers1 ++ [{<<"access-control-allow-origin">>, <<"*">>}]
+               end,
+    {ok, Req1} = cowboy_req:reply(status(Status), Headers2, Body1, Req),
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
+
+-spec handler_cross_domain(handler(), route(), cowboy_req:req(),
+                           handler_state()) -> boolean().
+handler_cross_domain(Handler, Route, Req, HandlerState) ->
+    %%
+    %% spec:
+    %%   Handler:cross_domain(Route, Req, State) -> boolean().
+    %%
+    case is_defined(Handler, cross_domain) of
+        false ->
+            true;
+        true ->
+            Handler:cross_domain(Route, Req, HandlerState)
+    end.
 
 -spec handler_terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
 handler_terminate(Reason, Req, Ctx) ->
