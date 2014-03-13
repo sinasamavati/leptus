@@ -4,17 +4,20 @@ CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config
 REBAR := $(shell which rebar)
 
 ifeq ($(REBAR),)
-$(error "Rebar is not reachable on this box, it's required for building dependencies")
+    $(error "Rebar is not reachable on this box, it's required for building \
+	dependencies")
 endif
 
-.PHONY: all check deps compile shell
+ifdef USE_JSX
+    ERLC_OPTS += -DUSE_JSX
+endif
 
-all: deps compile
+.PHONY: all deps shell
+
+all: deps app
 
 deps:
 	@$(REBAR) get-deps compile
-
-compile: app
 
 shell:
 	erl -pa ebin deps/*/ebin
