@@ -1,17 +1,22 @@
 PROJECT = leptus
 CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config
 
-.PHONY: all deps compile shell
+REBAR := $(shell which rebar)
+
+ifeq ($(REBAR),)
+$(error "Rebar is not reachable on this box, it's required for building dependencies")
+endif
+
+.PHONY: all check deps compile shell
 
 all: deps compile
 
 deps:
-	./rebar get-deps
+	@$(REBAR) get-deps compile
 
-compile:
-	./rebar compile
+compile: app
 
-shell: all
+shell:
 	erl -pa ebin deps/*/ebin
 
 
