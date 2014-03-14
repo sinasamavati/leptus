@@ -22,10 +22,16 @@
 
 -module(leptus).
 
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -export([start_listener/2]).
 -export([start_listener/3]).
 -export([stop_listener/1]).
 
+%% -----------------------------------------------------------------------------
+%% types
+%% -----------------------------------------------------------------------------
 -type host_match() :: term().
 -type handler() :: {module(), State :: any()}.
 -type handlers() :: [{host_match(), [handler()]}].
@@ -33,7 +39,8 @@
 -export_type([handlers/0]).
 
 -type listener() :: http | https | spdy.
--type option() :: {ip, inet:ip_address()}
+-type option() :: {nb_acceptors, non_neg_integer()}
+                | {ip, inet:ip_address()}
                 | {port, inet:port_number()}
                 | {cacertfile, file:name_all()}
                 | {certfile, file:name_all()}
@@ -43,6 +50,9 @@
 -export_type([options/0]).
 
 
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -spec start_listener(listener(), handlers()) -> {ok, pid()} | {error, any()}.
 start_listener(Listener, Handlers) ->
     start_listener(Listener, Handlers, []).
@@ -65,7 +75,8 @@ start_listener(Listener, Handlers, Opts) ->
 
     ListenerFunc = get_listener_func(Listener),
     Ref = get_ref(Listener),
-    cowboy:ListenerFunc(Ref, 100,
+    NbAcceptors = get_value(nb_acceptors, Opts, 100),
+    cowboy:ListenerFunc(Ref, NbAcceptors,
                         [IP, Port] ++ get_extra_opts(Listener, Opts),
                         [
                          {env, [{dispatch, Dispatch1}]},
@@ -76,6 +87,9 @@ start_listener(Listener, Handlers, Opts) ->
 stop_listener(Listener) ->
     cowboy:stop_listener(get_ref(Listener)).
 
+%% -----------------------------------------------------------------------------
+%% internal
+%% -----------------------------------------------------------------------------
 -spec get_listener_func(listener()) -> atom().
 get_listener_func(http) -> start_http;
 get_listener_func(https) -> start_https;
