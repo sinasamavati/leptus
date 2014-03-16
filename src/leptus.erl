@@ -76,12 +76,21 @@ start_listener(Listener, Handlers, Opts) ->
     ListenerFunc = get_listener_func(Listener),
     Ref = get_ref(Listener),
     NbAcceptors = get_value(nb_acceptors, Opts, 100),
-    cowboy:ListenerFunc(Ref, NbAcceptors,
-                        [IP, Port] ++ get_extra_opts(Listener, Opts),
-                        [
-                         {env, [{dispatch, Dispatch1}]},
-                         {onresponse, fun leptus_hooks:console_log/4}
-                        ]).
+    Res = cowboy:ListenerFunc(Ref, NbAcceptors,
+                              [IP, Port] ++ get_extra_opts(Listener, Opts),
+                              [
+                               {env, [{dispatch, Dispatch1}]},
+                               {onresponse, fun leptus_hooks:console_log/4}
+                              ]),
+    case Res of
+        {ok, _} ->
+            {ok, Vsn} = application:get_key(leptus, vsn),
+            io:format("Leptus ~s started on http://~s:~p~n",
+                      [Vsn, inet_ip_to_str(element(2, IP)), element(2, Port)]);
+        _ ->
+            ok
+    end,
+    Res.
 
 -spec stop_listener(listener()) -> ok | {error, not_found}.
 stop_listener(Listener) ->
@@ -134,3 +143,6 @@ get_value(Key, Opts, Default) ->
         {_, V} -> V;
         _ -> Default
     end.
+
+inet_ip_to_str({A, B, C, D}) ->
+    lists:concat([A, ".", B, ".", C, ".", D]).
