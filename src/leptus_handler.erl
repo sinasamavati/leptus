@@ -101,12 +101,12 @@ set_handler_state(Ctx, HandlerState) ->
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
 
--spec http_method(binary()) -> method() | badarg.
+-spec http_method(binary()) -> method() | not_allowed.
 http_method(<<"GET">>) -> get;
 http_method(<<"PUT">>) -> put;
 http_method(<<"POST">>) -> post;
 http_method(<<"DELETE">>) -> delete;
-http_method(_) -> badarg.
+http_method(_) -> not_allowed.
 
 %% -----------------------------------------------------------------------------
 %% Handler:init/3
@@ -119,9 +119,9 @@ handler_init(Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
--spec handle_request(handler(), method() | badarg, route(), Req, Ctx) ->
+-spec handle_request(handler(), method() | not_allowed, route(), Req, Ctx) ->
                             {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-handle_request(Handler, badarg, Route, Req, Ctx) ->
+handle_request(Handler, not_allowed, Route, Req, Ctx) ->
     Response = method_not_allowed(Handler, Route, get_handler_state(Ctx)),
     reply(Handler, Route, Response, Req, Ctx);
 handle_request(Handler, Func, Route, Req, Ctx) ->
