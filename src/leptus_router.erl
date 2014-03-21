@@ -22,19 +22,37 @@
 
 -module(leptus_router).
 
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -export([paths/1]).
 -export([sort_dispatch/1]).
 
 -include("leptus.hrl").
+
+%% -----------------------------------------------------------------------------
+%% types
+%% -----------------------------------------------------------------------------
 -type path_rule() :: {[atom() | binary()], term(), module(), any()}.
 -type dispatch() :: cowboy_router:dispatch_rules().
 
-
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -spec paths(leptus:handlers()) -> dispatch().
 paths(Handlers) ->
     handle_routes(Handlers, []).
 
+%% -----------------------------------------------------------------------------
+%% order routes the way it matters in cowboy
+%% -----------------------------------------------------------------------------
+-spec sort_dispatch(Dispatch) -> Dispatch when Dispatch :: dispatch().
+sort_dispatch(Dispatch) ->
+    sort_dispatch(Dispatch, []).
+
+%% -----------------------------------------------------------------------------
 %% internal
+%% -----------------------------------------------------------------------------
 handle_routes([], Acc) ->
     Acc;
 handle_routes([{HostMatch, X}|T], Acc) ->
@@ -49,13 +67,6 @@ handle_routes([{HostMatch, X}|T], Acc) ->
 new_ctx(Route, Handler, HandlerState) ->
     #ctx{route=Route, handler=Handler, handler_state=HandlerState}.
 
-%% public
-%% order routes the way it matters in cowboy
--spec sort_dispatch(Dispatch) -> Dispatch when Dispatch :: dispatch().
-sort_dispatch(Dispatch) ->
-    sort_dispatch(Dispatch, []).
-
-%% internal
 sort_dispatch([], Acc) ->
     Acc;
 sort_dispatch([{HM, C, PathRules}|Rest], Acc) ->
