@@ -233,20 +233,25 @@ reply(Handler, Route, Status, Headers, Body, HandlerState, Req, Ctx) ->
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
 
 %% -----------------------------------------------------------------------------
-%% Handler:cross_domain/3
+%% Handler:cross_domains/3
 %% -----------------------------------------------------------------------------
--spec handler_cross_domain(handler(), route(), req(), handler_state()) ->
-                                  boolean().
-handler_cross_domain(Handler, Route, Req, HandlerState) ->
+-spec handler_cross_domains(handler(), route(), req(), handler_state()) ->
+                                   headers().
+handler_cross_domains(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
-    %%   Handler:cross_domain(Route, Req, State) -> boolean().
+    %%   Handler:cross_domains(Route, Req, State) -> boolean().
     %%
-    case is_defined(Handler, cross_domain) of
-        false ->
-            true;
-        true ->
-            Handler:cross_domain(Route, Req, HandlerState)
+    case leptus_req:header(<<"origin">>, Req) of
+        <<>> ->
+            [];
+        _ ->
+            case is_defined(Handler, cross_domains) of
+                false ->
+                    [];
+                true ->
+                    Handler:cross_domains(Route, Req, HandlerState)
+            end
     end.
 
 %% -----------------------------------------------------------------------------
@@ -322,3 +327,38 @@ status(S) -> S.
 join_http_methods(Methods) ->
     <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
     Allow.
+
+-spec compile_host(string() | binary()) -> [[binary()]].
+compile_host(HostMatch) ->
+    [X || {X, _, _} <- cowboy_router:compile([{HostMatch, []}])].
+
+-spec origin_matches(binary(), [string() | binary()]) -> boolean().
+origin_matches(Origin, HostMatches) ->
+    %% [<<"com">>, <<"example">>], "example.com", [...]
+    domains_match(hd(compile_host(Origin)), HostMatches).
+
+domains_match(OriginToks, [HostMatch|Rest]) ->
+    %% [<<"com">>, <<"example">>], [[<<"com">>, <<"example">>], ...], [...]
+    domains_match(OriginToks, compile_host(HostMatch), Rest, OriginToks).
+
+domains_match(_, ['_'], _, _) ->
+    true;
+domains_match(OriginToks, [HMToks|Rest], HostMatches, OriginToks) ->
+    domain_matches(OriginToks, HMToks, Rest, HostMatches, OriginToks).
+
+domain_matches(OriginToks, OriginToks, _, _, _) ->
+    true;
+domain_matches(_, ['...'|_], _, _, _) ->
+    true;
+domain_matches([], [], _, _, _) ->
+    true;
+domain_matches(_, _, [], [], _) ->
+    false;
+domain_matches(_, _, [], HostMatches, OriginToks) ->
+    domains_match(OriginToks, HostMatches);
+domain_matches([H|T], [H|HMToks], Rest, HostMatches, OriginToksReplica) ->
+    domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
+domain_matches([_|T], ['_'|HMToks], Rest, HostMatches, OriginToksReplica) ->
+    domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
+domain_matches(_, _, [H|HMToks], HostMatches, OriginToksReplica) ->
+    domain_matches(OriginToksReplica, H, HMToks, HostMatches, OriginToksReplica).
