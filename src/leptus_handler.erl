@@ -223,12 +223,8 @@ reply(Handler, Route, Status, Headers, Body, HandlerState, Req, Ctx) ->
                 {set_content_type(text, Headers), Body}
         end,
     %% enable or disable cross-domain requests
-    Headers2 = case handler_cross_domain(Handler, Route, Req, HandlerState) of
-                   false ->
-                       Headers1;
-                   true ->
-                       Headers1 ++ [{<<"access-control-allow-origin">>, <<"*">>}]
-               end,
+    Headers2 = Headers1 ++ handler_cross_domains(Handler, Route, Req,
+                                                 HandlerState),
     {ok, Req1} = cowboy_req:reply(status(Status), Headers2, Body1, Req),
     {ok, Req1, set_handler_state(Ctx, HandlerState)}.
 
@@ -240,17 +236,23 @@ reply(Handler, Route, Status, Headers, Body, HandlerState, Req, Ctx) ->
 handler_cross_domains(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
-    %%   Handler:cross_domains(Route, Req, State) -> boolean().
+    %%   Handler:cross_domains(Route, Req, State) -> [string()].
     %%
     case leptus_req:header(<<"origin">>, Req) of
         <<>> ->
             [];
-        _ ->
+        Origin ->
             case is_defined(Handler, cross_domains) of
                 false ->
                     [];
                 true ->
-                    Handler:cross_domains(Route, Req, HandlerState)
+                    HostMatches = Handler:cross_domains(Route, Req, HandlerState),
+                    case origin_matches(Origin, HostMatches) of
+                        false ->
+                            [];
+                        true ->
+                            [{<<"access-control-allow-origin">>, Origin}]
+                    end
             end
     end.
 
