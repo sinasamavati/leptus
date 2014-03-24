@@ -330,15 +330,16 @@ join_http_methods(Methods) ->
     <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
     Allow.
 
--spec compile_host(string() | binary()) -> [[binary()]].
+-spec compile_host(string() | binary()) -> [[binary() | atom()]] | [atom()].
 compile_host(HostMatch) ->
     [X || {X, _, _} <- cowboy_router:compile([{HostMatch, []}])].
 
--spec origin_matches(binary(), [string() | binary()]) -> boolean().
+-spec origin_matches(binary(), [atom() | string() | binary()]) -> boolean().
 origin_matches(Origin, HostMatches) ->
     %% [<<"com">>, <<"example">>], "example.com", [...]
     domains_match(hd(compile_host(Origin)), HostMatches).
 
+%% TODO: make it compatible with Cowboy host-match syntax
 domains_match(OriginToks, [HostMatch|Rest]) ->
     %% [<<"com">>, <<"example">>], [[<<"com">>, <<"example">>], ...], [...]
     domains_match(OriginToks, compile_host(HostMatch), Rest, OriginToks).
