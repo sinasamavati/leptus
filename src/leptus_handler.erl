@@ -363,7 +363,7 @@ domain_matches([H|T], [H|HMToks], Rest, HostMatches, OriginToksReplica) ->
     domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
 domain_matches(_, _, [HMToks|Rest], HostMatches, OriginToksReplica) ->
     domain_matches(OriginToksReplica, HMToks, Rest, HostMatches, OriginToksReplica);
-domain_matches(_, _, [], HostMatches, OriginToks) ->
-    domains_match(OriginToks, HostMatches);
 domain_matches(_, _, [], [], _) ->
-    false.
+    false;
+domain_matches(_, _, [], HostMatches, OriginToks) ->
+    domains_match(OriginToks, HostMatches).
