@@ -276,7 +276,7 @@ content_type(msgpack) -> <<"application/x-msgpack">>.
 %% -----------------------------------------------------------------------------
 %% HTTP status code bindings
 %% -----------------------------------------------------------------------------
--spec status(atom() | S) -> status_code() | S when S :: any().
+-spec status(atom() | A) -> status_code() | A when A :: any().
 %% informational
 status(continue) -> 100;
 status(switching_protocols) -> 101;
@@ -323,7 +323,7 @@ status(bad_gateway) -> 502;
 status(service_unavailable) -> 503;
 status(gateway_timeout) -> 504;
 status(http_version_not_supported) -> 505;
-status(S) -> S.
+status(A) -> A.
 
 -spec join_http_methods([binary()]) -> binary().
 join_http_methods(Methods) ->
@@ -339,7 +339,9 @@ origin_matches(Origin, HostMatches) ->
     %% [<<"com">>, <<"example">>], "example.com", [...]
     domains_match(hd(compile_host(Origin)), HostMatches).
 
-%% TODO: make it compatible with Cowboy host-match syntax
+%% TODO: write tests
+domains_match(_, []) ->
+    false;
 domains_match(OriginToks, [HostMatch|Rest]) ->
     %% [<<"com">>, <<"example">>], [[<<"com">>, <<"example">>], ...], [...]
     domains_match(OriginToks, compile_host(HostMatch), Rest, OriginToks).
@@ -355,13 +357,13 @@ domain_matches(_, ['...'|_], _, _, _) ->
     true;
 domain_matches([], [], _, _, _) ->
     true;
-domain_matches(_, _, [], [], _) ->
-    false;
-domain_matches(_, _, [], HostMatches, OriginToks) ->
-    domains_match(OriginToks, HostMatches);
-domain_matches([H|T], [H|HMToks], Rest, HostMatches, OriginToksReplica) ->
-    domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
 domain_matches([_|T], ['_'|HMToks], Rest, HostMatches, OriginToksReplica) ->
     domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
-domain_matches(_, _, [H|HMToks], HostMatches, OriginToksReplica) ->
-    domain_matches(OriginToksReplica, H, HMToks, HostMatches, OriginToksReplica).
+domain_matches([H|T], [H|HMToks], Rest, HostMatches, OriginToksReplica) ->
+    domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
+domain_matches(_, _, [HMToks|Rest], HostMatches, OriginToksReplica) ->
+    domain_matches(OriginToksReplica, HMToks, Rest, HostMatches, OriginToksReplica);
+domain_matches(_, _, [], HostMatches, OriginToks) ->
+    domains_match(OriginToks, HostMatches);
+domain_matches(_, _, [], [], _) ->
+    false.
