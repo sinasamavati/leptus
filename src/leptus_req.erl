@@ -22,7 +22,24 @@
 
 %% a bunch of functions to deal with a request
 -module(leptus_req).
+-behaviour(gen_server).
 
+%% -----------------------------------------------------------------------------
+%% gen_server callbacks
+%% -----------------------------------------------------------------------------
+-export([init/1]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([terminate/2]).
+-export([code_change/3]).
+
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
+-export([start_link/1]).
+-export([start/1]).
+-export([stop/1]).
 -export([param/2]).
 -export([params/1]).
 -export([qs/1]).
@@ -37,22 +54,33 @@
 -export([parse_header/2]).
 -export([auth/2]).
 
+-spec start_link(cowboy_req:req()) -> {ok, pid()} | ignore | {error, any()}.
+start_link(Req) ->
+    gen_server:start_link(?MODULE, Req, []).
 
--spec param(atom(), cowboy_req:req()) -> binary() | undefined.
-param(Key, Req) ->
-    invoke(binding, [Key, Req]).
+-spec start(cowboy_req:req()) -> {ok, pid()} | ignore | {error, any()}.
+start(Req) ->
+    gen_server:start(?MODULE, Req, []).
 
--spec params(cowboy_req:req()) -> [{atom(), binary()}] | undefined.
-params(Req) ->
-    invoke(bindings, [Req]).
+-spec stop(pid()) -> ok.
+stop(Pid) ->
+    gen_server:call(Pid, stop).
 
--spec qs(cowboy_req:req()) -> binary().
-qs(Req) ->
-    invoke(qs, [Req]).
+-spec param(pid(), atom()) -> binary() | undefined.
+param(Pid, Key) ->
+    gen_server:call(Pid, {binding, [Key]}).
 
--spec qs_val(binary(), cowboy_req:req()) -> binary() | undefined.
-qs_val(Key, Req) ->
-    invoke(qs_val, [Key, Req]).
+-spec params(pid()) -> [{atom(), binary()}] | undefined.
+params(Pid) ->
+    gen_server:call(Pid, {bindings, []}).
+
+-spec qs(pid()) -> binary().
+qs(Pid) ->
+    gen_server:call(Pid, {qs, []}).
+
+-spec qs_val(pid(), binary()) -> binary() | undefined.
+qs_val(Pid, Key) ->
+    gen_server:call(Pid, {qs_val, [Key]}).
 
 -spec uri(cowboy_req:req()) -> binary().
 uri(Req) ->
@@ -118,14 +146,46 @@ auth(basic, Req) ->
             Value
     end.
 
+%% -----------------------------------------------------------------------------
+%% gen_server callbacks
+%% -----------------------------------------------------------------------------
+init(Req) ->
+    {ok, Req}.
 
+handle_call(stop, _From, Req) ->
+    {stop, shutdown, ok, Req};
+handle_call({F, A}, _From, Req) ->
+    {Value, Req1} = invoke(F, A ++ [Req]),
+    {reply, Value, Req1}.
+
+handle_cast(_Msg, Req) ->
+    {noreply, Req}.
+
+handle_info(_Info, Req) ->
+    {noreply, Req}.
+
+terminate(_Reason, _Req) ->
+    ok.
+
+code_change(_OldVsn, Req, _Extra) ->
+    {ok, Req}.
+
+%% -----------------------------------------------------------------------------
 %% internal
+%% -----------------------------------------------------------------------------
 invoke(F, A) ->
-    get_value(apply(cowboy_req, F, A)).
+    get_vr(apply(cowboy_req, F, A)).
 
-get_value({Value, _}) ->
-    Value;
-get_value({ok, Value, _}) ->
-    Value;
-get_value({undefined, Value, _}) ->
-    Value.
+%% get value and req
+get_vr(Res={_, _}) ->
+    Res;
+get_vr({ok, Value, Req}) ->
+    {Value, Req};
+get_vr({undefined, Value, Req}) ->
+    {Value, Req}.
+
+%% TODO: complete the new api
+%% leptus_req should be a gen_server and it should require Pid
+%% TO BE CONSIDERED: each function call updates the state (Req)
+%% so what about a number of concurrent function calls?
+%% last write wins?
