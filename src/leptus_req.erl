@@ -82,31 +82,30 @@ qs(Pid) ->
 qs_val(Pid, Key) ->
     gen_server:call(Pid, {qs_val, [Key]}).
 
--spec uri(cowboy_req:req()) -> binary().
-uri(Req) ->
-    Path = invoke(path, [Req]),
-    QS = invoke(qs, [Req]),
+-spec uri(pid()) -> binary().
+uri(Pid) ->
+    Path = gen_server:call(Pid, {path, []}),
+    QS = qs(Pid),
 
     %% e.g <<"/path?query=string">>
-
     case QS of
         <<>> -> Path;
         _ -> <<Path/binary, "?", QS/binary>>
     end.
 
--spec version(cowboy_req:req()) -> cowboy:http_version().
-version(Req) ->
-    invoke(version, [Req]).
+-spec version(pid()) -> cowboy:http_version().
+version(Pid) ->
+    gen_server:call(Pid, {version, []}).
 
--spec method(cowboy_req:req()) -> binary().
-method(Req) ->
-    invoke(method, [Req]).
+-spec method(pid()) -> binary().
+method(Pid) ->
+    gen_server:call(Pid, {method, []}).
 
--spec body(cowboy_req:req()) -> binary() | leptus_handler:json_term() |
-                                msgpack:msgpack_term() | {error, any()}.
-body(Req) ->
-    Body = body_raw(Req),
-    case header(<<"content-type">>, Req) of
+-spec body(pid()) -> binary() | leptus_handler:json_term() |
+                     msgpack:msgpack_term() | {error, any()}.
+body(Pid) ->
+    Body = body_raw(Pid),
+    case header(Pid, <<"content-type">>) of
         %% decode body if content-type is json or msgpack
         <<"application/json">> ->
             leptus_json:decode(Body);
@@ -121,25 +120,25 @@ body(Req) ->
             Body
     end.
 
--spec body_raw(cowboy_req:req()) -> binary().
-body_raw(Req) ->
-    invoke(body, [infinity, Req]).
+-spec body_raw(pid()) -> binary().
+body_raw(Pid) ->
+    gen_server:call(Pid, {body, [infinity]}).
 
--spec body_qs(cowboy_req:req()) -> [{binary(), binary() | true}].
-body_qs(Req) ->
-    invoke(body_qs, [infinity, Req]).
+-spec body_qs(pid()) -> [{binary(), binary() | true}].
+body_qs(Pid) ->
+    gen_server:call(Pid, {body_qs, [infinity]}).
 
--spec header(binary(), cowboy_req:req()) -> binary().
-header(Name, Req) ->
-    invoke(header, [Name, Req, <<>>]).
+-spec header(pid(), binary()) -> binary().
+header(Pid, Name) ->
+    gen_server:call(Pid, {header, [Name, <<>>]}).
 
--spec parse_header(binary(), cowboy_req:req()) -> any() | <<>>.
-parse_header(Name, Req) ->
-    invoke(parse_header, [Name, Req, <<>>]).
+-spec parse_header(pid(), binary()) -> any() | <<>>.
+parse_header(Pid, Name) ->
+    gen_server:call(Pid, {parse_header, [Name, <<>>]}).
 
--spec auth(basic, cowboy_req:req()) -> {binary(), binary()} | <<>> | error.
-auth(basic, Req) ->
-    case parse_header(<<"authorization">>, Req) of
+-spec auth(pid(), basic) -> {binary(), binary()} | <<>> | error.
+auth(Pid, basic) ->
+    case parse_header(Pid, <<"authorization">>) of
         {<<"basic">>, UserPass} ->
             UserPass;
         Value ->
@@ -155,7 +154,7 @@ init(Req) ->
 handle_call(stop, _From, Req) ->
     {stop, shutdown, ok, Req};
 handle_call({F, A}, _From, Req) ->
-    {Value, Req1} = invoke(F, A ++ [Req]),
+    {Value, Req1} = call_cowboy_req(F, A, Req),
     {reply, Value, Req1}.
 
 handle_cast(_Msg, Req) ->
@@ -173,7 +172,13 @@ code_change(_OldVsn, Req, _Extra) ->
 %% -----------------------------------------------------------------------------
 %% internal
 %% -----------------------------------------------------------------------------
-invoke(F, A) ->
+call_cowboy_req(F, [], Req) ->
+    call_cowboy_req(F, [Req]);
+call_cowboy_req(F, [H|T], Req) ->
+    A = [H] ++ [Req|T],
+    call_cowboy_req(F, A).
+
+call_cowboy_req(F, A) ->
     get_vr(apply(cowboy_req, F, A)).
 
 %% get value and req
@@ -183,9 +188,3 @@ get_vr({ok, Value, Req}) ->
     {Value, Req};
 get_vr({undefined, Value, Req}) ->
     {Value, Req}.
-
-%% TODO: complete the new api
-%% leptus_req should be a gen_server and it should require Pid
-%% TO BE CONSIDERED: each function call updates the state (Req)
-%% so what about a number of concurrent function calls?
-%% last write wins?
