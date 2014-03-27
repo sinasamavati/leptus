@@ -53,6 +53,9 @@
 -export([header/2]).
 -export([parse_header/2]).
 -export([auth/2]).
+-export([invoke/3]).
+-export([get_req/1]).
+-export([set_req/2]).
 
 -spec start_link(cowboy_req:req()) -> {ok, pid()} | ignore | {error, any()}.
 start_link(Req) ->
@@ -145,6 +148,18 @@ auth(Pid, basic) ->
             Value
     end.
 
+-spec invoke(pid(), atom(), [any()]) -> any().
+invoke(Pid, F, A) ->
+    gen_server:call(Pid, {F, A}).
+
+-spec get_req(pid()) -> cowboy_req:req().
+get_req(Pid) ->
+    gen_server:call(Pid, get_req).
+
+-spec set_req(pid(), cowboy_req:req()) -> ok.
+set_req(Pid, Req) ->
+    gen_server:call(Pid, {set_req, Req}).
+
 %% -----------------------------------------------------------------------------
 %% gen_server callbacks
 %% -----------------------------------------------------------------------------
@@ -153,6 +168,10 @@ init(Req) ->
 
 handle_call(stop, _From, Req) ->
     {stop, shutdown, ok, Req};
+handle_call(get_req, _From, Req) ->
+    {reply, Req, Req};
+handle_call({set_req, NewReq}, _From, _Req) ->
+    {reply, ok, NewReq};
 handle_call({F, A}, _From, Req) ->
     {Value, Req1} = call_cowboy_req(F, A, Req),
     {reply, Value, Req1}.
