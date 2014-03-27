@@ -71,23 +71,23 @@ stop(Pid) ->
 
 -spec param(pid(), atom()) -> binary() | undefined.
 param(Pid, Key) ->
-    gen_server:call(Pid, {binding, [Key]}).
+    invoke(Pid, binding, [Key]).
 
 -spec params(pid()) -> [{atom(), binary()}] | undefined.
 params(Pid) ->
-    gen_server:call(Pid, {bindings, []}).
+    invoke(Pid, bindings, []).
 
 -spec qs(pid()) -> binary().
 qs(Pid) ->
-    gen_server:call(Pid, {qs, []}).
+    invoke(Pid, qs, []).
 
 -spec qs_val(pid(), binary()) -> binary() | undefined.
 qs_val(Pid, Key) ->
-    gen_server:call(Pid, {qs_val, [Key]}).
+    invoke(Pid, qs_val, [Key]).
 
 -spec uri(pid()) -> binary().
 uri(Pid) ->
-    Path = gen_server:call(Pid, {path, []}),
+    Path = invoke(Pid, path, []),
     QS = qs(Pid),
 
     %% e.g <<"/path?query=string">>
@@ -98,11 +98,11 @@ uri(Pid) ->
 
 -spec version(pid()) -> cowboy:http_version().
 version(Pid) ->
-    gen_server:call(Pid, {version, []}).
+    invoke(Pid, version, []).
 
 -spec method(pid()) -> binary().
 method(Pid) ->
-    gen_server:call(Pid, {method, []}).
+    invoke(Pid, method, []).
 
 -spec body(pid()) -> binary() | leptus_handler:json_term() |
                      msgpack:msgpack_term() | {error, any()}.
@@ -125,19 +125,19 @@ body(Pid) ->
 
 -spec body_raw(pid()) -> binary().
 body_raw(Pid) ->
-    gen_server:call(Pid, {body, [infinity]}).
+    invoke(Pid, body, [infinity]).
 
 -spec body_qs(pid()) -> [{binary(), binary() | true}].
 body_qs(Pid) ->
-    gen_server:call(Pid, {body_qs, [infinity]}).
+    invoke(Pid, body_qs, [infinity]).
 
 -spec header(pid(), binary()) -> binary().
 header(Pid, Name) ->
-    gen_server:call(Pid, {header, [Name, <<>>]}).
+    invoke(Pid, header, [Name, <<>>]).
 
 -spec parse_header(pid(), binary()) -> any() | <<>>.
 parse_header(Pid, Name) ->
-    gen_server:call(Pid, {parse_header, [Name, <<>>]}).
+    invoke(Pid, parse_header, [Name, <<>>]).
 
 -spec auth(pid(), basic) -> {binary(), binary()} | <<>> | error.
 auth(Pid, basic) ->
