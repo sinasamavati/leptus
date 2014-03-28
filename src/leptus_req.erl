@@ -207,3 +207,5 @@ get_vr({ok, Value, Req}) ->
     {Value, Req};
 get_vr({undefined, Value, Req}) ->
     {Value, Req}.
+
+%% TODO: complete the bridge
