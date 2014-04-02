@@ -28,7 +28,7 @@ If you want to use it as a dependency in your project add the following to your 
 ```
 
 NOTE: if you prefer [jsx](https://github.com/talentdeficit/jsx) rather than [jiffy](https://github.com/davisp/jiffy)
-the environment variable `USE_JSX` must be set to `true` when getting dependencies and/or compiling using rebar.
+the environment variable `USE_JSX` must be set to `true` when getting dependencies and/or compiling.
 
 i.e.
 ```
@@ -92,8 +92,7 @@ Check out the [docs](docs) directory.
 
 ## Support
 
-Feel free to open up [issues](https://github.com/s1n4/leptus/issues)
-or get in touch with [@sinasamavati](https://twitter.com/sinasamavati) on Twitter.
+Feel free to open up [issues](https://github.com/s1n4/leptus/issues).
 
 ## License
 
