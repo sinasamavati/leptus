@@ -26,8 +26,9 @@
 -export([paths/1]).
 -export([sort_dispatch/1]).
 
--record(ctx, {route, handler, handler_state}).
+-include_lib("test_server/include/test_server.hrl").
 
+-record(ctx, {route, handler, handler_state}).
 
 all() ->
     [paths, sort_dispatch].
@@ -46,6 +47,13 @@ paths(_) ->
                 handler_state=i_see},
     Ctx8 = #ctx{handler=leptus_routes3, route="/users/:id/info",
                 handler_state=i_see},
+    Ctx9 = #ctx{handler=leptus_routes4, route="/items",
+                handler_state=undefined},
+    Ctx10 = #ctx{handler=leptus_routes4, route="/items/:id",
+                 handler_state=undefined},
+    Ctx11 = #ctx{handler=leptus_routes4, route="/items/:id/childrens",
+                 handler_state=undefined},
+
     [{'_', [
             {"/", leptus_handler, Ctx1},
             {"/blah", leptus_handler, Ctx2},
@@ -54,11 +62,15 @@ paths(_) ->
             {"/something/:key", leptus_handler, Ctx5},
             {"/something/else", leptus_handler, Ctx6},
             {"/users/:id", leptus_handler, Ctx7},
-            {"/users/:id/info", leptus_handler, Ctx8}
+            {"/users/:id/info", leptus_handler, Ctx8},
+            {"/v1/items", leptus_handler, Ctx9},
+            {"/v1/items/:id", leptus_handler, Ctx10},
+            {"/v1/items/:id/childrens", leptus_handler, Ctx11}
            ]
-     }]= leptus_router:paths([{'_', [{leptus_routes1, []},
-                                     {leptus_routes2, aha},
-                                     {leptus_routes3, i_see}]}]).
+     }] = leptus_router:paths([{'_', [{leptus_routes1, []},
+                                      {leptus_routes2, aha},
+                                      {leptus_routes3, i_see},
+                                      {leptus_routes4, undefined}]}]).
 
 sort_dispatch(_) ->
     Routes = [

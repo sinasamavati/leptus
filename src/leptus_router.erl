@@ -34,12 +34,13 @@
 %% types
 %% -----------------------------------------------------------------------------
 -type path_rule() :: {[atom() | binary()], term(), module(), any()}.
+-type routes() :: cowboy_router:routes().
 -type dispatch() :: cowboy_router:dispatch_rules().
 
 %% -----------------------------------------------------------------------------
 %% API
 %% -----------------------------------------------------------------------------
--spec paths(leptus:handlers()) -> dispatch().
+-spec paths(leptus:handlers()) -> routes().
 paths(Handlers) ->
     handle_routes(Handlers, []).
 
@@ -58,14 +59,29 @@ handle_routes([], Acc) ->
 handle_routes([{HostMatch, X}|T], Acc) ->
     %% each module must have routes/0 -> [string()].
     F = fun({Handler, State}, AccIn) ->
-                AccIn ++ [{Route, leptus_handler, new_ctx(Route, Handler, State)}
-                          || Route <- Handler:routes()]
+                Prefix = handler_prefix(Handler),
+                AccIn ++ [new_route(Prefix, Route, Handler, State) ||
+                             Route <- Handler:routes()]
         end,
     handle_routes(T, Acc ++ [{HostMatch, lists:foldl(F, [], X)}]).
 
--spec new_ctx(route(), handler(), handler_state()) -> ctx().
-new_ctx(Route, Handler, HandlerState) ->
-    #ctx{route=Route, handler=Handler, handler_state=HandlerState}.
+new_route(Prefix, Route, Handler, HandlerState) ->
+    {Prefix ++ Route, leptus_handler, #ctx{route=Route, handler=Handler,
+                                           handler_state=HandlerState}}.
+
+%% -----------------------------------------------------------------------------
+%% get handler's prefix
+%%
+%% optional callback: Handler:prefix/0 -> string()
+%% e.g. Handler:prefix() -> "/v1"
+%% -----------------------------------------------------------------------------
+-spec handler_prefix(handler()) -> string().
+handler_prefix(Handler) ->
+    try Handler:prefix() of
+        Prefix -> Prefix
+    catch
+        error:undef -> ""
+    end.
 
 sort_dispatch([], Acc) ->
     Acc;
