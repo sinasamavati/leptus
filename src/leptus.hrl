@@ -28,6 +28,7 @@
         {
           route :: route(),
           handler :: module(),
-          handler_state :: any()
+          handler_state :: any(),
+          req_pid :: pid()
         }).
 -type ctx() :: #ctx{}.
