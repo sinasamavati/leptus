@@ -92,7 +92,8 @@ Check out the [docs](docs) directory.
 
 ## Support
 
-Feel free to open up [issues](https://github.com/s1n4/leptus/issues).
+* [Issue tracker](https://github.com/s1n4/leptus/issues)
+* #leptus on Freenode
 
 ## License
 
