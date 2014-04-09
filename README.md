@@ -37,10 +37,10 @@ USE_JSX=true make
 USE_JSX=true rebar get-deps compile
 ```
 
-## Quickstart
+## Quick example
 
 ```erlang
--module(rq_handler).
+-module(hello).
 -compile({parse_transform, leptus_pt}).
 
 %% leptus callbacks
@@ -55,8 +55,12 @@ get("/", _Req, State) ->
     {<<"Hello, leptus!">>, State};
 get("/hi/:name", Req, State) ->
     Status = 200,
-    Name = leptus_req:param(name, Req),
+    Name = leptus_req:param(Req, name),
     Body = [{<<"say">>, <<"Hi">>}, {<<"to">>, Name}],
+    {Status, {json, Body}, State};
+get("/[...]", _Req, State) ->
+    Status = not_found,
+    Body = [{<<"error">>, <<"not found">>}],
     {Status, {json, Body}, State}.
 
 terminate(_Reason, _Req, _State) ->
@@ -68,14 +72,17 @@ $ erl -pa ebin deps/*/ebin
 ```
 
 ```erlang
-1> c(rq_handler).
-2> Options = [{handlers, [{rq_handler, state}]}].
-3> leptus:start_http(Options).
+1> c(hello).
+2> leptus:start_listener(http, [{'_', [{hello, undefined_state}]}]).
+Leptus 0.3.4 started on http://127.0.0.1:8080
 ```
 
 ```
 $ curl localhost:8080/hi/Leptus
 {"say":"Hi","to":"Leptus"}
+
+$ curl localhost:8080/some-uri
+{"error":"not found"}
 ```
 
 ## Features
