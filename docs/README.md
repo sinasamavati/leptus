@@ -16,8 +16,10 @@ So, I suggest you using the following in your request/resource handlers (modules
 * [Types](types.md)
 
 * [Callbacks](callbacks.md)
+  * [prefix/0](callbacks.md#prefix0)
   * [init/3](callbacks.md#init3)
-  * [is_authorized/3](callbacks.md#isauthorized_3)
+  * [cross_domains/3](callbacks.md#cross_domains3)
+  * [is_authorized/3](callbacks.md#is_authorized3)
   * [HttpMethod/3](callbacks.md#httpmethod3)
   * [terminate/3](callbacks.md#terminate3)
 

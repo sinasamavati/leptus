@@ -1,11 +1,30 @@
 # Callbacks
 
-There are three callbacks which are required for every request handler: `init/3`, `HttpMethod/3` and `terminate/3`.
+There are three callbacks which are required for every request handler: `init/3`,
+`HttpMethod/3` and `terminate/3`.
 
+* [prefix/0](#prefix0)
 * [init/3](#init3)
-* [is_authorized/3](#isauthorized_3)
+* [cross_domains/3](#cross_domains3)
+* [is_authorized/3](#is_authorized3)
 * [HttpMethod/3](#httpmethod3)
 * [terminate/3](#terminate3)
+
+#### prefix/0
+
+This is an optional callback which you can use for prefixing routes.
+
+```erlang
+Module:prefix() -> string()
+```
+
+Example:
+```erlang
+prefix() -> "/v1".
+```
+
+NOTE: this won't affect `Route`s in the handler, but instead, this will be used
+when gathering routes and starting the Cowboy listener.
 
 #### init/3
 
@@ -14,9 +33,26 @@ Module:init(Route, Req, State) ->
     {ok, State}.
 ```
 
+#### cross_domains/3
+
+This is an optional callback that lets you enable cross-domain requests
+([CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing)).
+
+```erlang
+Module:cross_domains(Route, Req, State) -> [HostMatch]
+```
+
+`HostMatch` is equal to Cowboy HostMatch syntax.
+
+This will be used when preparing headers right before replying.
+
+If one of the HostMatches and Origin match, `access-control-allow-origin` will
+be set to Origin.
+
 #### is_authorized/3
 
-Exporting this callback in a module means that every request that should come to the handler needs authorization.
+Exporting this callback in a module means that every request that should come to
+the handler needs authorization.
 
 ```erlang
 Module:is_authorized(Route, Req, State) ->
@@ -59,4 +95,40 @@ delete("/:id", Req, State) ->
 
 ```erlang
 Module:terminate(Reason, Req, State) -> ok
+```
+
+## Example
+
+Please pay attention to comment.
+
+```erlang
+-module(example).
+-compile({parse_transform, leptus_pt}).
+
+-export([prefix/0]).
+-export([init/3]).
+-export([cross_domains/3]).
+-export([is_authorized/3]).
+-export([get/3]).
+-export([terminate/3]).
+
+prefix() -> "/example".
+
+init(_Route, _Req, State) ->
+    {ok, State}.
+
+cross_domains(_Route, _Req, _State) ->
+    ['_'].
+
+is_authorized(_Route, _Req, State) ->
+    {true, State}.
+
+%% Route is "/1" in every callback in this example,
+%% but we used prefix/0 to prepend "/example",
+%% so this will be used by issuing the url '/example/1'
+get("/1", _Req, State) ->
+    {<<"Example 1!">>, State}.
+
+terminate(_Reason, _Req, _State) ->
+    ok.
 ```
