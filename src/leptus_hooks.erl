@@ -24,19 +24,17 @@
 
 -export([console_log/4]).
 
-
 console_log(Status, Headers, _, Req) ->
     %% [%Y-%m-%d %H:%M:%S] "METHOD URL VERSION" STATUS CONTENT-LENGTH
     {{Year, Month, Day}, {Hour, Min, Sec}} = erlang:localtime(),
-    Method = leptus_req:method(Req),
-    Uri = leptus_req:uri(Req),
-    Version = leptus_req:version(Req),
+    {Method, Req1} = cowboy_req:method(Req),
+    {URI, Req2} = uri(Req1),
+    {Version, Req3} = cowboy_req:version(Req2),
     ContentLength = get_value(<<"content-length">>, Headers, 0),
     io:format("[~w-~w-~w ~w:~w:~w] \"\~s ~s ~s\"\ ~w ~s~n",
-              [Year, Month, Day, Hour, Min, Sec, Method, Uri,
+              [Year, Month, Day, Hour, Min, Sec, Method, URI,
                Version, Status, ContentLength]),
-    Req.
-
+    Req3.
 
 %% internal
 get_value(Key, Proplist, Default) ->
@@ -44,3 +42,12 @@ get_value(Key, Proplist, Default) ->
         {_, Value} -> Value;
         _ -> Default
     end.
+
+uri(Req) ->
+    {Path, Req1} = cowboy_req:path(Req),
+    {QS, Req2} = cowboy_req:qs(Req1),
+    URI = case QS of
+              <<>> -> Path;
+              _ -> <<Path/binary, "?", QS/binary>>
+          end,
+    {URI, Req2}.
