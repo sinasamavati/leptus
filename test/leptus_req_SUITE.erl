@@ -21,7 +21,6 @@
 -export([parse_header/1]).
 -export([auth/1]).
 -export([method/1]).
--export([invoke/1]).
 -export([get_req/1]).
 -export([set_req/1]).
 
@@ -49,7 +48,7 @@ end_per_testcase(_, Config) ->
 all() ->
     [
      param, params, qs, qs_val, uri, version, body, body_raw, body_qs,
-     header, parse_header, auth, method, invoke, get_req, set_req
+     header, parse_header, auth, method, get_req, set_req
     ].
 
 param(Config) ->
@@ -176,10 +175,6 @@ method(Config) ->
     <<"GET">> = leptus_req:method(Req2),
     <<"POST">> = leptus_req:method(Req3),
     <<"POST">> = leptus_req:method(Req4).
-
-invoke(Config) ->
-    Req1 = ?config(req1, Config),
-    <<"">> = leptus_req:invoke(Req1, parse_header, [<<"origin">>, <<"">>]).
 
 get_req(Config) ->
     Req1 = ?config(req1, Config),

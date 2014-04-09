@@ -53,7 +53,6 @@
 -export([header/2]).
 -export([parse_header/2]).
 -export([auth/2]).
--export([invoke/3]).
 -export([get_req/1]).
 -export([set_req/2]).
 
@@ -148,17 +147,13 @@ auth(Pid, basic) ->
             Value
     end.
 
--spec invoke(pid(), atom(), [any()]) -> any().
-invoke(Pid, F, A) ->
-    gen_server:call(Pid, {F, A}).
-
 -spec get_req(pid()) -> cowboy_req:req().
 get_req(Pid) ->
     gen_server:call(Pid, get_req).
 
 -spec set_req(pid(), cowboy_req:req()) -> ok.
 set_req(Pid, Req) ->
-    gen_server:call(Pid, {set_req, Req}).
+    gen_server:cast(Pid, {set_req, Req}).
 
 %% -----------------------------------------------------------------------------
 %% gen_server callbacks
@@ -170,12 +165,12 @@ handle_call(stop, _From, Req) ->
     {stop, shutdown, ok, Req};
 handle_call(get_req, _From, Req) ->
     {reply, Req, Req};
-handle_call({set_req, NewReq}, _From, _Req) ->
-    {reply, ok, NewReq};
 handle_call({F, A}, _From, Req) ->
     {Value, Req1} = call_cowboy_req(F, A, Req),
     {reply, Value, Req1}.
 
+handle_cast({set_req, NewReq}, _Req) ->
+    {noreply, NewReq};
 handle_cast(_Msg, Req) ->
     {noreply, Req}.
 
@@ -191,21 +186,27 @@ code_change(_OldVsn, Req, _Extra) ->
 %% -----------------------------------------------------------------------------
 %% internal
 %% -----------------------------------------------------------------------------
+-spec invoke(pid(), atom(), [any()]) -> any().
+invoke(Pid, F, A) ->
+    gen_server:call(Pid, {F, A}).
+
+-spec call_cowboy_req(atom(), [any()], cowboy_req:req()) -> any().
 call_cowboy_req(F, [], Req) ->
     call_cowboy_req(F, [Req]);
 call_cowboy_req(F, [H|T], Req) ->
     A = [H] ++ [Req|T],
     call_cowboy_req(F, A).
 
+-spec call_cowboy_req(atom(), [any()]) -> any().
 call_cowboy_req(F, A) ->
     get_vr(apply(cowboy_req, F, A)).
 
 %% get value and req
+-spec get_vr({atom(), any(), cowboy_req:req()} | {any(), cowboy_req:req()}) ->
+                    {any(), cowboy_req:req()}.
 get_vr(Res={_, _}) ->
     Res;
 get_vr({ok, Value, Req}) ->
     {Value, Req};
 get_vr({undefined, Value, Req}) ->
     {Value, Req}.
-
-%% TODO: complete the bridge
