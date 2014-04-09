@@ -97,32 +97,33 @@ sort_path_rules([Pivot|Rest]) ->
         ++ [Pivot] ++
         sort_path_rules([PathRule || PathRule <- Rest, egt(PathRule, Y)]).
 
--spec segments_length(path_rule()) -> non_neg_integer().
+-spec segments_length(path_rule()) -> integer().
+segments_length({['...'], _, _, _}) -> -1;
 segments_length({Segments, _, _, _}) ->
-    F = fun(Segment, {NBSQ, BSQ}) ->
-                %% NBSQ :: non-binding segment quantity
-                %% BSQ :: binding-segment quantity
-                %% if segment is an atom, it's a binding
-                case is_atom(Segment) of
-                    false -> {NBSQ + 0.5, BSQ};
-                    true -> {NBSQ, BSQ + 1}
-                end
+    F = fun(Segment, N) ->
+                N + segment_val(Segment)
         end,
-    {N1, N2} = lists:foldl(F, {0, 0}, Segments),
-    N1 + N2.
+    lists:foldl(F, 0, Segments).
+
+segment_val(A) when is_atom(A) -> 1;
+segment_val(_) -> 0.5.
 
 %% less than
 -spec lt(path_rule(), integer()) -> boolean().
+lt(_, -1) -> true;
 lt(PathRule, Y) ->
     case segments_length(PathRule) of
+        -1 -> false;
         N when N < Y -> true;
         _ -> false
     end.
 
 %% equal greater than
 -spec egt(path_rule(), integer()) -> boolean().
+egt(_, -1) -> false;
 egt(PathRule, Y) ->
     case segments_length(PathRule) of
+        -1 -> true;
         N when N >= Y -> true;
         _ -> false
     end.

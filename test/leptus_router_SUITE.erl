@@ -70,6 +70,7 @@ paths(_) ->
 sort_dispatch(_) ->
     Routes = [
               {"/:bucket", handler, undefined},
+              {"/[...]", handler, undefined},
               {"/_version", handler, undefined},
               {"/:bucket/:key", handler, undefined},
               {"/:bucket/_keys", handler, undefined},
@@ -84,7 +85,8 @@ sort_dispatch(_) ->
        {[<<"_buckets">>],[],handler,undefined},
        {[bucket],[],handler,undefined},
        {[bucket,<<"_keys">>],[],handler,undefined},
-       {[bucket,key],[],handler,undefined}]}
+       {[bucket,key],[],handler,undefined},
+       {['...'],[],handler,undefined}]}
     ] = leptus_router:sort_dispatch(Dispatch),
 
     Routes1 = [{"/:a/:b", handler, undefined},
