@@ -57,46 +57,27 @@
 %% -----------------------------------------------------------------------------
 -spec init({module(), http}, Req, Ctx) ->
                   {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-init(_Transport, Req, Ctx) ->
-    Handler = get_handler(Ctx),
-    Route = get_route(Ctx),
-    HandlerState = get_handler_state(Ctx),
-    {ok, HandlerState1} = handler_init(Handler, Route, Req, HandlerState),
-    {ok, Req, set_handler_state(Ctx, HandlerState1)}.
-
+init(_Transport, Req, Ctx=#ctx{route=Route, handler=Handler,
+                               handler_state=HandlerState}) ->
+    {ok, ReqPid} = leptus_req:start_link(Req),
+    {ok, HandlerState1} = handler_init(Handler, Route, ReqPid, HandlerState),
+    {ok, Req, Ctx#ctx{handler_state = HandlerState1, req_pid = ReqPid}}.
 
 -spec handle(Req, Ctx) -> {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-handle(Req, Ctx) ->
-    Handler = get_handler(Ctx),
-    Route = get_route(Ctx),
-
+handle(_Req, Ctx) ->
     %% convert the http method to a lowercase atom
-    Func = http_method(leptus_req:method(Req)),
-    handle_request(Handler, Func, Route, Req, Ctx).
+    Func = http_method(leptus_req:method(Ctx#ctx.req_pid)),
+    handle_request(Func, Ctx).
 
 -spec terminate(terminate_reason(), req(), ctx()) -> ok.
-terminate(Reason, Req, Ctx) ->
-    handler_terminate(Reason, Req, Ctx).
+terminate(Reason, _Req, Ctx) ->
+    Res = handler_terminate(Reason, Ctx),
+    leptus_req:stop(Ctx#ctx.req_pid),
+    Res.
 
 %% -----------------------------------------------------------------------------
 %% internal
 %% -----------------------------------------------------------------------------
--spec get_handler(ctx()) -> handler().
-get_handler(Ctx) ->
-    Ctx#ctx.handler.
-
--spec get_route(ctx()) -> route().
-get_route(Ctx) ->
-    Ctx#ctx.route.
-
--spec get_handler_state(ctx()) -> any().
-get_handler_state(Ctx) ->
-    Ctx#ctx.handler_state.
-
--spec set_handler_state(Ctx, any()) -> Ctx when Ctx :: ctx().
-set_handler_state(Ctx, HandlerState) ->
-    Ctx#ctx{handler_state=HandlerState}.
-
 -spec is_defined(module(), atom()) -> boolean().
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
@@ -119,13 +100,14 @@ handler_init(Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
--spec handle_request(handler(), method() | not_allowed, route(), Req, Ctx) ->
+-spec handle_request(method() | not_allowed, Ctx) ->
                             {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-handle_request(Handler, not_allowed, Route, Req, Ctx) ->
-    Response = method_not_allowed(Handler, Route, get_handler_state(Ctx)),
-    reply(Handler, Route, Response, Req, Ctx);
-handle_request(Handler, Func, Route, Req, Ctx) ->
-    HandlerState = get_handler_state(Ctx),
+handle_request(not_allowed, Ctx=#ctx{handler=Handler, route=Route,
+                                     handler_state=HandlerState}) ->
+    Response = method_not_allowed(Handler, Route, HandlerState),
+    reply(Response, Ctx);
+handle_request(Func, Ctx=#ctx{handler=Handler, route=Route,
+                              handler_state=HandlerState, req_pid=Req}) ->
     Response = case is_allowed(Handler, Func, Route, Req) of
                    true ->
                        case handler_is_authorized(Handler, Route, Req, HandlerState) of
@@ -137,7 +119,7 @@ handle_request(Handler, Func, Route, Req, Ctx) ->
                    false ->
                        method_not_allowed(Handler, Route, HandlerState)
                end,
-    reply(Handler, Route, Response, Req, Ctx).
+    reply(Response, Ctx).
 
 %% -----------------------------------------------------------------------------
 %% Handler:is_authorized/3
@@ -198,35 +180,36 @@ method_not_allowed(Handler, Route, HandlerState) ->
     {405, [{<<"allow">>, join_http_methods(Handler:allowed_methods(Route))}],
      <<>>, HandlerState}.
 
--spec reply(handler(), route(), response(), Req, Ctx) ->
-                   {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-reply(Handler, Route, {Body, HandlerState}, Req, Ctx) ->
-    reply(Handler, Route, 200, [], Body, HandlerState, Req, Ctx);
-reply(Handler, Route, {Status, Body, HandlerState}, Req, Ctx) ->
-    reply(Handler, Route, Status, [], Body, HandlerState, Req, Ctx);
-reply(Handler, Route, {Status, Headers, Body, HandlerState}, Req, Ctx) ->
-    reply(Handler, Route, Status, Headers, Body, HandlerState, Req, Ctx).
+-spec reply(response(), Ctx) -> {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+reply({Body, HandlerState}, Ctx) ->
+    reply(200, [], Body, Ctx#ctx{handler_state = HandlerState});
+reply({Status, Body, HandlerState}, Ctx) ->
+    reply(Status, [], Body, Ctx#ctx{handler_state = HandlerState});
+reply({Status, Headers, Body, HandlerState}, Ctx) ->
+    reply(Status, Headers, Body, Ctx#ctx{handler_state = HandlerState}).
 
--spec reply(handler(), route(), status(), headers(), body(), handler_state(),
-            Req, Ctx) -> {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-reply(Handler, Route, Status, Headers, Body, HandlerState, Req, Ctx) ->
+-spec reply(status(), headers(), body(), Ctx) ->
+                   {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
+                                      handler_state=HandlerState}) ->
     %% encode Body and set content-type
-    {
-      Headers1,
-      Body1
-    } = case Body of
-            {json, Body2} ->
-                {set_content_type(json, Headers), leptus_json:encode(Body2)};
-            {msgpack, Body2}->
-                {set_content_type(msgpack, Headers), msgpack:pack({Body2}, [jiffy])};
-            _ ->
-                {set_content_type(text, Headers), Body}
-        end,
+    {Headers1, Body1} = prepare_headers_body(Headers, Body),
+
     %% enable or disable cross-domain requests
     Headers2 = Headers1 ++ handler_cross_domains(Handler, Route, Req,
                                                  HandlerState),
-    {ok, Req1} = cowboy_req:reply(status(Status), Headers2, Body1, Req),
-    {ok, Req1, set_handler_state(Ctx, HandlerState)}.
+    Req1 = leptus_req:get_req(Req),
+    {ok, Req2} = cowboy_req:reply(status(Status), Headers2, Body1, Req1),
+    leptus_req:set_req(Req, Req2),
+    {ok, Req2, Ctx}.
+
+-spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
+prepare_headers_body(Headers, {json, Body}) ->
+    {set_content_type(json, Headers), leptus_json:encode(Body)};
+prepare_headers_body(Headers, {msgpack, Body}) ->
+    {set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
+prepare_headers_body(Headers, Body) ->
+    {set_content_type(text, Headers), Body}.
 
 %% -----------------------------------------------------------------------------
 %% Handler:cross_domains/3
@@ -238,7 +221,7 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
     %% spec:
     %%   Handler:cross_domains(Route, Req, State) -> [string()].
     %%
-    case leptus_req:header(<<"origin">>, Req) of
+    case leptus_req:header(Req, <<"origin">>) of
         <<>> ->
             [];
         Origin ->
@@ -259,10 +242,9 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% Handler:terminate/3
 %% -----------------------------------------------------------------------------
--spec handler_terminate(terminate_reason(), req(), ctx()) -> ok.
-handler_terminate(Reason, Req, Ctx) ->
-    Handler = get_handler(Ctx),
-    HandlerState = get_handler_state(Ctx),
+-spec handler_terminate(terminate_reason(), ctx()) -> ok.
+handler_terminate(Reason, #ctx{handler=Handler, req_pid=Req,
+                               handler_state=HandlerState}) ->
     Handler:terminate(Reason, Req, HandlerState).
 
 -spec set_content_type(data_format(), headers()) -> headers().

@@ -44,7 +44,7 @@ get("/", _Req, State) ->
 get("/hello", _Req, State) ->
     {200, <<"hello, world!">>, State};
 get("/hello/:name", Req, State) ->
-    Name = leptus_req:param(name, Req),
+    Name = leptus_req:param(Req, name),
     {200, "hello, " ++ Name, State}.
 
 terminate(_Reason, _Req, _State) ->

@@ -61,11 +61,11 @@ is_authorized(_Route, _Req, State) ->
     {true, State}.
 
 get("/users/:id", Req, State) ->
-    Id = leptus_req:param(id, Req),
+    Id = leptus_req:param(Req, id),
     {["aha, this is ", Id], State};
 
 get("/users/:id/interests", Req, State) ->
-    Id = leptus_req:param(id, Req),
+    Id = leptus_req:param(Req, id),
     case Id of
         <<"s1n4">> ->
             {200, <<"Erlang and a lotta things else">>, State};
@@ -77,9 +77,9 @@ get("/users/:id/interests", Req, State) ->
 
 get("/users/:id/profile", Req, State) ->
     Body = [
-            {<<"id">>, leptus_req:param(id, Req)},
+            {<<"id">>, leptus_req:param(Req, id)},
             {<<"bio">>, <<"Erlanger">>},
-            {<<"github">>, leptus_req:param(id, Req)}
+            {<<"github">>, leptus_req:param(Req, id)}
            ],
     {200, {json, Body}, State}.
 
@@ -92,7 +92,7 @@ post("/users/:id", _Req, State) ->
 
 %% internal
 check_auth(Req, State) ->
-    case leptus_req:auth(basic, Req) of
+    case leptus_req:auth(Req, basic) of
         {<<"sina">>, <<"wrote_me">>} ->
             {true, State};
         _ ->

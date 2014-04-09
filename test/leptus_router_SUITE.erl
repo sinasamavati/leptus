@@ -26,9 +26,7 @@
 -export([paths/1]).
 -export([sort_dispatch/1]).
 
--include_lib("test_server/include/test_server.hrl").
-
--record(ctx, {route, handler, handler_state}).
+-include("src/leptus.hrl").
 
 all() ->
     [paths, sort_dispatch].
@@ -47,12 +45,9 @@ paths(_) ->
                 handler_state=i_see},
     Ctx8 = #ctx{handler=leptus_routes3, route="/users/:id/info",
                 handler_state=i_see},
-    Ctx9 = #ctx{handler=leptus_routes4, route="/items",
-                handler_state=undefined},
-    Ctx10 = #ctx{handler=leptus_routes4, route="/items/:id",
-                 handler_state=undefined},
-    Ctx11 = #ctx{handler=leptus_routes4, route="/items/:id/childrens",
-                 handler_state=undefined},
+    Ctx9 = #ctx{handler=leptus_routes4, route="/items"},
+    Ctx10 = #ctx{handler=leptus_routes4, route="/items/:id"},
+    Ctx11 = #ctx{handler=leptus_routes4, route="/items/:id/childrens"},
 
     [{'_', [
             {"/", leptus_handler, Ctx1},

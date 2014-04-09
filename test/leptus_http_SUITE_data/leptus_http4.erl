@@ -33,7 +33,7 @@ allowed_methods("/msgpack/:msg") -> [<<"GET">>].
 init(_Route, _Req, State) -> {ok, State}.
 
 get("/msgpack/:msg", Req, State) ->
-    Msg = leptus_req:param(msg, Req),
+    Msg = leptus_req:param(Req, msg),
     {{msgpack, [{<<"msg">>, Msg}]}, State}.
 
 terminate(_Reason, _Req, _State) ->

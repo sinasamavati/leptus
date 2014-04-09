@@ -65,7 +65,7 @@ put("/settings/change-password", Req, State) ->
 
 delete("/users/:username/posts/:id", Req, State) ->
     my_state = State,
-    IdLen = byte_size(leptus_req:param(id, Req)),
+    IdLen = byte_size(leptus_req:param(Req, id)),
     if IdLen >= 4 ->
             {404, <<>>, dammit};
 
