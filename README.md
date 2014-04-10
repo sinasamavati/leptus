@@ -46,7 +46,7 @@ USE_JSX=true rebar get-deps compile
 %% leptus callbacks
 -export([init/3]).
 -export([get/3]).
--export([terminate/3]).
+-export([terminate/4]).
 
 init(_Route, _Req, State) ->
     {ok, State}.
@@ -63,7 +63,7 @@ get("/[...]", _Req, State) ->
     Body = [{<<"error">>, <<"not found">>}],
     {Status, {json, Body}, State}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Route, _Req, _State) ->
     ok.
 ```
 

@@ -30,7 +30,7 @@
 -export([get/3]).
 -export([put/3]).
 -export([post/3]).
--export([terminate/3]).
+-export([terminate/4]).
 
 
 routes() ->
@@ -99,6 +99,6 @@ check_auth(Req, State) ->
             {false, <<"unauthorized.">>, State}
     end.
 
-terminate(_Reason, _Req, State) ->
+terminate(_Reason, _Route, _Req, State) ->
     blah = State,
     ok.

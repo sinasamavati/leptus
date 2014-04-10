@@ -240,12 +240,12 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
     end.
 
 %% -----------------------------------------------------------------------------
-%% Handler:terminate/3
+%% Handler:terminate/4
 %% -----------------------------------------------------------------------------
 -spec handler_terminate(terminate_reason(), ctx()) -> ok.
-handler_terminate(Reason, #ctx{handler=Handler, req_pid=Req,
+handler_terminate(Reason, #ctx{handler=Handler, route=Route, req_pid=Req,
                                handler_state=HandlerState}) ->
-    Handler:terminate(Reason, Req, HandlerState).
+    Handler:terminate(Reason, Route, Req, HandlerState).
 
 -spec set_content_type(data_format(), headers()) -> headers().
 set_content_type(Type, Headers) ->

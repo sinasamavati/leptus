@@ -1,14 +1,14 @@
 # Callbacks
 
 There are three callbacks which are required for every request handler: `init/3`,
-`HttpMethod/3` and `terminate/3`.
+`HttpMethod/3` and `terminate/4`.
 
 * [prefix/0](#prefix0)
 * [init/3](#init3)
 * [cross_domains/3](#cross_domains3)
 * [is_authorized/3](#is_authorized3)
 * [HttpMethod/3](#httpmethod3)
-* [terminate/3](#terminate3)
+* [terminate/4](#terminate4)
 
 #### prefix/0
 
@@ -91,10 +91,10 @@ delete("/:id", Req, State) ->
     {204, {json, [{<<"message">>, <<"deleted">>}]}, State}.
 ```
 
-#### terminate/3
+#### terminate/4
 
 ```erlang
-Module:terminate(Reason, Req, State) -> ok
+Module:terminate(Reason, Route, Req, State) -> ok
 ```
 
 ## Example
@@ -110,7 +110,7 @@ Please pay attention to comment.
 -export([cross_domains/3]).
 -export([is_authorized/3]).
 -export([get/3]).
--export([terminate/3]).
+-export([terminate/4]).
 
 prefix() -> "/example".
 
@@ -129,6 +129,6 @@ is_authorized(_Route, _Req, State) ->
 get("/1", _Req, State) ->
     {<<"Example 1!">>, State}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Route, _Req, _State) ->
     ok.
 ```

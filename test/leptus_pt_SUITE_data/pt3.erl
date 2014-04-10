@@ -32,7 +32,7 @@
 -export([put/3]).
 -export([post/3]).
 -export([delete/3]).
--export([terminate/3]).
+-export([terminate/4]).
 
 start() ->
     leptus:start_listener(http, [{'_', [{?MODULE, state0}]}]).
@@ -60,7 +60,7 @@ delete("/old", _, State) ->
     State = state1,
     {204, <<>>, State}.
 
-terminate(_Reason, _Req, State) ->
+terminate(_Reason, _Route, _Req, State) ->
     case State of
         state1 -> ok;
         state2 -> ok;

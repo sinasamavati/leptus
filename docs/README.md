@@ -21,7 +21,7 @@ So, I suggest you using the following in your request/resource handlers (modules
   * [cross_domains/3](callbacks.md#cross_domains3)
   * [is_authorized/3](callbacks.md#is_authorized3)
   * [HttpMethod/3](callbacks.md#httpmethod3)
-  * [terminate/3](callbacks.md#terminate3)
+  * [terminate/4](callbacks.md#terminate4)
 
 * [Request](request.md)
   * [param/2](request.md#param2)

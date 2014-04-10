@@ -26,7 +26,7 @@
 -export([allowed_methods/1]).
 -export([init/3]).
 -export([get/3]).
--export([terminate/3]).
+-export([terminate/4]).
 
 routes() -> ["/msgpack/:msg"].
 allowed_methods("/msgpack/:msg") -> [<<"GET">>].
@@ -36,5 +36,5 @@ get("/msgpack/:msg", Req, State) ->
     Msg = leptus_req:param(Req, msg),
     {{msgpack, [{<<"msg">>, Msg}]}, State}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Route, _Req, _State) ->
     ok.

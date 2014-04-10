@@ -27,7 +27,7 @@
 -export([allowed_methods/1]).
 -export([init/3]).
 -export([get/3]).
--export([terminate/3]).
+-export([terminate/4]).
 
 routes() ->
     ["/", "/hello", "/hello/:name"].
@@ -47,5 +47,5 @@ get("/hello/:name", Req, State) ->
     Name = leptus_req:param(Req, name),
     {200, "hello, " ++ Name, State}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Route, _Req, _State) ->
     ok.

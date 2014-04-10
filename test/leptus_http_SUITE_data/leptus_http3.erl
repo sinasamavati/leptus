@@ -29,7 +29,7 @@
 -export([post/3]).
 -export([put/3]).
 -export([delete/3]).
--export([terminate/3]).
+-export([terminate/4]).
 
 
 routes() ->
@@ -73,7 +73,7 @@ delete("/users/:username/posts/:id", Req, State) ->
             {204, <<>>, aha}
     end.
 
-terminate(_Reason, _Req, State) ->
+terminate(_Reason, _Route, _Req, State) ->
     case State of
         my_state -> ok;
         badmatch -> ok;
