@@ -60,8 +60,8 @@ start_listener(Listener, App) when is_atom(App)->
     %%   * {handlers, handlers()}
     %%   * {options, options()}
     Conf = leptus_config:config_file(App),
-    Handlers = get_value(handlers, Conf, []),
-    Opts = get_value(options, Conf, []),
+    Handlers = opt(handlers, Conf, []),
+    Opts = opt(options, Conf, []),
     start_listener(Listener, Handlers, Opts);
 start_listener(Listener, Handlers) ->
     start_listener(Listener, Handlers, []).
@@ -78,15 +78,16 @@ start_listener(Listener, Handlers, Opts) ->
     %% sort compiled routes
     Dispatch1 = leptus_router:sort_dispatch(Dispatch),
 
-    %% basic listener configuration
-    IP = {ip, get_value(ip, Opts, {127, 0, 0, 1})},
-    Port = {port, get_value(port, Opts, 8080)},
-
     ListenerFunc = get_listener_func(Listener),
     Ref = get_ref(Listener),
-    NbAcceptors = get_value(nb_acceptors, Opts, 100),
-    Res = cowboy:ListenerFunc(Ref, NbAcceptors,
-                              [IP, Port] ++ get_extra_opts(Listener, Opts),
+    NbAcceptors = opt(nb_acceptors, Opts, 100),
+
+    %% basic listener configuration
+    IP = opt(ip, Opts, {127, 0, 0, 1}),
+    Port = opt(port, Opts, 8080),
+
+    ListenerOpts = listener_opts(Listener, IP, Port, Opts)
+    Res = cowboy:ListenerFunc(Ref, NbAcceptors, ListenerOpts,
                               [
                                {env, [{dispatch, Dispatch1}]},
                                {onresponse, fun leptus_hooks:console_log/4}
@@ -95,7 +96,7 @@ start_listener(Listener, Handlers, Opts) ->
         {ok, _} ->
             {ok, Vsn} = application:get_key(leptus, vsn),
             io:format("Leptus ~s started on http://~s:~p~n",
-                      [Vsn, inet_ip_to_str(element(2, IP)), element(2, Port)]);
+                      [Vsn, inet_ip_to_str(IP), Port]);
         _ ->
             ok
     end,
@@ -118,14 +119,25 @@ get_ref(http) -> leptus_http;
 get_ref(https) -> leptus_https;
 get_ref(spdy) -> leptus_spdy.
 
-%% get extra options based on listener
--spec get_extra_opts(listener(), options()) -> options().
-get_extra_opts(http, _) -> [];
-get_extra_opts(_, Opts) ->
+%% -----------------------------------------------------------------------------
+%% listener options
+%% -----------------------------------------------------------------------------
+-spec listener_opts(listener(), options()) -> options().
+listener_opts(http, IP, Port, Opts) ->
+    basic_listener_opts(IP, Port);
+listener_opts(_, IP, Port, Opts) ->
+    basic_listener_opts(IP, Port) ++ extra_listener_opts(Opts).
+
+-spec basic_listener_opts(options()) -> options().
+basic_listener_opts(IP, Port) ->
+    [{ip, IP}, {port, Port}].
+
+-spec extra_listener_opts(options()) -> options().
+extra_listener_opts(Opts) ->
     [
-     {cacertfile, get_value(cacertfile, Opts, "")},
-     {certfile, get_value(certfile, Opts, "")},
-     {keyfile, get_value(keyfile, Opts, "")}
+     {cacertfile, opt(cacertfile, Opts, "")},
+     {certfile, opt(certfile, Opts, "")},
+     {keyfile, opt(keyfile, Opts, "")}
     ].
 
 ensure_started(App) ->
@@ -143,15 +155,12 @@ ensure_deps_started() ->
     ensure_started(cowlib),
     ensure_started(cowboy).
 
-get_value(_, [], Default) ->
-    Default;
-get_value(_, undefined, Default) ->
-    Default;
-get_value(Key, Opts, Default) ->
-    case lists:keyfind(Key, 1, Opts) of
-        {_, V} -> V;
-        _ -> Default
-    end.
+opt(Key, [{Key, Value}|_], Default) ->
+    Value;
+opt(Key, [_|Rest], Default) ->
+    opt(Key, Rest, Default);
+opt(_, [], Default) ->
+    Default.
 
 inet_ip_to_str({A, B, C, D}) ->
     lists:concat([A, ".", B, ".", C, ".", D]).
