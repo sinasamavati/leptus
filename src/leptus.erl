@@ -27,6 +27,9 @@
 %% -----------------------------------------------------------------------------
 -export([start_listener/2]).
 -export([start_listener/3]).
+-export([upgrade/0]).
+-export([upgrade/1]).
+-export([upgrade/2]).
 -export([stop_listener/1]).
 
 %% -----------------------------------------------------------------------------
@@ -94,11 +97,37 @@ start_listener(Listener, Handlers, Opts) ->
                               ]),
     case Res of
         {ok, _} ->
+            update_listener_bucket({Listener, {Handlers, Opts}}),
             print_info(IP, Port);
         _ ->
             ok
     end,
     Res.
+
+%% -----------------------------------------------------------------------------
+%% upgrade running listeners
+%% -----------------------------------------------------------------------------
+-spec upgrade() -> ok.
+upgrade() ->
+    upgrade(lookup_listeners()).
+
+-spec upgrade([listener()]) -> ok.
+upgrade(Listeners) ->
+    Buckets = [{L, lookup_listener_bucket(L)} || L <- Listeners],
+    [upgrade(Listener, Handlers) || {Listener, {Handlers, _}} <- Buckets],
+    ok.
+
+%% -----------------------------------------------------------------------------
+%% upgrade a listener
+%% -----------------------------------------------------------------------------
+-spec upgrade(listener(), handlers()) -> ok.
+upgrade(Listener, Handlers) ->
+    Paths = leptus_router:paths(Handlers),
+    Dispatch = cowboy_router:compile(Paths),
+    %% sort compiled routes
+    Dispatch1 = leptus_router:sort_dispatch(Dispatch),
+    Ref = get_ref(Listener),
+    cowboy:set_env(Ref, dispatch, Dispatch1).
 
 -spec stop_listener(listener()) -> ok | {error, not_found}.
 stop_listener(Listener) ->
@@ -171,3 +200,23 @@ print_info(IP, Port) ->
     {ok, Vsn} = application:get_key(leptus, vsn),
     io:format("Leptus ~s started on http://~s:~p~n",
               [Vsn, inet_ip_to_str(IP), Port]).
+
+%% -----------------------------------------------------------------------------
+%% update leptus_config ETS table
+%% keep handlers and options in an ETS table
+%% -----------------------------------------------------------------------------
+update_listener_bucket(Bucket={Listener, _}) ->
+    %% [{Listener, ListenerInfo}]
+    Listeners = leptus_config:lookup(listeners, []),
+    Listeners1 = lists:keystore(Listener, 1, Listeners, Bucket),
+    leptus_config:set(listeners, Listeners1).
+
+lookup_listener_bucket(Listener) ->
+    Listeners = leptus_config:lookup(listeners, []),
+    opt(Listener, Listeners, not_found).
+
+lookup_listeners() ->
+    F = fun({L, _}, Acc) ->
+                [L|Acc]
+        end,
+    lists:foldr(F, [], leptus_config:lookup(listeners)).
