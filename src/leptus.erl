@@ -86,7 +86,7 @@ start_listener(Listener, Handlers, Opts) ->
     IP = opt(ip, Opts, {127, 0, 0, 1}),
     Port = opt(port, Opts, 8080),
 
-    ListenerOpts = listener_opts(Listener, IP, Port, Opts)
+    ListenerOpts = listener_opts(Listener, IP, Port, Opts),
     Res = cowboy:ListenerFunc(Ref, NbAcceptors, ListenerOpts,
                               [
                                {env, [{dispatch, Dispatch1}]},
@@ -94,9 +94,7 @@ start_listener(Listener, Handlers, Opts) ->
                               ]),
     case Res of
         {ok, _} ->
-            {ok, Vsn} = application:get_key(leptus, vsn),
-            io:format("Leptus ~s started on http://~s:~p~n",
-                      [Vsn, inet_ip_to_str(IP), Port]);
+            print_info(IP, Port);
         _ ->
             ok
     end,
@@ -122,13 +120,14 @@ get_ref(spdy) -> leptus_spdy.
 %% -----------------------------------------------------------------------------
 %% listener options
 %% -----------------------------------------------------------------------------
--spec listener_opts(listener(), options()) -> options().
-listener_opts(http, IP, Port, Opts) ->
+-spec listener_opts(listener(), inet:ip_address(), inet:port_number(),
+                    options()) -> options().
+listener_opts(http, IP, Port, _) ->
     basic_listener_opts(IP, Port);
 listener_opts(_, IP, Port, Opts) ->
     basic_listener_opts(IP, Port) ++ extra_listener_opts(Opts).
 
--spec basic_listener_opts(options()) -> options().
+-spec basic_listener_opts(inet:ip_address(), inet:port_number()) -> options().
 basic_listener_opts(IP, Port) ->
     [{ip, IP}, {port, Port}].
 
@@ -155,7 +154,7 @@ ensure_deps_started() ->
     ensure_started(cowlib),
     ensure_started(cowboy).
 
-opt(Key, [{Key, Value}|_], Default) ->
+opt(Key, [{Key, Value}|_], _) ->
     Value;
 opt(Key, [_|Rest], Default) ->
     opt(Key, Rest, Default);
@@ -164,3 +163,11 @@ opt(_, [], Default) ->
 
 inet_ip_to_str({A, B, C, D}) ->
     lists:concat([A, ".", B, ".", C, ".", D]).
+
+%% -----------------------------------------------------------------------------
+%% print the version number and what ip/port it's started on
+%% -----------------------------------------------------------------------------
+print_info(IP, Port) ->
+    {ok, Vsn} = application:get_key(leptus, vsn),
+    io:format("Leptus ~s started on http://~s:~p~n",
+              [Vsn, inet_ip_to_str(IP), Port]).
