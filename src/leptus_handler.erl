@@ -35,7 +35,7 @@
 -type req() :: cowboy_req:req().
 -type status() :: non_neg_integer() | binary() | atom().
 -type headers() :: cowboy:http_headers().
--type body() :: binary() | string() | {json | msgpack, json_term()}.
+-type body() :: binary() | string() | {json | msgpack, json_term()} | {html, binary()}.
 -type method() :: get | put | post | delete.
 -type json_term() :: [json_term()]
                    | {binary() | atom(), json_term()}
@@ -49,7 +49,7 @@
                   | {status(), body(), handler_state()}
                   | {status(), headers(), body(), handler_state()}.
 -type terminate_reason() :: {normal, timeout | shutdown} | {error, atom()}.
--type data_format() :: text | json | msgpack.
+-type data_format() :: text | json | msgpack | html.
 -type status_code() :: 100..101 | 200..206 | 300..307 | 400..417 | 500..505.
 
 %% -----------------------------------------------------------------------------
@@ -208,6 +208,8 @@ prepare_headers_body(Headers, {json, Body}) ->
     {set_content_type(json, Headers), leptus_json:encode(Body)};
 prepare_headers_body(Headers, {msgpack, Body}) ->
     {set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
+prepare_headers_body(Headers, {html, Body}) ->
+    {set_content_type(html, Headers), Body};
 prepare_headers_body(Headers, Body) ->
     {set_content_type(text, Headers), Body}.
 
@@ -251,7 +253,9 @@ handler_terminate(Reason, #ctx{handler=Handler, route=Route, req_pid=Req,
 set_content_type(Type, Headers) ->
     [{<<"content-type">>, content_type(Type)}|Headers].
 
+-spec content_type(data_format()) -> binary().
 content_type(text) -> <<"text/plain">>;
+content_type(html) -> <<"text/html">>;
 content_type(json) -> <<"application/json">>;
 content_type(msgpack) -> <<"application/x-msgpack">>.
 
