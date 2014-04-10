@@ -180,39 +180,6 @@ method_not_allowed(Handler, Route, HandlerState) ->
     {405, [{<<"allow">>, join_http_methods(Handler:allowed_methods(Route))}],
      <<>>, HandlerState}.
 
--spec reply(response(), Ctx) -> {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-reply({Body, HandlerState}, Ctx) ->
-    reply(200, [], Body, Ctx#ctx{handler_state = HandlerState});
-reply({Status, Body, HandlerState}, Ctx) ->
-    reply(Status, [], Body, Ctx#ctx{handler_state = HandlerState});
-reply({Status, Headers, Body, HandlerState}, Ctx) ->
-    reply(Status, Headers, Body, Ctx#ctx{handler_state = HandlerState}).
-
--spec reply(status(), headers(), body(), Ctx) ->
-                   {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
-reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
-                                      handler_state=HandlerState}) ->
-    %% encode Body and set content-type
-    {Headers1, Body1} = prepare_headers_body(Headers, Body),
-
-    %% enable or disable cross-domain requests
-    Headers2 = Headers1 ++ handler_cross_domains(Handler, Route, Req,
-                                                 HandlerState),
-    Req1 = leptus_req:get_req(Req),
-    {ok, Req2} = cowboy_req:reply(status(Status), Headers2, Body1, Req1),
-    leptus_req:set_req(Req, Req2),
-    {ok, Req2, Ctx}.
-
--spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
-prepare_headers_body(Headers, {json, Body}) ->
-    {set_content_type(json, Headers), leptus_json:encode(Body)};
-prepare_headers_body(Headers, {msgpack, Body}) ->
-    {set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
-prepare_headers_body(Headers, {html, Body}) ->
-    {set_content_type(html, Headers), Body};
-prepare_headers_body(Headers, Body) ->
-    {set_content_type(text, Headers), Body}.
-
 %% -----------------------------------------------------------------------------
 %% Handler:cross_domains/3
 %% -----------------------------------------------------------------------------
@@ -248,6 +215,42 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
 handler_terminate(Reason, #ctx{handler=Handler, route=Route, req_pid=Req,
                                handler_state=HandlerState}) ->
     Handler:terminate(Reason, Route, Req, HandlerState).
+
+%% -----------------------------------------------------------------------------
+%% reply - prepare stauts, headers and body
+%% -----------------------------------------------------------------------------
+-spec reply(response(), Ctx) -> {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+reply({Body, HandlerState}, Ctx) ->
+    reply(200, [], Body, Ctx#ctx{handler_state = HandlerState});
+reply({Status, Body, HandlerState}, Ctx) ->
+    reply(Status, [], Body, Ctx#ctx{handler_state = HandlerState});
+reply({Status, Headers, Body, HandlerState}, Ctx) ->
+    reply(Status, Headers, Body, Ctx#ctx{handler_state = HandlerState}).
+
+-spec reply(status(), headers(), body(), Ctx) ->
+                   {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
+                                      handler_state=HandlerState}) ->
+    %% encode Body and set content-type
+    {Headers1, Body1} = prepare_headers_body(Headers, Body),
+
+    %% enable or disable cross-domain requests
+    Headers2 = Headers1 ++ handler_cross_domains(Handler, Route, Req,
+                                                 HandlerState),
+    Req1 = leptus_req:get_req(Req),
+    {ok, Req2} = cowboy_req:reply(status(Status), Headers2, Body1, Req1),
+    leptus_req:set_req(Req, Req2),
+    {ok, Req2, Ctx}.
+
+-spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
+prepare_headers_body(Headers, {json, Body}) ->
+    {set_content_type(json, Headers), leptus_json:encode(Body)};
+prepare_headers_body(Headers, {msgpack, Body}) ->
+    {set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
+prepare_headers_body(Headers, {html, Body}) ->
+    {set_content_type(html, Headers), Body};
+prepare_headers_body(Headers, Body) ->
+    {set_content_type(text, Headers), Body}.
 
 -spec set_content_type(data_format(), headers()) -> headers().
 set_content_type(Type, Headers) ->
