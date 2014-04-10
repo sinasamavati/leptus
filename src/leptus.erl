@@ -53,7 +53,16 @@
 %% -----------------------------------------------------------------------------
 %% API
 %% -----------------------------------------------------------------------------
--spec start_listener(listener(), handlers()) -> {ok, pid()} | {error, any()}.
+-spec start_listener(listener(), atom() | handlers()) ->
+                            {ok, pid()} | {error, any()}.
+start_listener(Listener, App) when is_atom(App)->
+    %% App/priv/leptus.config should have two sections:
+    %%   * {handlers, handlers()}
+    %%   * {options, options()}
+    Conf = leptus_config:config_file(App),
+    Handlers = get_value(handlers, Conf, []),
+    Opts = get_value(options, Conf, []),
+    start_listener(Listener, Handlers, Opts);
 start_listener(Listener, Handlers) ->
     start_listener(Listener, Handlers, []).
 
