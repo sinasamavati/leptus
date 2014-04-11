@@ -3,7 +3,7 @@
 ** Types
 
    #+BEGIN_SRC erlang
-   Listner           = http | https | spdy
+   Listener           = http | https | spdy
    AppName           = atom()
    HandlersOrAppName = Handlers | AppName
    #+END_SRC

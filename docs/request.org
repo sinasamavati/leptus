@@ -30,7 +30,7 @@
    %% e.g.
    %% route: /items/:id
    %% requested uri: /items/1863
-   param(id, Req) -> <<"1863">>
+   param(Req, id) -> <<"1863">>
    #+END_SRC
 
 **** params/1

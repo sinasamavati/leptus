@@ -16,8 +16,6 @@
 
 **** options
 
-   This means ~http~, ~https~ and/or ~spdy~.
-
    IP address and port number have default values: ~127.0.0.1:8080~, but you
    can override them as follows:
 
@@ -30,7 +28,7 @@
    }.
    #+END_SRC
 
-   Note that ~https~ and ~spdy~ require three options that are ~cacertfile~, ~certfile~ and ~keyfile~:
+   Note that HTTPS and SPDY require three options that are ~cacertfile~, ~certfile~ and ~keyfile~:
    #+BEGIN_SRC erlang
    {options,
     [
