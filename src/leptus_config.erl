@@ -23,7 +23,9 @@
 -module(leptus_config).
 -behaviour(gen_server).
 
+%% -----------------------------------------------------------------------------
 %% gen_server
+%% -----------------------------------------------------------------------------
 -export([init/1]).
 -export([handle_call/3]).
 -export([handle_cast/2]).
@@ -31,6 +33,9 @@
 -export([terminate/2]).
 -export([code_change/3]).
 
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -export([start/0]).
 -export([start_link/0]).
 -export([stop/0]).
@@ -38,10 +43,10 @@
 -export([lookup/2]).
 -export([set/2]).
 -export([config_file/1]).
--export([priv_dir/1]).
 
-
+%% -----------------------------------------------------------------------------
 %% for test purposes
+%% -----------------------------------------------------------------------------
 -spec start() -> {ok, pid()} | {error, any()}.
 start() ->
     gen_server:start({local, ?MODULE}, ?MODULE, [], []).
@@ -54,12 +59,16 @@ start_link() ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%% -----------------------------------------------------------------------------
 %% find a k/v
+%% -----------------------------------------------------------------------------
 -spec lookup(any()) -> any() | undefined.
 lookup(Key) ->
     lookup(Key, undefined).
 
+%% -----------------------------------------------------------------------------
 %% find a k/v and return Default if not found
+%% -----------------------------------------------------------------------------
 -spec lookup(any(), Default) -> any() | Default.
 lookup(Key, Default) ->
     case ets:lookup(?MODULE, Key) of
@@ -71,32 +80,28 @@ lookup(Key, Default) ->
             V
     end.
 
+%% -----------------------------------------------------------------------------
 %% set a k/v
+%% -----------------------------------------------------------------------------
 -spec set(any(), any()) -> ok.
 set(Key, Value) ->
     gen_server:call(?MODULE, {set, {Key, Value}}).
 
-%% read priv/leptus.config file
+%% -----------------------------------------------------------------------------
+%% read App/priv/leptus.config file
+%% -----------------------------------------------------------------------------
 config_file(App) ->
-    case file:consult(filename:join([priv_dir(App), "leptus.config"])) of
+    case file:consult(filename:join(leptus_utils:priv_dir(App),
+                                    "leptus.config")) of
         {ok, Terms} ->
             Terms;
         Else ->
             Else
     end.
 
-%% find the path to the priv directory in an application
-priv_dir(App) ->
-    case code:priv_dir(App) of
-        {error, bad_name} ->
-            Ebin = filename:dirname(code:which(App)),
-            filename:join(filename:dirname(Ebin), "priv");
-        PrivDir ->
-            PrivDir
-    end.
-
-
+%% -----------------------------------------------------------------------------
 %% gen_server
+%% -----------------------------------------------------------------------------
 init([]) ->
     ets:new(?MODULE, [set, named_table, protected]),
     {ok, ?MODULE}.
