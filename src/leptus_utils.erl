@@ -28,6 +28,11 @@
 -export([priv_dir/1]).
 -export([paginator/1]).
 -export([paginate/3]).
+-export([listener_bucket/1]).
+-export([listener_handlers/1]).
+-export([print_listener_info/1]).
+
+-include("leptus_stats.hrl").
 
 %% -----------------------------------------------------------------------------
 %% find the path to the priv directory in an application
@@ -59,3 +64,62 @@ paginate(NElemPerPage, Objects, Page) ->
     Start = Last - NElemPerPage,
     Len = Last - Start,
     lists:sublist(Objects, Start + 1, Len).
+
+%% -----------------------------------------------------------------------------
+%% get a listener bucket
+%% -----------------------------------------------------------------------------
+listener_bucket(Listener) ->
+    Listeners = leptus_config:lookup(listeners, []),
+    get_value(Listener, Listeners, not_found).
+
+%% -----------------------------------------------------------------------------
+%% get handlers of a running listener
+%% -----------------------------------------------------------------------------
+listener_handlers(Listener) ->
+    case listener_bucket(Listener) of
+        not_found ->
+            {error, not_found};
+        #listener_bucket{handlers = Handlers} ->
+            F = fun({_, A}, Acc) ->
+                        Acc ++ A
+                end,
+            lists:foldl(F, [], Handlers)
+    end.
+
+%% -----------------------------------------------------------------------------
+%% print running listeners information
+%% -----------------------------------------------------------------------------
+print_listener_info(Listener) ->
+    Handlers = [H || {H, _} <- listener_handlers(Listener)],
+    F = fun(H) ->
+                Prefix = try H:prefix() of
+                             X -> X
+                         catch _:_ ->
+                                 ""
+                         end,
+                F1 = fun(R) ->
+                             print(H, Prefix, R)
+                     end,
+                lists:foreach(F1, H:routes())
+        end,
+    io:fwrite("~-30s ~-44s ~15s~n", ["Handler", "Route", "Allowed methods"]),
+    io:fwrite("~.98c~n~n", [$=]),
+    lists:foreach(F, Handlers).
+
+%% -----------------------------------------------------------------------------
+%% internal
+%% -----------------------------------------------------------------------------
+print(Handler, Prefix, Route) ->
+    Terms = [Handler, Prefix ++ Route, allowed_methods(Handler, Route)],
+    io:fwrite("~-30s ~-44s ~-22s~n", Terms).
+
+allowed_methods(Handler, Route) ->
+    Methods = Handler:allowed_methods(Route),
+    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
+    Allow.
+
+get_value(Key, Opts, Default) ->
+    case lists:keyfind(Key, 1, Opts) of
+        {_, Value} -> Value;
+        _ -> Default
+    end.
