@@ -32,6 +32,7 @@
 -export([upgrade/2]).
 -export([stop_listener/1]).
 -export([running_listeners/0]).
+-export([listener_uptime/1]).
 
 -include("leptus_stats.hrl").
 
@@ -57,7 +58,7 @@
 
 
 %% -----------------------------------------------------------------------------
-%% API
+%% start a listener
 %% -----------------------------------------------------------------------------
 -spec start_listener(listener(), atom() | handlers()) ->
                             {ok, pid()} | {error, any()}.
@@ -148,6 +149,21 @@ running_listeners() ->
                 [L|Acc]
         end,
     lists:foldr(F, [], leptus_config:lookup(listeners)).
+
+%% -----------------------------------------------------------------------------
+%% get uptime of a running listener
+%% -----------------------------------------------------------------------------
+-spec listener_uptime(listener()) -> {Days :: integer(), calendar:time()} |
+                                     {error, not_found}.
+listener_uptime(Listener) ->
+    case leptus_utils:listener_bucket(Listener) of
+        not_found ->
+            {error, not_found};
+        #listener_bucket{started_timestamp = Started} ->
+            StartedDatetime = calendar:now_to_local_time(Started),
+            Localtime = calendar:local_time(),
+            calendar:time_difference(StartedDatetime, Localtime)
+    end.
 
 %% -----------------------------------------------------------------------------
 %% internal
