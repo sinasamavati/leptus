@@ -244,17 +244,24 @@ reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
 
 -spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
 prepare_headers_body(Headers, {json, Body}) ->
-    {set_content_type(json, Headers), leptus_json:encode(Body)};
+    {maybe_set_content_type(json, Headers), leptus_json:encode(Body)};
 prepare_headers_body(Headers, {msgpack, Body}) ->
-    {set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
+    {maybe_set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
 prepare_headers_body(Headers, {html, Body}) ->
-    {set_content_type(html, Headers), Body};
+    {maybe_set_content_type(html, Headers), Body};
 prepare_headers_body(Headers, Body) ->
-    {set_content_type(text, Headers), Body}.
+    {maybe_set_content_type(text, Headers), Body}.
 
--spec set_content_type(data_format(), headers()) -> headers().
-set_content_type(Type, Headers) ->
-    [{<<"content-type">>, content_type(Type)}|Headers].
+-spec maybe_set_content_type(data_format(), headers()) -> headers().
+maybe_set_content_type(Type, Headers) ->
+    Headers1 = [{cowboy_bstr:to_lower(N), V} || {N, V} <- Headers],
+    %% don't set content-type if it's already been set
+    case lists:keyfind(<<"content-type">>, 1, Headers1) of
+        {_, _} ->
+            Headers;
+        _ ->
+            [{<<"content-type">>, content_type(Type)}|Headers]
+    end.
 
 -spec content_type(data_format()) -> binary().
 content_type(text) -> <<"text/plain">>;
