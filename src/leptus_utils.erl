@@ -90,7 +90,7 @@ listener_handlers(Listener) ->
 %% print running listeners information
 %% -----------------------------------------------------------------------------
 print_listener_info(Listener) ->
-    Handlers = [H || {H, _} <- listener_handlers(Listener)],
+    Modules = [M || {M, _} <- listener_handlers(Listener)],
     F = fun(H) ->
                 Prefix = try H:prefix() of
                              X -> X
@@ -104,7 +104,7 @@ print_listener_info(Listener) ->
         end,
     io:fwrite("~-30s ~-44s ~15s~n", ["Handler", "Route", "Allowed methods"]),
     io:fwrite("~.98c~n~n", [$=]),
-    lists:foreach(F, Handlers).
+    lists:foreach(F, Modules).
 
 %% -----------------------------------------------------------------------------
 %% internal
