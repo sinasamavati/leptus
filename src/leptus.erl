@@ -100,7 +100,7 @@ start_listener(Listener, Handlers, Opts) ->
                               ]),
     case Res of
         {ok, _} ->
-            update_listener_bucket({Listener, {Handlers, Opts}}),
+            update_listener_bucket({Listener, {Handlers, ListenerOpts}}),
             print_info(IP, Port);
         _ ->
             ok
@@ -116,8 +116,8 @@ upgrade() ->
 
 -spec upgrade([listener()]) -> ok.
 upgrade(Listeners) ->
-    Buckets = [{L, lookup_listener_bucket(L)} || L <- Listeners],
-    [upgrade(L, HL) || {L, #listener_bucket{handlers = HL}} <- Buckets],
+    LH = [{L, leptus_utils:listener_handlers(L)} || L <- Listeners],
+    [upgrade(L, H) || {L, H} <- LH],
     ok.
 
 %% -----------------------------------------------------------------------------
@@ -228,7 +228,3 @@ update_listener_bucket({Listener, {Handlers, Opts}}) ->
     Listeners = leptus_config:lookup(listeners, []),
     Listeners1 = lists:keystore(Listener, 1, Listeners, {Listener, Bucket}),
     leptus_config:set(listeners, Listeners1).
-
-lookup_listener_bucket(Listener) ->
-    Listeners = leptus_config:lookup(listeners, []),
-    opt(Listener, Listeners, not_found).
