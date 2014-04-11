@@ -8,5 +8,7 @@ otp_release:
 notifications:
   email: false
   irc: "chat.freenode.net#leptus"
+  on_success: change
+  on_failure: change
 install: "make deps"
 script: "make test"
