@@ -12,7 +12,7 @@
 
    #+BEGIN_SRC erlang
    -compile({parse_transform, leptus_pt}).
-   #+BEGIN_SRC
+   #+END_SRC
 
 ** Table of contents
 
