@@ -31,6 +31,9 @@
 -export([upgrade/1]).
 -export([upgrade/2]).
 -export([stop_listener/1]).
+-export([running_listeners/0]).
+
+-include("leptus_stats.hrl").
 
 %% -----------------------------------------------------------------------------
 %% types
@@ -109,12 +112,12 @@ start_listener(Listener, Handlers, Opts) ->
 %% -----------------------------------------------------------------------------
 -spec upgrade() -> ok.
 upgrade() ->
-    upgrade(lookup_listeners()).
+    upgrade(running_listeners()).
 
 -spec upgrade([listener()]) -> ok.
 upgrade(Listeners) ->
     Buckets = [{L, lookup_listener_bucket(L)} || L <- Listeners],
-    [upgrade(Listener, Handlers) || {Listener, {Handlers, _}} <- Buckets],
+    [upgrade(L, HL) || {L, #listener_bucket{handlers = HL}} <- Buckets],
     ok.
 
 %% -----------------------------------------------------------------------------
@@ -129,9 +132,22 @@ upgrade(Listener, Handlers) ->
     Ref = get_ref(Listener),
     cowboy:set_env(Ref, dispatch, Dispatch1).
 
+%% -----------------------------------------------------------------------------
+%% stop a listener
+%% -----------------------------------------------------------------------------
 -spec stop_listener(listener()) -> ok | {error, not_found}.
 stop_listener(Listener) ->
     cowboy:stop_listener(get_ref(Listener)).
+
+%% -----------------------------------------------------------------------------
+%% get a list of running listeners
+%% -----------------------------------------------------------------------------
+-spec running_listeners() -> [listener()].
+running_listeners() ->
+    F = fun({L, _}, Acc) ->
+                [L|Acc]
+        end,
+    lists:foldr(F, [], leptus_config:lookup(listeners)).
 
 %% -----------------------------------------------------------------------------
 %% internal
@@ -205,18 +221,14 @@ print_info(IP, Port) ->
 %% update leptus_config ETS table
 %% keep handlers and options in an ETS table
 %% -----------------------------------------------------------------------------
-update_listener_bucket(Bucket={Listener, _}) ->
-    %% [{Listener, ListenerInfo}]
+update_listener_bucket({Listener, {Handlers, Opts}}) ->
+    %% [{Listener, Bucket}]
+    Bucket = #listener_bucket{handlers = Handlers, options = Opts,
+                              started_timestamp = now()},
     Listeners = leptus_config:lookup(listeners, []),
-    Listeners1 = lists:keystore(Listener, 1, Listeners, Bucket),
+    Listeners1 = lists:keystore(Listener, 1, Listeners, {Listener, Bucket}),
     leptus_config:set(listeners, Listeners1).
 
 lookup_listener_bucket(Listener) ->
     Listeners = leptus_config:lookup(listeners, []),
     opt(Listener, Listeners, not_found).
-
-lookup_listeners() ->
-    F = fun({L, _}, Acc) ->
-                [L|Acc]
-        end,
-    lists:foldr(F, [], leptus_config:lookup(listeners)).
