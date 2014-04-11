@@ -8,9 +8,11 @@
    HandlersOrAppName = Handlers | AppName
    #+END_SRC
 
+** leptus functions
+
 **** start_listener/2
 
-   Starts leptus' dependencies and an HTTP listener.
+   Starts leptus' dependencies and a listener of type ~Listener~.
 
    #+BEGIN_SRC erlang
    leptus:start_listener(Listener, HandlersOrAppName) -> {ok, pid()}
@@ -19,14 +21,14 @@
    Note that if you use ~AppName~, Leptus will try to read
    ~AppName/priv/leptus.config~ file
    which should contain
-   #BEGIN_SRC
+   #+BEGIN_SRC
    {handlers, Handlers}.
    {options, Options}.
    #+END_SRC
 
 **** start_listener/3
 
-   Starts leptus' dependencies and an HTTP listener.
+   Starts leptus' dependencies and a listener of type ~Listener~.
 
    #+BEGIN_SRC erlang
    leptus:start_listener(Listener, Handlers, Options) -> {ok, pid()}
