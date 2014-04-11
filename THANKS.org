@@ -1,0 +1,10 @@
+* Acknowledgments
+
+  The following people contributed to making this project better by sending
+  patches, reporting bugs and/or sharing helpful thoughts.
+
+  - [[https://github.com/nox][Anthony Ramine]]
+  - [[https://github.com/Licenser][Heinz N. Gies]]
+  - [[https://github.com/hamidreza-s][Hamidreza Soleimani]]
+  - [[https://github.com/wmealing][Wade Mealing]]
+  - [[https://github.com/seth][Seth Falcon]]

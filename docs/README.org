@@ -1,0 +1,51 @@
+* Documentations
+
+** Preface
+
+   Let me talk about a *thing* that makes Leptus simple. Parse transform,
+   the *thing* that saves us some headache, so now we've got a rule,
+   using the module ~leptus_pt~ for doing the parse transform when compiling our
+   request/resource handlers (modules).
+
+   So, I suggest you using the following in your request/resource handlers
+   (modules):
+
+   #+BEGIN_SRC erlang
+   -compile({parse_transform, leptus_pt}).
+   #+BEGIN_SRC
+
+** Table of contents
+
+   - [[types.org][Types]]
+
+   - [[callbacks.org][Callbacks]]
+     - [[callbacks.org#prefix0][prefix/0]]
+     - [[callbacks.org#init3][init/3]]
+     - [[callbacks.org#cross_domains3][cross_domains/3]]
+     - [[callbacks.org#is_authorized3][is_authorized/3]]
+     - [[callbacks.org#httpmethod3][HttpMethod/3]]
+     - [[callbacks.org#terminate4][terminate/4]]
+
+   - [[request.org][Request]]
+     - [[request.org#param2][param/2]]
+     - [[request.org#params1][params/1]]
+     - [[request.org#qs1][qs/1]]
+     - [[request.org#qs_val2][qs_val/2]]
+     - [[request.org#uri1][uri/1]]
+     - [[request.org#version1][version/1]]
+     - [[request.org#method1][method/1]]
+     - [[request.org#body1][body/1]]
+     - [[request.org#body_raw1][body_raw/1]]
+     - [[request.org#body_qs1][body_qs/1]]
+     - [[request.org#header2][header/2]]
+     - [[request.org#parse_header2][parse_header/2]]
+     - [[request.org#auth2][auth/2]]
+
+   - [[configuration.org][Configuration]]
+     - [[configuration.org#listener][listener (basic listener configuration)]]
+     - [[configuration.org#handlers][handlers (request handlers)]]
+
+   - [[start.org][Start]]
+     - [[start.org#start_listener2][start_listener/2]]
+     - [[start.org#start_listener3][start_listener/3]]
+     - [[start.org#the-otp-way][The OTP way]]

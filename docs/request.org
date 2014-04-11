@@ -1,0 +1,172 @@
+* Request
+
+  Please keep it in mind that ~Req~ is a Pid that should be used as the first
+  argument in _leptus_req_ functions.
+
+  All the functions given below are accessible through the ~leptus_req~ module,
+  which are supposed to work with the ~Req~ object.
+
+  - [[#param2][param/2]]
+  - [[#params1][params/1]]
+  - [[#qs1][qs/1]]
+  - [[#qs_val2][qs_val/2]]
+  - [[#uri1][uri/1]]
+  - [[#version1][version/1]]
+  - [[#method1][method/1]]
+  - [[#body1][body/1]]
+  - [[#body_raw1][body_raw/1]]
+  - [[#body_qs1][body_qs/1]]
+  - [[#header2][header/2]]
+  - [[#parse_header2][parse_header/2]]
+  - [[#auth2][auth/2]]
+
+**** param/2
+
+   Returns a parameter that is bound to the route.
+
+   #+BEGIN_SRC erlang
+   param(Req, Name :: atom()) -> binary() | undefined
+
+   %% e.g.
+   %% route: /items/:id
+   %% requested uri: /items/1863
+   param(id, Req) -> <<"1863">>
+   #+END_SRC
+
+**** params/1
+
+   Returns parameters that are bound to the route.
+
+   #+BEGIN_SRC erlang
+   params(Req) -> [{atom(), binary()}]
+
+   %% e.g.
+   params(Req) -> [{id, <<"1863">>}]
+   #+END_SRC
+
+**** qs/1
+
+   Returns query strings.
+
+   #+BEGIN_SRC erlang
+   qs(Req) -> binary()
+
+   %% e.g.
+   %% uri: /items/?limit=50
+   qs(Req) -> <<"limit=50">>
+   #+END_SRC
+
+**** qs_val/2
+
+   Returns the given query string value.
+
+   #+BEGIN_SRC erlang
+   qs_val(Req, Field :: binary()) -> binary() | undefined
+
+   %% e.g.
+   qs_val(Req, <<"limit">>) -> <<"50">>
+   #+END_SRC
+
+**** uri/1
+
+   Returns the requested URI.
+
+   #+BEGIN_SRC erlang
+   uri(Req) -> binary()
+
+   %% e.g.
+   uri(Req) -> <<"/items/?limit=50">>
+   #+END_SRC
+
+**** version/1
+
+   Returns HTTP version.
+
+   #+BEGIN_SRC erlang
+   version(Req) -> 'HTTP/1.1' | 'HTTP/1.0'
+
+   %% e.g.
+   version(Req) -> 'HTTP/1.1'
+   #+END_SRC
+
+**** method/1
+
+   Returns used HTTP method.
+
+   #+BEGIN_SRC erlang
+   method(Req) -> binary()
+
+   %% e.g.
+   method(Req) -> <<"DELETE">>
+   #+END_SRC
+
+**** body/1
+
+   Returns received body (decoding might apply to it).
+
+   #+BEGIN_SRC erlang
+   body(Req) -> binary() | json_term()
+
+   %% e.g.
+   body(Req) -> <<"foo=bar">>
+
+   %% when content-type is set to applicaation/json
+   body(Req) -> [{<<"function">>, <<"body/1">>}]
+   #+END_SRC
+
+**** body_raw/1
+
+   Returns raw body.
+
+   #+BEGIN_SRC erlang
+   body_raw(Req) -> binary()
+
+   %% e.g.
+   body_raw(Req) -> <<"{\"function\": \"body/1\"}">>
+   #+END_SRC
+
+**** body_qs/1
+
+   Returns body but in query string format.
+
+   #+BEGIN_SRC erlang
+   body_qs(Req) -> [{binary(), binary() | true}]
+
+   %% e.g.
+   body_qs(Req) -> [{<<"foo">>, <<"bar">>}]
+   #+END_SRC
+
+**** header/2
+
+   Returns the given header value.
+
+   #+BEGIN_SRC erlang
+   header(Req, binary()) -> binary()
+
+   %% e.g.
+   header(Req, <<"content-type">>) -> <<"application/x-www-form-urlencoded">>
+   #+END_SRC
+
+**** parse_header/2
+
+   Parses the given header.
+
+   #+BEGIN_SRC erlang
+   parse_header(Req, binary()) -> any() | <<>>
+
+   %% e.g.
+   parse_header(Req, <<"content-type">>) -> {<<"application">>, <<"json">>, []}
+   #+END_SRC
+
+**** auth/2
+
+   Checks for the given authorization method.
+
+   NOTE: basic authentication is only supported at the moment.
+
+   #+BEGIN_SRC erlang
+   auth(Req, basic) -> {binary(), binary()} | <<>> | error
+
+   %% e.g.
+   auth(Req, basic) -> {<<"username">>, <<"p4ssw0rd">>}
+   #+END_SRC

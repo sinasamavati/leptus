@@ -1,0 +1,86 @@
+* Configuration
+
+  Leptus configuration file must be named ~leptus.config~ and put in ~priv~
+  directory.
+
+  There are two types of configuration that can be defined:
+
+  - [[#handlers][handlers]]
+  - [[#options][options]]
+
+**** handlers
+
+   Leptus must know your request handlers and their states, they should be
+   defined as ~{handlers, [{HostMatch, [{module(), State :: any()}]}]}.~ in
+   ~leptus.config~
+
+**** options
+
+   This means ~http~, ~https~ and/or ~spdy~.
+
+   IP address and port number have default values: ~127.0.0.1:8080~, but you
+   can override them as follows:
+
+   #+BEGIN_SRC erlang
+   {options,
+    [
+     {ip, inet:ip_address()},
+     {port, inet:port_number()}
+    ]
+   }.
+   #+END_SRC
+
+   Note that ~https~ and ~spdy~ require three options that are ~cacertfile~, ~certfile~ and ~keyfile~:
+   #+BEGIN_SRC erlang
+   {options,
+    [
+     {cacertfile, file:name()},
+     {certfile, file:name()},
+     {keyfile, file:name()}
+    ]
+   }.
+   #+END_SRC
+
+** Examples
+
+   #+BEGIN_SRC erlang
+   %% leptus.config
+
+   %% example 1
+   {options,
+    [
+     {ip, {0, 0, 0, 0}},
+     {port, 4000},
+     {hostmatch, "api.example.org"},
+    ]
+   }.
+
+   %% example 2
+   {options,
+    [
+     {ip, {0, 0, 0, 0}},
+     {port, 4443},
+     {cacertfile, "ssl/ca.crt"},
+     {certfile, "ssl/server.crt"},
+     {keyfile, "ssl/server.key"}
+    ]
+   }.
+
+   %% example 3
+   {options,
+    [
+     {ip, {0, 0, 0, 0}},
+     {port, 4444},
+     {cacertfile, "ssl/ca.crt"},
+     {certfile, "ssl/server.crt"},
+     {keyfile, "ssl/server.key"}
+    ]
+   }.
+
+   {handlers,
+    [{'_',
+       [{rq_handler, undefined_state}]
+     }
+    ]
+   }.
+   #+END_SRC
