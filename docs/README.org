@@ -49,3 +49,8 @@
      - [[start.org#start_listener2][start_listener/2]]
      - [[start.org#start_listener3][start_listener/3]]
      - [[start.org#the-otp-way][The OTP way]]
+
+   - [[upgrade.org][Upgrade]]
+     - [[upgrade.org#leptusupgrade0][leptus:upgrade/0]]
+     - [[upgrade.org#leptusupgrade1][leptus:upgrade/1]]
+     - [[upgrade.org#leptusupgrade2][leptus:upgrade/2]]

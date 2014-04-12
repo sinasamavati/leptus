@@ -19,154 +19,173 @@
   - [[#header2][header/2]]
   - [[#parse_header2][parse_header/2]]
   - [[#auth2][auth/2]]
+  - [[get_req#1][get_req/1]]
+  - [[#set_req2][set_req/2]]
 
 **** param/2
 
-   Returns a parameter that is bound to the route.
+     Returns a parameter that is bound to the route.
 
-   #+BEGIN_SRC erlang
-   param(Req, Name :: atom()) -> binary() | undefined
+     #+BEGIN_SRC erlang
+     param(Req, Name :: atom()) -> binary() | undefined
 
-   %% e.g.
-   %% route: /items/:id
-   %% requested uri: /items/1863
-   param(Req, id) -> <<"1863">>
-   #+END_SRC
+     %% e.g.
+     %% route: /items/:id
+     %% requested uri: /items/1863
+     param(Req, id) -> <<"1863">>
+     #+END_SRC
 
 **** params/1
 
-   Returns parameters that are bound to the route.
+     Returns parameters that are bound to the route.
 
-   #+BEGIN_SRC erlang
-   params(Req) -> [{atom(), binary()}]
+     #+BEGIN_SRC erlang
+     params(Req) -> [{atom(), binary()}]
 
-   %% e.g.
-   params(Req) -> [{id, <<"1863">>}]
-   #+END_SRC
+     %% e.g.
+     params(Req) -> [{id, <<"1863">>}]
+     #+END_SRC
 
 **** qs/1
 
-   Returns query strings.
+     Returns query strings.
 
-   #+BEGIN_SRC erlang
-   qs(Req) -> binary()
+     #+BEGIN_SRC erlang
+     qs(Req) -> binary()
 
-   %% e.g.
-   %% uri: /items/?limit=50
-   qs(Req) -> <<"limit=50">>
-   #+END_SRC
+     %% e.g.
+     %% uri: /items/?limit=50
+     qs(Req) -> <<"limit=50">>
+     #+END_SRC
 
 **** qs_val/2
 
-   Returns the given query string value.
+     Returns the given query string value.
 
-   #+BEGIN_SRC erlang
-   qs_val(Req, Field :: binary()) -> binary() | undefined
+     #+BEGIN_SRC erlang
+     qs_val(Req, Field :: binary()) -> binary() | undefined
 
-   %% e.g.
-   qs_val(Req, <<"limit">>) -> <<"50">>
-   #+END_SRC
+     %% e.g.
+     qs_val(Req, <<"limit">>) -> <<"50">>
+     #+END_SRC
 
 **** uri/1
 
-   Returns the requested URI.
+     Returns the requested URI.
 
-   #+BEGIN_SRC erlang
-   uri(Req) -> binary()
+     #+BEGIN_SRC erlang
+     uri(Req) -> binary()
 
-   %% e.g.
-   uri(Req) -> <<"/items/?limit=50">>
-   #+END_SRC
+     %% e.g.
+     uri(Req) -> <<"/items/?limit=50">>
+     #+END_SRC
 
 **** version/1
 
-   Returns HTTP version.
+     Returns HTTP version.
 
-   #+BEGIN_SRC erlang
-   version(Req) -> 'HTTP/1.1' | 'HTTP/1.0'
+     #+BEGIN_SRC erlang
+     version(Req) -> 'HTTP/1.1' | 'HTTP/1.0'
 
-   %% e.g.
-   version(Req) -> 'HTTP/1.1'
-   #+END_SRC
+     %% e.g.
+     version(Req) -> 'HTTP/1.1'
+     #+END_SRC
 
 **** method/1
 
-   Returns used HTTP method.
+     Returns used HTTP method.
 
-   #+BEGIN_SRC erlang
-   method(Req) -> binary()
+     #+BEGIN_SRC erlang
+     method(Req) -> binary()
 
-   %% e.g.
-   method(Req) -> <<"DELETE">>
-   #+END_SRC
+     %% e.g.
+     method(Req) -> <<"DELETE">>
+     #+END_SRC
 
 **** body/1
 
-   Returns received body (decoding might apply to it).
+     Returns received body (decoding might apply to it).
 
-   #+BEGIN_SRC erlang
-   body(Req) -> binary() | json_term()
+     #+BEGIN_SRC erlang
+     body(Req) -> binary() | json_term()
 
-   %% e.g.
-   body(Req) -> <<"foo=bar">>
+     %% e.g.
+     body(Req) -> <<"foo=bar">>
 
-   %% when content-type is set to applicaation/json
-   body(Req) -> [{<<"function">>, <<"body/1">>}]
-   #+END_SRC
+     %% when content-type is set to applicaation/json or application/x-msgpack
+     body(Req) -> [{<<"function">>, <<"body/1">>}]
+     #+END_SRC
 
 **** body_raw/1
 
-   Returns raw body.
+     Returns raw body.
 
-   #+BEGIN_SRC erlang
-   body_raw(Req) -> binary()
+     #+BEGIN_SRC erlang
+     body_raw(Req) -> binary()
 
-   %% e.g.
-   body_raw(Req) -> <<"{\"function\": \"body/1\"}">>
-   #+END_SRC
+     %% e.g.
+     body_raw(Req) -> <<"{\"function\": \"body/1\"}">>
+     #+END_SRC
 
 **** body_qs/1
 
-   Returns body but in query string format.
+     Returns body but in query string format.
 
-   #+BEGIN_SRC erlang
-   body_qs(Req) -> [{binary(), binary() | true}]
+     #+BEGIN_SRC erlang
+     body_qs(Req) -> [{binary(), binary() | true}]
 
-   %% e.g.
-   body_qs(Req) -> [{<<"foo">>, <<"bar">>}]
-   #+END_SRC
+     %% e.g.
+     body_qs(Req) -> [{<<"foo">>, <<"bar">>}]
+     #+END_SRC
 
 **** header/2
 
-   Returns the given header value.
+     Returns the given header value.
 
-   #+BEGIN_SRC erlang
-   header(Req, binary()) -> binary()
+     #+BEGIN_SRC erlang
+     header(Req, binary()) -> binary()
 
-   %% e.g.
-   header(Req, <<"content-type">>) -> <<"application/x-www-form-urlencoded">>
-   #+END_SRC
+     %% e.g.
+     header(Req, <<"content-type">>) -> <<"application/x-www-form-urlencoded">>
+     #+END_SRC
 
 **** parse_header/2
 
-   Parses the given header.
+     Parses the given header.
 
-   #+BEGIN_SRC erlang
-   parse_header(Req, binary()) -> any() | <<>>
+     #+BEGIN_SRC erlang
+     parse_header(Req, binary()) -> any() | <<>>
 
-   %% e.g.
-   parse_header(Req, <<"content-type">>) -> {<<"application">>, <<"json">>, []}
-   #+END_SRC
+     %% e.g.
+     parse_header(Req, <<"content-type">>) -> {<<"application">>, <<"json">>, []}
+     #+END_SRC
 
 **** auth/2
 
-   Checks for the given authorization method.
+     Checks for the given authorization method.
 
-   NOTE: basic authentication is only supported at the moment.
+     NOTE: basic authentication is only supported at the moment.
 
-   #+BEGIN_SRC erlang
-   auth(Req, basic) -> {binary(), binary()} | <<>> | error
+     #+BEGIN_SRC erlang
+     auth(Req, basic) -> {binary(), binary()} | <<>> | error
 
-   %% e.g.
-   auth(Req, basic) -> {<<"username">>, <<"p4ssw0rd">>}
-   #+END_SRC
+     %% e.g.
+     auth(Req, basic) -> {<<"username">>, <<"p4ssw0rd">>}
+     #+END_SRC
+
+**** get_req/1
+
+     Returns the Cowboy Req object.
+
+     #+BEGIN_SRC erlang
+     get_req(Req) -> cowboy_req:req()
+     #+END_SRC
+
+**** set_req/2
+
+     Sets a new Cowboy Req object as the state of leptus_req so that leptus_req
+     functions will use the new Req object.
+
+     #+BEGIN_SRC erlang
+     set_req(Req, CowboyReq) -> ok
+     #+END_SRC

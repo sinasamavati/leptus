@@ -1,0 +1,48 @@
+* Upgrade
+
+  Leptus provides a number of functions that you can use to upgrade your code.
+
+  - [[#leptusupgrade0][leptus:upgrade/0]]
+  - [[#leptusupgrade1][leptus:upgrade/1]]
+  - [[#leptusupgrade2][leptus:upgrade/2]]
+
+**** leptus:upgrade/0
+
+     Upgrades running listeners.
+
+     #+BEGIN_SRC erlang
+     leptus:upgrade() -> ok
+     #+END_SRC
+
+     Assume we have the listener ~http~ running and its handlers are A, B and C,
+     this function will gather routes of A, B and C, and update the Cowboy
+     dispatch list.
+
+**** leptus:upgrade/1
+
+     Upgrades a list of running listeners.
+
+     #+BEGIN_SRC erlang
+     leptus:upgrade([Listner]) -> ok
+     #+END_SRC
+
+     This works like [[#upgrade0][upgrade/0]] but requires a list of listeners.
+
+**** leptus:upgrade/2
+
+     Upgrades a running listener.
+
+     #+BEGIN_SRC erlang
+     upgrade(Listener, Handlers) -> ok | {error, not_found}
+     #+END_SRC
+
+     For example, let's say, we have the listener ~http~ running and its
+     handlers are A, B and C, but we want to append a new handler that is called
+     D, so what we should do is using this function to update the Cowboy
+     dispatch list.
+
+     #+BEGIN_SRC erlang
+     %% e.g.
+     Handlers = [{'_', [{A, AState}, {B, BState}, {C, CState}, {D, DState}]}],
+     leptus:upgrade(http, Handlers)
+     #+END_SRC

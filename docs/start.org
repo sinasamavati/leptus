@@ -3,7 +3,7 @@
 ** Types
 
    #+BEGIN_SRC erlang
-   Listener           = http | https | spdy
+   Listener          = http | https | spdy
    AppName           = atom()
    HandlersOrAppName = Handlers | AppName
    #+END_SRC
@@ -12,27 +12,27 @@
 
 **** start_listener/2
 
-   Starts leptus' dependencies and a listener of type ~Listener~.
+     Starts leptus' dependencies and a listener of type ~Listener~.
 
-   #+BEGIN_SRC erlang
-   leptus:start_listener(Listener, HandlersOrAppName) -> {ok, pid()}
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     leptus:start_listener(Listener, HandlersOrAppName) -> {ok, pid()}
+     #+END_SRC
 
-   Note that if you use ~AppName~, Leptus will try to read
-   ~AppName/priv/leptus.config~ file
-   which should contain
-   #+BEGIN_SRC
-   {handlers, Handlers}.
-   {options, Options}.
-   #+END_SRC
+     Note that if you use ~AppName~, Leptus will try to read
+     ~AppName/priv/leptus.config~ file
+     which should contain
+     #+BEGIN_SRC
+     {handlers, Handlers}.
+     {options, Options}.
+     #+END_SRC
 
 **** start_listener/3
 
-   Starts leptus' dependencies and a listener of type ~Listener~.
+     Starts leptus' dependencies and a listener of type ~Listener~.
 
-   #+BEGIN_SRC erlang
-   leptus:start_listener(Listener, Handlers, Options) -> {ok, pid()}
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     leptus:start_listener(Listener, Handlers, Options) -> {ok, pid()}
+     #+END_SRC
 
 ** The OTP way
 

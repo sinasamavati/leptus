@@ -10,34 +10,35 @@
 
 **** handlers
 
-   Leptus must know your request handlers and their states, they should be
-   defined as ~{handlers, [{HostMatch, [{module(), State :: any()}]}]}.~ in
-   ~leptus.config~
+     Leptus must know your request handlers and their states, they should be
+     defined as ~{handlers, [{HostMatch, [{module(), State :: any()}]}]}.~ in
+     ~leptus.config~
 
 **** options
 
-   IP address and port number have default values: ~127.0.0.1:8080~, but you
-   can override them as follows:
+     IP address and port number have default values: ~127.0.0.1:8080~, but you
+     can override them as follows:
 
-   #+BEGIN_SRC erlang
-   {options,
-    [
-     {ip, inet:ip_address()},
-     {port, inet:port_number()}
-    ]
-   }.
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     {options,
+      [
+       {ip, inet:ip_address()},
+       {port, inet:port_number()}
+      ]
+     }.
+     #+END_SRC
 
-   Note that HTTPS and SPDY require three options that are ~cacertfile~, ~certfile~ and ~keyfile~:
-   #+BEGIN_SRC erlang
-   {options,
-    [
-     {cacertfile, file:name()},
-     {certfile, file:name()},
-     {keyfile, file:name()}
-    ]
-   }.
-   #+END_SRC
+     Note that HTTPS and SPDY require three options that are ~cacertfile~,
+     ~certfile~ and ~keyfile~:
+     #+BEGIN_SRC erlang
+     {options,
+      [
+       {cacertfile, file:name()},
+       {certfile, file:name()},
+       {keyfile, file:name()}
+      ]
+     }.
+     #+END_SRC
 
 ** Examples
 
@@ -76,8 +77,9 @@
    }.
 
    {handlers,
-    [{'_',
-       [{rq_handler, undefined_state}]
+    [
+     {'_',
+      [{rq_handler, undefined_state}]
      }
     ]
    }.

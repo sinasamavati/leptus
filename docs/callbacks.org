@@ -12,90 +12,90 @@
 
 **** prefix/0
 
-   This is an optional callback which you can use for prefixing routes.
+     This is an optional callback which you can use for prefixing routes.
 
-   #+BEGIN_SRC erlang
-   Module:prefix() -> string()
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     Module:prefix() -> string()
+     #+END_SRC
 
-   Example:
-   #+BEGIN_SRC erlang
-   prefix() -> "/v1".
-   #+END_SRC
+     Example:
+     #+BEGIN_SRC erlang
+     prefix() -> "/v1".
+     #+END_SRC
 
-   NOTE: this won't affect ~Route~s in the handler, but instead, this will be
-   used when gathering routes and starting the Cowboy listener.
+     NOTE: this won't affect ~Route~s in the handler, but instead, this will be
+     used when gathering routes and starting the Cowboy listener.
 
-   **** init/3
+**** init/3
 
-   #+BEGIN_SRC erlang
-   Module:init(Route, Req, State) ->
-       {ok, State}.
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     Module:init(Route, Req, State) ->
+         {ok, State}.
+     #+END_SRC
 
 **** cross_domains/3
 
-   This is an optional callback that lets you enable cross-domain requests
-   ([[http://en.wikipedia.org/wiki/Cross-origin_resource_sharing][CORS]]).
+     This is an optional callback that lets you enable cross-domain requests
+     ([[http://en.wikipedia.org/wiki/Cross-origin_resource_sharing][CORS]]).
 
-   #+BEGIN_SRC erlang
-   Module:cross_domains(Route, Req, State) -> [HostMatch]
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     Module:cross_domains(Route, Req, State) -> [HostMatch]
+     #+END_SRC
 
-   ~HostMatch~ is equal to Cowboy HostMatch syntax.
+     ~HostMatch~ is equal to Cowboy HostMatch syntax.
 
-   This will be used when preparing headers right before replying.
+     This will be used when preparing headers right before replying.
 
-   If one of the HostMatches and Origin match, ~access-control-allow-origin~
-   will be set to Origin.
+     If one of the HostMatches and Origin match, ~access-control-allow-origin~
+     will be set to Origin.
 
 **** is_authorized/3
 
-   Exporting this callback in a module means that every request that should come
-   to the handler needs authorization.
+     Exporting this callback in a module means that every request that should
+     come to the handler needs authorization.
 
-   #+BEGIN_SRC erlang
-   Module:is_authorized(Route, Req, State) ->
-       {true, State} | {false, Body, State} | {false, Headers, Body, State}
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     Module:is_authorized(Route, Req, State) ->
+         {true, State} | {false, Body, State} | {false, Headers, Body, State}
+     #+END_SRC
 
 **** HttpMethod/3
 
-   This means ~get/3~, ~put/3~, ~post/3~, ~delete/3~.
+     This means ~get/3~, ~put/3~, ~post/3~, ~delete/3~.
 
-   #+BEGIN_SRC erlang
-   Module:HttpMethod(Route, Req, State) ->
-       {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     Module:HttpMethod(Route, Req, State) ->
+         {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}
+     #+END_SRC
 
-   In this case, ~Route~ must be a pattern matching.
+     In this case, ~Route~ must be a pattern matching.
 
-   Examples:
+     Examples:
 
-   #+BEGIN_SRC erlang
-   get("/", Req, State) ->
-       ...
-       {<<"index">>, State}.
+     #+BEGIN_SRC erlang
+     get("/", Req, State) ->
+         ...
+         {<<"index">>, State}.
 
-   put("/:id/edit", Req, State) ->
-       ...
-       {200, <<"edited">>, State}.
+     put("/:id/edit", Req, State) ->
+         ...
+         {200, <<"edited">>, State}.
 
-   post("/new", Req, State) ->
-       ...
-       {201, [{<<"Location">>, <<"/data/386">>}], <<"created">>, State}.
+     post("/new", Req, State) ->
+         ...
+         {201, [{<<"Location">>, <<"/data/386">>}], <<"created">>, State}.
 
-   delete("/:id", Req, State) ->
-       ...
-       %% Body as a json
-       {204, {json, [{<<"message">>, <<"deleted">>}]}, State}.
-   #+END_SRC
+     delete("/:id", Req, State) ->
+         ...
+         %% Body as a json
+         {204, {json, [{<<"message">>, <<"deleted">>}]}, State}.
+     #+END_SRC
 
 **** terminate/4
 
-   #+BEGIN_SRC erlang
-   Module:terminate(Reason, Route, Req, State) -> ok
-   #+END_SRC
+     #+BEGIN_SRC erlang
+     Module:terminate(Reason, Route, Req, State) -> ok
+     #+END_SRC
 
 ** Example
 
