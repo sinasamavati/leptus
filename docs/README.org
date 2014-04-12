@@ -54,3 +54,6 @@
      - [[upgrade.org#leptusupgrade0][leptus:upgrade/0]]
      - [[upgrade.org#leptusupgrade1][leptus:upgrade/1]]
      - [[upgrade.org#leptusupgrade2][leptus:upgrade/2]]
+
+   - [[stop.org][Stop]]
+     - [[stop.org#leptusstop_listener1][leptus:stop_listener/1]]

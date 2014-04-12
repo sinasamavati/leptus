@@ -1,0 +1,11 @@
+* Stop
+
+  Use the function below to stop a listener.
+
+**** leptus:stop_listener/1
+
+     Stops a listener.
+
+     #+BEGIN_SRC erlang
+     leptus:stop_listener(Listener) -> ok | {error, not_found}
+     #+END_SRC
