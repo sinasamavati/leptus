@@ -1,11 +1,17 @@
 #+TITLE:    leptus module
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
-#+OPTIONS:  ^:nil
+#+OPTIONS:  ^:nil num:nil
 
-* leptus
+* leptus module
+  :PROPERTIES:
+  :CUSTOM_ID: module
+  :END:
 
 ** Types
+   :PROPERTIES:
+   :CUSTOM_ID:       types
+   :END:
 
    #+BEGIN_SRC erlang
    Listener          = http | https | spdy
@@ -24,8 +30,14 @@
    #+END_SRC
 
 ** Functions
+   :PROPERTIES:
+   :CUSTOM_ID:       functions
+   :END:
 
 *** start_listener/2
+    :PROPERTIES:
+    :CUSTOM_ID:       start_listener-2
+    :END:
 
      Starts leptus' dependencies and a listener of type ~Listener~.
 
@@ -36,12 +48,15 @@
      Note that if you use ~AppName~, Leptus will try to read
      ~AppName/priv/leptus.config~ file
      which should contain
-     #+BEGIN_SRC
+     #+BEGIN_SRC erlang
      {handlers, Handlers}.
      {options, Options}.
      #+END_SRC
 
 *** start_listener/3
+    :PROPERTIES:
+    :CUSTOM_ID:       start_listener-3
+    :END:
 
      Starts leptus' dependencies and a listener of type ~Listener~.
 
@@ -50,6 +65,9 @@
      #+END_SRC
 
 *** upgrade/0
+    :PROPERTIES:
+    :CUSTOM_ID:       upgrade-0
+    :END:
 
      Upgrades running listeners.
 
@@ -62,6 +80,9 @@
      dispatch list.
 
 *** upgrade/1
+    :PROPERTIES:
+    :CUSTOM_ID:       upgrade-1
+    :END:
 
      Upgrades a list of running listeners.
 
@@ -72,6 +93,9 @@
      This works like [[#upgrade0][upgrade/0]] but requires a list of listeners.
 
 *** upgrade/2
+    :PROPERTIES:
+    :CUSTOM_ID:       upgrade-2
+    :END:
 
      Upgrades a running listener.
 
@@ -91,6 +115,9 @@
      #+END_SRC
 
 *** stop_listener/1
+    :PROPERTIES:
+    :CUSTOM_ID:       stop_listener-1
+    :END:
 
      Stops a listener.
 
@@ -99,6 +126,9 @@
      #+END_SRC
 
 *** running_listener/0
+    :PROPERTIES:
+    :CUSTOM_ID:       running_listener-0
+    :END:
 
      Returns a list of running listeners.
 
@@ -107,6 +137,9 @@
      #+END_SRC
 
 *** listener_uptime/1
+    :PROPERTIES:
+    :CUSTOM_ID:       listener_uptime-1
+    :END:
 
      Returns uptime of a running listener.
 

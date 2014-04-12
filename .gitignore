@@ -4,3 +4,5 @@ deps
 logs
 erl_crash.dump
 .leptus.plt
+docs/public_html
+docs/tmp

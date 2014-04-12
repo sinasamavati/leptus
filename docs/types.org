@@ -1,9 +1,12 @@
 #+TITLE:    Types
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
-#+OPTIONS:  ^:nil
+#+OPTIONS:  ^:nil num:nil
 
 * Types
+  :PROPERTIES:
+  :CUSTOM_ID: types
+  :END:
 
   #+BEGIN_SRC erlang
   json_term() = [json_term()]

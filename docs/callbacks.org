@@ -1,21 +1,21 @@
 #+TITLE:    Callbacks
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
-#+OPTIONS:  ^:nil
+#+OPTIONS:  ^:nil num:nil
 
 * Callbacks
+  :PROPERTIES:
+  :CUSTOM_ID: callbacks
+  :END:
 
   There are three callbacks which are required for every request handler:
   ~init/3~, ~HttpMethod/3~ and ~terminate/4~.
 
-  - [[#prefix0][prefix/0]]
-  - [[#init3][init/3]]
-  - [[#cross_domains3][cross_domains/3]]
-  - [[#is_authorized3][is_authorized/3]]
-  - [[#httpmethod3][HttpMethod/3]]
-  - [[#terminate4][terminate/4]]
 
 ** Types
+   :PROPERTIES:
+   :CUSTOM_ID: types
+   :END:
 
    #+BEGIN_SRC erlang
    Route = cowboy_router:route_match()
@@ -37,24 +37,33 @@
    #+END_SRC
 
 ** Behaviour
+   :PROPERTIES:
+   :CUSTOM_ID: behaviour
+   :END:
 
 *** prefix/0
+    :PROPERTIES:
+    :CUSTOM_ID: prefix-0
+    :END:
 
-     This is an optional callback which you can use for prefixing routes.
+    This is an optional callback which you can use for prefixing routes.
 
      #+BEGIN_SRC erlang
      Module:prefix() -> string()
      #+END_SRC
 
-     Example:
+    Example:
      #+BEGIN_SRC erlang
      prefix() -> "/v1".
      #+END_SRC
 
-     NOTE: this won't affect ~Route~s in the handler, but instead, this will be
-     used when gathering routes and starting the Cowboy listener.
+    NOTE: this won't affect ~Route~s in the handler, but instead, this will be
+    used when gathering routes and starting the Cowboy listener.
 
 *** init/3
+    :PROPERTIES:
+    :CUSTOM_ID: init-3
+    :END:
 
      #+BEGIN_SRC erlang
      Module:init(Route, Req, State) ->
@@ -62,22 +71,28 @@
      #+END_SRC
 
 *** cross_domains/3
+    :PROPERTIES:
+    :CUSTOM_ID: cross_domains-3
+    :END:
 
-     This is an optional callback that lets you enable cross-domain requests
-     ([[http://en.wikipedia.org/wiki/Cross-origin_resource_sharing][CORS]]).
+    This is an optional callback that lets you enable cross-domain requests
+    ([[http://en.wikipedia.org/wiki/Cross-origin_resource_sharing][CORS]]).
 
      #+BEGIN_SRC erlang
      Module:cross_domains(Route, Req, State) -> [HostMatch]
      #+END_SRC
 
-     ~HostMatch~ is equal to Cowboy HostMatch syntax.
+    ~HostMatch~ is equal to Cowboy HostMatch syntax.
 
-     This will be used when preparing headers right before replying.
+    This will be used when preparing headers right before replying.
 
-     If one of the HostMatches and Origin match, ~access-control-allow-origin~
-     will be set to Origin.
+    If one of the HostMatches and Origin match, ~access-control-allow-origin~
+    will be set to Origin.
 
 *** is_authorized/3
+    :PROPERTIES:
+    :CUSTOM_ID: is_authorized-3
+    :END:
 
      Exporting this callback in a module means that every request that should
      come to the handler needs authorization.
@@ -88,6 +103,9 @@
      #+END_SRC
 
 *** HttpMethod/3
+    :PROPERTIES:
+    :CUSTOM_ID: HttpMethod-3
+    :END:
 
      This means ~get/3~, ~put/3~, ~post/3~, ~delete/3~.
 
@@ -120,12 +138,18 @@
      #+END_SRC
 
 *** terminate/4
+    :PROPERTIES:
+    :CUSTOM_ID: terminate-4
+    :END:
 
      #+BEGIN_SRC erlang
      Module:terminate(Reason, Route, Req, State) -> ok
      #+END_SRC
 
 ** Example
+   :PROPERTIES:
+   :CUSTOM_ID: example
+   :END:
 
    Please pay attention to comment.
 
