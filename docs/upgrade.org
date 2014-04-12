@@ -33,7 +33,7 @@
      Upgrades a running listener.
 
      #+BEGIN_SRC erlang
-     upgrade(Listener, Handlers) -> ok | {error, not_found}
+     leptus:upgrade(Listener, Handlers) -> ok | {error, not_found}
      #+END_SRC
 
      For example, let's say, we have the listener ~http~ running and its
