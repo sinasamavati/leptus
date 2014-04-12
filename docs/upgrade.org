@@ -1,3 +1,8 @@
+#+TITLE:    Upgrade
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil
+
 * Upgrade
 
   Leptus provides a number of functions that you can use to upgrade your code.

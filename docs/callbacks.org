@@ -1,3 +1,8 @@
+#+TITLE:    Callbacks
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil
+
 * Callbacks
 
   There are three callbacks which are required for every request handler:
@@ -10,7 +15,30 @@
   - [[#httpmethod3][HttpMethod/3]]
   - [[#terminate4][terminate/4]]
 
-**** prefix/0
+** Types
+
+   #+BEGIN_SRC erlang
+   Route = cowboy_router:route_match()
+   Req   = pid()
+   State = any()
+
+   json_term() = [json_term()]
+               | {binary() | atom(), json_term()}
+               | true
+               | false
+               | null
+               | integer()
+               | float()
+               | binary()
+
+   Status  = non_neg_integer() | binary()
+   Headers = [{binary(), iodata()}]
+   Body    = string() | binary() | {json | msgpack, json_term()} | {html, binary()}
+   #+END_SRC
+
+** Behaviour
+
+*** prefix/0
 
      This is an optional callback which you can use for prefixing routes.
 
@@ -26,14 +54,14 @@
      NOTE: this won't affect ~Route~s in the handler, but instead, this will be
      used when gathering routes and starting the Cowboy listener.
 
-**** init/3
+*** init/3
 
      #+BEGIN_SRC erlang
      Module:init(Route, Req, State) ->
          {ok, State}.
      #+END_SRC
 
-**** cross_domains/3
+*** cross_domains/3
 
      This is an optional callback that lets you enable cross-domain requests
      ([[http://en.wikipedia.org/wiki/Cross-origin_resource_sharing][CORS]]).
@@ -49,7 +77,7 @@
      If one of the HostMatches and Origin match, ~access-control-allow-origin~
      will be set to Origin.
 
-**** is_authorized/3
+*** is_authorized/3
 
      Exporting this callback in a module means that every request that should
      come to the handler needs authorization.
@@ -59,7 +87,7 @@
          {true, State} | {false, Body, State} | {false, Headers, Body, State}
      #+END_SRC
 
-**** HttpMethod/3
+*** HttpMethod/3
 
      This means ~get/3~, ~put/3~, ~post/3~, ~delete/3~.
 
@@ -91,7 +119,7 @@
          {204, {json, [{<<"message">>, <<"deleted">>}]}, State}.
      #+END_SRC
 
-**** terminate/4
+*** terminate/4
 
      #+BEGIN_SRC erlang
      Module:terminate(Reason, Route, Req, State) -> ok

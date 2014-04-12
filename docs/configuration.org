@@ -1,3 +1,8 @@
+#+TITLE:    Configuration
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil
+
 * Configuration
 
   Leptus configuration file must be named ~leptus.config~ and put in ~priv~
@@ -8,13 +13,13 @@
   - [[#handlers][handlers]]
   - [[#options][options]]
 
-**** handlers
+*** handlers
 
      Leptus must know your request handlers and their states, they should be
      defined as ~{handlers, [{HostMatch, [{module(), State :: any()}]}]}.~ in
      ~leptus.config~
 
-**** options
+*** options
 
      IP address and port number have default values: ~127.0.0.1:8080~, but you
      can override them as follows:

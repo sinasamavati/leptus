@@ -1,3 +1,8 @@
+#+TITLE:    Documentations
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil
+
 * Documentations
 
 ** Preface
@@ -46,8 +51,8 @@
      - [[configuration.org#handlers][handlers (request handlers)]]
 
    - [[start.org][Start]]
-     - [[start.org#start_listener2][start_listener/2]]
-     - [[start.org#start_listener3][start_listener/3]]
+     - [[start.org#leptusstart_listener2][leptus:start_listener/2]]
+     - [[start.org#leptusstart_listener3][leptus:start_listener/3]]
      - [[start.org#the-otp-way][The OTP way]]
 
    - [[upgrade.org][Upgrade]]

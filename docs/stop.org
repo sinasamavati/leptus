@@ -1,3 +1,8 @@
+#+TITLE:    Stop
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil
+
 * Stop
 
   Use the function below to stop a listener.

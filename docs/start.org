@@ -1,3 +1,8 @@
+#+TITLE:    Start
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil
+
 * Start
 
 ** Types
@@ -10,7 +15,7 @@
 
 ** leptus functions
 
-**** start_listener/2
+*** leptus:start_listener/2
 
      Starts leptus' dependencies and a listener of type ~Listener~.
 
@@ -21,12 +26,12 @@
      Note that if you use ~AppName~, Leptus will try to read
      ~AppName/priv/leptus.config~ file
      which should contain
-     #+BEGIN_SRC
+     #+BEGIN_SRC erlang
      {handlers, Handlers}.
      {options, Options}.
      #+END_SRC
 
-**** start_listener/3
+*** leptus:start_listener/3
 
      Starts leptus' dependencies and a listener of type ~Listener~.
 

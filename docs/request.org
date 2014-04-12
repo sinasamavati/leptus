@@ -1,28 +1,25 @@
+#+TITLE:    Request
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil
+
 * Request
 
   Please keep it in mind that ~Req~ is a Pid that should be used as the first
-  argument in _leptus_req_ functions.
+  argument in leptus_req functions.
 
   All the functions given below are accessible through the ~leptus_req~ module,
   which are supposed to work with the ~Req~ object.
 
-  - [[#param2][param/2]]
-  - [[#params1][params/1]]
-  - [[#qs1][qs/1]]
-  - [[#qs_val2][qs_val/2]]
-  - [[#uri1][uri/1]]
-  - [[#version1][version/1]]
-  - [[#method1][method/1]]
-  - [[#body1][body/1]]
-  - [[#body_raw1][body_raw/1]]
-  - [[#body_qs1][body_qs/1]]
-  - [[#header2][header/2]]
-  - [[#parse_header2][parse_header/2]]
-  - [[#auth2][auth/2]]
-  - [[get_req#1][get_req/1]]
-  - [[#set_req2][set_req/2]]
+** Types
 
-**** param/2
+   #+BEGIN_SRC erlang
+   Req = pid()
+   #+END_SRC
+
+** Functions
+
+*** param/2
 
      Returns a parameter that is bound to the route.
 
@@ -35,7 +32,7 @@
      param(Req, id) -> <<"1863">>
      #+END_SRC
 
-**** params/1
+*** params/1
 
      Returns parameters that are bound to the route.
 
@@ -46,7 +43,7 @@
      params(Req) -> [{id, <<"1863">>}]
      #+END_SRC
 
-**** qs/1
+*** qs/1
 
      Returns query strings.
 
@@ -58,7 +55,7 @@
      qs(Req) -> <<"limit=50">>
      #+END_SRC
 
-**** qs_val/2
+*** qs_val/2
 
      Returns the given query string value.
 
@@ -69,7 +66,7 @@
      qs_val(Req, <<"limit">>) -> <<"50">>
      #+END_SRC
 
-**** uri/1
+*** uri/1
 
      Returns the requested URI.
 
@@ -80,7 +77,7 @@
      uri(Req) -> <<"/items/?limit=50">>
      #+END_SRC
 
-**** version/1
+*** version/1
 
      Returns HTTP version.
 
@@ -91,7 +88,7 @@
      version(Req) -> 'HTTP/1.1'
      #+END_SRC
 
-**** method/1
+*** method/1
 
      Returns used HTTP method.
 
@@ -102,7 +99,7 @@
      method(Req) -> <<"DELETE">>
      #+END_SRC
 
-**** body/1
+*** body/1
 
      Returns received body (decoding might apply to it).
 
@@ -116,7 +113,7 @@
      body(Req) -> [{<<"function">>, <<"body/1">>}]
      #+END_SRC
 
-**** body_raw/1
+*** body_raw/1
 
      Returns raw body.
 
@@ -127,7 +124,7 @@
      body_raw(Req) -> <<"{\"function\": \"body/1\"}">>
      #+END_SRC
 
-**** body_qs/1
+*** body_qs/1
 
      Returns body but in query string format.
 
@@ -138,7 +135,7 @@
      body_qs(Req) -> [{<<"foo">>, <<"bar">>}]
      #+END_SRC
 
-**** header/2
+*** header/2
 
      Returns the given header value.
 
@@ -149,7 +146,7 @@
      header(Req, <<"content-type">>) -> <<"application/x-www-form-urlencoded">>
      #+END_SRC
 
-**** parse_header/2
+*** parse_header/2
 
      Parses the given header.
 
@@ -160,7 +157,7 @@
      parse_header(Req, <<"content-type">>) -> {<<"application">>, <<"json">>, []}
      #+END_SRC
 
-**** auth/2
+*** auth/2
 
      Checks for the given authorization method.
 
@@ -173,7 +170,7 @@
      auth(Req, basic) -> {<<"username">>, <<"p4ssw0rd">>}
      #+END_SRC
 
-**** get_req/1
+*** get_req/1
 
      Returns the Cowboy Req object.
 
@@ -181,7 +178,7 @@
      get_req(Req) -> cowboy_req:req()
      #+END_SRC
 
-**** set_req/2
+*** set_req/2
 
      Sets a new Cowboy Req object as the state of leptus_req so that leptus_req
      functions will use the new Req object.
