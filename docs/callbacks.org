@@ -79,15 +79,15 @@
     ([[http://en.wikipedia.org/wiki/Cross-origin_resource_sharing][CORS]]).
 
      #+BEGIN_SRC erlang
-     Module:cross_domains(Route, Req, State) -> [HostMatch]
+     Module:cross_domains(Route, Req, State) -> {[HostMatch], State}
      #+END_SRC
 
     ~HostMatch~ is equal to Cowboy HostMatch syntax.
 
     This will be used when preparing headers right before replying.
 
-    If one of the HostMatches and Origin match, ~access-control-allow-origin~
-    will be set to Origin.
+    If one of the HostMatches and the Origin match, ~access-control-allow-origin~
+    will be set to the Origin.
 
 *** is_authorized/3
     :PROPERTIES:
@@ -169,8 +169,8 @@
    init(_Route, _Req, State) ->
        {ok, State}.
 
-   cross_domains(_Route, _Req, _State) ->
-       ['_'].
+   cross_domains(_Route, _Req, State) ->
+       {['_'], State}.
 
    is_authorized(_Route, _Req, State) ->
        {true, State}.

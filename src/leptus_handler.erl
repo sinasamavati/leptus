@@ -188,22 +188,24 @@ method_not_allowed(Handler, Route, HandlerState) ->
 handler_cross_domains(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
-    %%   Handler:cross_domains(Route, Req, State) -> [string()].
+    %%   Handler:cross_domains(Route, Req, State) -> {[string()], State}
     %%
     case leptus_req:header(Req, <<"origin">>) of
         <<>> ->
-            [];
+            {[], HandlerState};
         Origin ->
             case is_defined(Handler, cross_domains) of
                 false ->
-                    [];
+                    {[], HandlerState};
                 true ->
-                    HostMatches = Handler:cross_domains(Route, Req, HandlerState),
+                    {HostMatches, HandlerState1} =
+                        Handler:cross_domains(Route, Req, HandlerState),
                     case origin_matches(Origin, HostMatches) of
                         false ->
-                            [];
+                            {[], HandlerState1};
                         true ->
-                            [{<<"access-control-allow-origin">>, Origin}]
+                            {[{<<"access-control-allow-origin">>, Origin}],
+                             HandlerState1}
                     end
             end
     end.
@@ -235,12 +237,13 @@ reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
     {Headers1, Body1} = prepare_headers_body(Headers, Body),
 
     %% enable or disable cross-domain requests
-    Headers2 = Headers1 ++ handler_cross_domains(Handler, Route, Req,
-                                                 HandlerState),
+    {Headers2, HandlerState1} = handler_cross_domains(Handler, Route, Req,
+                                                      HandlerState),
+    Headers3 = Headers1 ++ Headers2,
     Req1 = leptus_req:get_req(Req),
-    {ok, Req2} = cowboy_req:reply(status(Status), Headers2, Body1, Req1),
+    {ok, Req2} = cowboy_req:reply(status(Status), Headers3, Body1, Req1),
     leptus_req:set_req(Req, Req2),
-    {ok, Req2, Ctx}.
+    {ok, Req2, Ctx#ctx{handler_state = HandlerState1}}.
 
 -spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
 prepare_headers_body(Headers, {json, Body}) ->
