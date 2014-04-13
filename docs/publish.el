@@ -1,4 +1,10 @@
+(add-to-list 'load-path "elisp")
+(add-to-list 'load-path "elisp/org-mode/lisp")
+
+(require 'htmlize)
 (require 'org-publish)
+(require 'ox-html)
+
 (setq org-publish-project-alist
       '(
         ("leptus-docs"
@@ -6,11 +12,9 @@
          :base-extension "org"
          :publishing-directory "./public_html"
          :recursive t
-         :publishing-function org-publish-org-to-html
+         :publishing-function org-html-publish-to-html
          :exclude "README.org"
          :headline-levels 4
-         :auto-preamble t
          )
         ))
-(setq org-link-search-must-match-exact-headline nil)
-(org-publish "leptus-docs" t)
+(org-publish "leptus-docs")

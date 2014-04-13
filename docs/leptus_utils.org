@@ -28,7 +28,7 @@
 
     Types:
 
-    #+BEGIN_SRC
+    #+BEGIN_SRC erlang
     App = atom()
     Dir = file:name_all()
     #+END_SRC
