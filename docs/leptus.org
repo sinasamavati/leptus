@@ -5,7 +5,7 @@
 
 * leptus module
   :PROPERTIES:
-  :CUSTOM_ID: module
+  :CUSTOM_ID: leptus
   :END:
 
 ** Types

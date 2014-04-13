@@ -93,7 +93,7 @@ listener_handlers(Listener) ->
     end.
 
 %% -----------------------------------------------------------------------------
-%% print running listeners information
+%% print a running listener information
 %% -----------------------------------------------------------------------------
 print_listener_info(Listener) ->
     Modules = [M || {M, _} <- listener_handlers(Listener)],

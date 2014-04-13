@@ -1,0 +1,95 @@
+#+TITLE:    leptus_config module
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil num:nil
+
+* leptus_config module
+  :PROPERTIES:
+  :CUSTOM_ID: leptus_config
+  :END:
+
+  This module is a gen_server which has an ETS table.
+  It's used for keeping configurations in memory.
+
+** Types
+   :PROPERTIES:
+   :CUSTOM_ID: types
+   :END:
+
+   #+BEGIN_SRC erlang
+   Key     = any()
+   Value   = any()
+   App     = atom()
+   #+END_SRC
+
+** Functions
+  :PROPERTIES:
+  :CUSTOM_ID: functions
+  :END:
+
+*** start/0
+    :PROPERTIES:
+    :CUSTOM_ID: start-0
+    :END:
+
+    Starts leptus_config gen_server.
+
+    #+BEGIN_SRC erlang
+    start() -> {ok, pid()} | {error, any()}
+    #+END_SRC
+
+*** start_link/0
+    :PROPERTIES:
+    :CUSTOM_ID: start_link-0
+    :END:
+
+    Starts leptus_config gen_server and creates a link to the process.
+
+    #+BEGIN_SRC erlang
+    start() -> {ok, pid()} | {error, any()}
+    #+END_SRC
+
+*** lookup/1
+    :PROPERTIES:
+    :CUSTOM_ID: lookup-1
+    :END:
+
+    Finds a key-value.
+
+    #+BEGIN_SRC erlang
+    lookup(Key) -> any() | undefined
+    #+END_SRC
+
+*** lookup/2
+    :PROPERTIES:
+    :CUSTOM_ID: lookup-2
+    :END:
+
+    Finds a key-value.
+    This returns the Default if nothing found.
+
+    #+BEGIN_SRC erlang
+    lookup(Key, Default) -> any() | Default
+    #+END_SRC
+
+*** set/2
+    :PROPERTIES:
+    :CUSTOM_ID: set-2
+    :END:
+
+    Associates a key to a value.
+
+    #+BEGIN_SRC erlang
+    set(Key, Value) -> ok
+    #+END_SRC
+
+*** config_file/1
+    :PROPERTIES:
+    :CUSTOM_ID: config_file-1
+    :END:
+
+    Reads leptus configuration file that is ~App/priv/leptus.config~.
+
+    #+BEGIN_SRC erlang
+    config_file(App) -> [any()] | {error, enoent}
+    #+END_SRC

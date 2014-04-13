@@ -66,3 +66,6 @@
 
    - Modules
      - [[leptus.org][leptus]]
+     - [[leptus_config.org][leptus_config]]
+     - [[leptus_router.org][leptus_router]]
+     - [[leptus_utils.org][leptus_utils]]
