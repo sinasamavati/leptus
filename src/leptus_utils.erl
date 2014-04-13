@@ -37,11 +37,17 @@
 %% -----------------------------------------------------------------------------
 %% find the path to the priv directory in an application
 %% -----------------------------------------------------------------------------
+-spec priv_dir(atom()) -> file:name_all() | {error, bad_name}.
 priv_dir(App) ->
     case code:priv_dir(App) of
         {error, bad_name} ->
-            Ebin = filename:dirname(code:which(App)),
-            filename:join(filename:dirname(Ebin), "priv");
+            case code:which(App) of
+                non_existing ->
+                    {error, bad_name};
+                BeamFile ->
+                    Ebin = filename:dirname(BeamFile),
+                    filename:join(filename:dirname(Ebin), "priv")
+            end;
         PrivDir ->
             PrivDir
     end.
