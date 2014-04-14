@@ -22,6 +22,9 @@
 
 -module(leptus_json).
 
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -export([encode/1]).
 -export([decode/1]).
 -export([parser/0]).
@@ -31,11 +34,10 @@
 -define(DECODE(Term), jsx:decode(Term)).
 -define(PARSER, jsx).
 -else.
--define(ENCODE(Term), jiffy:encode({Term})).
--define(DECODE(Term), element(1, jiffy:decode(Term))).
+-define(ENCODE(Term), jiffy_encode(Term)).
+-define(DECODE(Term), jiffy_decode(Term)).
 -define(PARSER, jiffy).
 -endif.
-
 
 encode(Term) ->
     ?ENCODE(Term).
@@ -45,3 +47,23 @@ decode(Term) ->
 
 parser() ->
     ?PARSER.
+
+%% -----------------------------------------------------------------------------
+%% internal
+%% -----------------------------------------------------------------------------
+jiffy_encode(Term) ->
+    jiffy:encode(before_encode(Term)).
+
+jiffy_decode(Bin) ->
+    after_decode(jiffy:decode(Bin)).
+
+%% -----------------------------------------------------------------------------
+%% before encoding - after decoding (only for jiffy)
+%% -----------------------------------------------------------------------------
+before_encode([{}]) -> {[]};
+before_encode(Term=[H|_]) when is_tuple(H) -> {Term};
+before_encode(Term) -> Term.
+
+after_decode({[]}) -> [{}];
+after_decode({Term}) -> Term;
+after_decode(Term) -> Term.
