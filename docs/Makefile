@@ -35,7 +35,7 @@ $(DEPS_DIR):
 $(ORG_MODE):
 	wget $(ORG_MODE_URL) -O $(ORG_MODE)
 	cd $(DEPS_DIR); tar xzf $(ORG_MODE)
-	cd $(DEPS_DIR)/org-mode; $(MAKE) compile
+	-cd $(DEPS_DIR)/org-mode; $(MAKE)
 
 $(HTMLIZE):
 	wget $(HTMLIZE_URL) -O $(HTMLIZE)
