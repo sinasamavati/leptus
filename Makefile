@@ -96,22 +96,11 @@ define compile_erl
 		-pa ebin/ -I include/ $(COMPILE_FIRST_PATHS) $(1)
 endef
 
-define compile_xyrl
-	$(xyrl_verbose) erlc -v -o ebin/ $(1)
-	$(xyrl_verbose) erlc $(ERLC_OPTS) -o ebin/ ebin/*.erl
-	@rm ebin/*.erl
-endef
-
-
 ebin/$(PROJECT).app: $(shell find src -type f -name \*.erl) \
-		$(shell find src -type f -name \*.core) \
-		$(shell find src -type f -name \*.xrl) \
-		$(shell find src -type f -name \*.yrl)
+		$(shell find src -type f -name \*.core)
 	@mkdir -p ebin/
 	$(if $(strip $(filter %.erl %.core,$?)), \
 		$(call compile_erl,$(filter %.erl %.core,$?)))
-	$(if $(strip $(filter %.xrl %.yrl,$?)), \
-		$(call compile_xyrl,$(filter %.xrl %.yrl,$?)))
 
 clean:
 	$(gen_verbose) rm -rf ebin/ test/*.beam erl_crash.dump
