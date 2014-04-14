@@ -59,7 +59,7 @@
                   {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
 init(_Transport, Req, Ctx=#ctx{route=Route, handler=Handler,
                                handler_state=HandlerState}) ->
-    {ok, ReqPid} = leptus_req:start_link(Req),
+    {ok, ReqPid} = leptus_req_sup:start_child(Req),
     {ok, HandlerState1} = handler_init(Handler, Route, ReqPid, HandlerState),
     {ok, Req, Ctx#ctx{handler_state = HandlerState1, req_pid = ReqPid}}.
 

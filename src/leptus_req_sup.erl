@@ -20,10 +20,11 @@
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 %% THE SOFTWARE.
 
--module(leptus_sup).
+-module(leptus_req_sup).
 -behaviour(supervisor).
 
 -export([start_link/0]).
+-export([start_child/1]).
 -export([init/1]).
 
 %% -----------------------------------------------------------------------------
@@ -32,16 +33,14 @@
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
+start_child(Req) ->
+    supervisor:start_child(leptus_req_sup, [Req]).
+
 %% -----------------------------------------------------------------------------
 %% supervisor callback
 %% -----------------------------------------------------------------------------
 init([]) ->
-    %% TODO: choose a better MaxRestarts in MaxTime
-    {ok, {{one_for_one, 50, 10},
-          [
-           {leptus_config, {leptus_config, start_link, []},
-            permanent, 5000, worker, [leptus_config]},
-           {leptus_req_sup, {leptus_req_sup, start_link, []},
-            permanent, 5000, supervisor, [leptus_req_sup]}
-          ]
+    {ok, {{simple_one_for_one, 10, 20},
+          [{leptus_req, {leptus_req, start_link, []},
+            transient, 5000, worker, [leptus_req]}]
          }}.
