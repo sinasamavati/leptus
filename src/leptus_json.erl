@@ -34,6 +34,7 @@
 -define(DECODE(Term), jsx:decode(Term)).
 -define(PARSER, jsx).
 -else.
+-define(USE_JIFFY, true).
 -define(ENCODE(Term), jiffy_encode(Term)).
 -define(DECODE(Term), jiffy_decode(Term)).
 -define(PARSER, jiffy).
@@ -47,6 +48,8 @@ decode(Term) ->
 
 parser() ->
     ?PARSER.
+
+-ifdef(USE_JIFFY).
 
 %% -----------------------------------------------------------------------------
 %% internal
@@ -67,3 +70,5 @@ before_encode(Term) -> Term.
 after_decode({[]}) -> [{}];
 after_decode({Term}) -> Term;
 after_decode(Term) -> Term.
+
+-endif.
