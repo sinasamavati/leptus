@@ -103,8 +103,7 @@ version(Pid) ->
 method(Pid) ->
     invoke(Pid, method, []).
 
--spec body(pid()) -> binary() | leptus_handler:json_term() |
-                     msgpack:msgpack_term() | {error, any()}.
+-spec body(pid()) -> binary() | leptus_json:json_term() | {error, any()}.
 body(Pid) ->
     Body = body_raw(Pid),
     case header(Pid, <<"content-type">>) of

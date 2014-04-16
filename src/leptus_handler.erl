@@ -32,19 +32,12 @@
 %% -----------------------------------------------------------------------------
 %% types
 %% -----------------------------------------------------------------------------
--type req() :: cowboy_req:req().
+-type req() :: pid().
 -type status() :: non_neg_integer() | binary() | atom().
 -type headers() :: cowboy:http_headers().
--type body() :: binary() | string() | {json | msgpack, json_term()} | {html, binary()}.
+-type body() :: binary() | string() | {json | msgpack, leptus_json:json_term()}
+              | {html, binary()}.
 -type method() :: get | put | post | delete.
--type json_term() :: [json_term()]
-                   | {binary() | atom(), json_term()}
-                   | true
-                   | false
-                   | null
-                   | integer()
-                   | float()
-                   | binary().
 -type response() :: {body(), handler_state()}
                   | {status(), body(), handler_state()}
                   | {status(), headers(), body(), handler_state()}.
@@ -56,20 +49,21 @@
 %% cowboy callbacks
 %% -----------------------------------------------------------------------------
 -spec init({module(), http}, Req, Ctx) ->
-                  {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+                  {ok, Req, Ctx} when Req :: cowboy_req:req(), Ctx :: ctx().
 init(_Transport, Req, Ctx=#ctx{route=Route, handler=Handler,
                                handler_state=HandlerState}) ->
     {ok, ReqPid} = leptus_req_sup:start_child(Req),
     {ok, HandlerState1} = handler_init(Handler, Route, ReqPid, HandlerState),
     {ok, Req, Ctx#ctx{handler_state = HandlerState1, req_pid = ReqPid}}.
 
--spec handle(Req, Ctx) -> {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+-spec handle(Req, Ctx) -> {ok, Req, Ctx} when Req :: cowboy_req:req(),
+                                              Ctx :: ctx().
 handle(_Req, Ctx) ->
     %% convert the http method to a lowercase atom
     Func = http_method(leptus_req:method(Ctx#ctx.req_pid)),
     handle_request(Func, Ctx).
 
--spec terminate(terminate_reason(), req(), ctx()) -> ok.
+-spec terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
 terminate(Reason, _Req, Ctx) ->
     Res = handler_terminate(Reason, Ctx),
     leptus_req:stop(Ctx#ctx.req_pid),
@@ -100,8 +94,10 @@ handler_init(Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
--spec handle_request(method() | not_allowed, Ctx) ->
-                            {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+-spec handle_request(not_allowed, Ctx) ->
+                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx();
+                    (method(), Ctx) ->
+                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx().
 handle_request(not_allowed, Ctx=#ctx{handler=Handler, route=Route,
                                      handler_state=HandlerState}) ->
     Response = method_not_allowed(Handler, Route, HandlerState),
@@ -184,7 +180,7 @@ method_not_allowed(Handler, Route, HandlerState) ->
 %% Handler:cross_domains/3
 %% -----------------------------------------------------------------------------
 -spec handler_cross_domains(handler(), route(), req(), handler_state()) ->
-                                   headers().
+                                   {headers(), handler_state()}.
 handler_cross_domains(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
@@ -221,7 +217,8 @@ handler_terminate(Reason, #ctx{handler=Handler, route=Route, req_pid=Req,
 %% -----------------------------------------------------------------------------
 %% reply - prepare stauts, headers and body
 %% -----------------------------------------------------------------------------
--spec reply(response(), Ctx) -> {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+-spec reply(response(), Ctx) -> {ok, Req, Ctx} when Req :: cowboy_req:req(),
+                                                    Ctx :: ctx().
 reply({Body, HandlerState}, Ctx) ->
     reply(200, [], Body, Ctx#ctx{handler_state = HandlerState});
 reply({Status, Body, HandlerState}, Ctx) ->
@@ -230,7 +227,7 @@ reply({Status, Headers, Body, HandlerState}, Ctx) ->
     reply(Status, Headers, Body, Ctx#ctx{handler_state = HandlerState}).
 
 -spec reply(status(), headers(), body(), Ctx) ->
-                   {ok, Req, Ctx} when Req :: req(), Ctx :: ctx().
+                   {ok, Req, Ctx} when Req :: cowboy_req:req(), Ctx :: ctx().
 reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
                                       handler_state=HandlerState}) ->
     %% encode Body and set content-type

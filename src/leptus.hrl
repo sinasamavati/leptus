@@ -20,13 +20,13 @@
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 %% THE SOFTWARE.
 
--type route() :: '_' | iodata().
+-type route() :: string().
 -type handler() :: module().
 -type handler_state() :: any().
 
 -record(ctx,
         {
-          route :: route(),
+          route = "" :: route(),
           handler :: module(),
           handler_state :: any(),
           req_pid :: pid()

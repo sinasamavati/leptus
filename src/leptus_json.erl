@@ -40,6 +40,16 @@
 -define(PARSER, jiffy).
 -endif.
 
+-type json_term() :: [json_term()]
+                   | {binary() | atom(), json_term()}
+                   | true
+                   | false
+                   | null
+                   | integer()
+                   | float()
+                   | binary().
+-export_type([json_term/0]).
+
 encode(Term) ->
     ?ENCODE(Term).
 
