@@ -31,7 +31,49 @@
                | float()
                | binary()
 
-   Status  = non_neg_integer() | binary()
+   status_binding() = continue
+                    | switching_protocols
+                    | ok
+                    | created
+                    | accepted
+                    | non_authoritative_information
+                    | no_content
+                    | reset_content
+                    | partial_content
+                    | multiple_choices
+                    | moved_permanently
+                    | found
+                    | see_other
+                    | not_modified
+                    | use_proxy
+                    | switch_proxy
+                    | temporary_redirect
+                    | bad_request
+                    | unauthorized
+                    | payment_required
+                    | forbidden
+                    | not_found
+                    | not_allowed
+                    | not_acceptable
+                    | proxy_authentication_required
+                    | request_timeout
+                    | conflict
+                    | gone
+                    | length_required
+                    | precondition_failed
+                    | request_entity_too_large
+                    | request_uri_too_long
+                    | unsupported_media_type
+                    | requested_range_not_satisfiable
+                    | expectation_failed
+                    | internal_server_error
+                    | not_implemented
+                    | bad_gateway
+                    | service_unavailable
+                    | gateway_timeout
+                    | http_version_not_supported
+
+   Status  = non_neg_integer() | binary() | status_binding()
    Headers = [{binary(), iodata()}]
    Body    = string() | binary() | {json | msgpack, json_term()} | {html, binary()}
    #+END_SRC
