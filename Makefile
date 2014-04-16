@@ -27,7 +27,7 @@ dep_cowboy = https://github.com/extend/cowboy/archive/0.9.0.tar.gz
 dep_msgpack = https://github.com/msgpack/msgpack-erlang/archive/0.2.8.tar.gz
 ifdef USE_JSX
     DEPS += jsx
-    dep_jsx = https://github.com/talentdeficit/jsx/archive/v1.4.4.tar.gz
+    dep_jsx = https://github.com/talentdeficit/jsx/archive/v1.4.5.tar.gz
     ERLC_OPTS += -DUSE_JSX
 else
     DEPS += jiffy
