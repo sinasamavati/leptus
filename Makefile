@@ -123,11 +123,8 @@ test: ERLC_OPTS += -DTEST=1
 test: clean deps app
 	$(gen_verbose) erlc -v -o test $(ERLC_OPTS) \
 		$(wildcard test/*.erl test/*/*.erl) -pa ebin
-	@if [ -d "test" ] ; \
-	then \
-		mkdir -p logs/ ; \
-		$(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES)) ; \
-	fi
+	@mkdir -p logs
+	@$(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES))
 	@rm -f test/*.beam
 
 # ------------------------------------------------------------------------------

@@ -22,6 +22,7 @@
 
 -module(leptus_pt_SUITE).
 
+-export([groups/0]).
 -export([all/0]).
 -export([routes/1]).
 -export([allowed_methods/1]).
@@ -30,9 +31,11 @@
 %% helpers
 -import(helpers, [request/2]).
 
+groups() ->
+    [{main, [parallel], [routes, allowed_methods, rq_pt]}].
 
 all() ->
-    [routes, allowed_methods, rq_pt].
+    [{group, main}].
 
 routes(_) ->
     ["/", "/hello", "/hello/:name"] = pt1:routes(),

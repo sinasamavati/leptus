@@ -7,6 +7,7 @@
 
 -export([init_per_testcase/2]).
 -export([end_per_testcase/2]).
+-export([groups/0]).
 -export([all/0]).
 -export([param/1]).
 -export([params/1]).
@@ -45,11 +46,15 @@ end_per_testcase(_, Config) ->
     ok = leptus_req:stop(?config(req7, Config)),
     Config.
 
+groups() ->
+    [{main, [parallel], [
+                         param, params, qs, qs_val, uri, version, body, body_raw,
+                         body_qs, header, parse_header, auth, method, get_req,
+                         set_req
+                        ]}].
+
 all() ->
-    [
-     param, params, qs, qs_val, uri, version, body, body_raw, body_qs,
-     header, parse_header, auth, method, get_req, set_req
-    ].
+    [{group, main}].
 
 param(Config) ->
     Req1 = ?config(req1, Config),

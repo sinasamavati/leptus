@@ -22,14 +22,18 @@
 
 -module(leptus_router_SUITE).
 
+-export([groups/0]).
 -export([all/0]).
 -export([paths/1]).
 -export([sort_dispatch/1]).
 
 -include("src/leptus.hrl").
 
+groups() ->
+    [{main, [parallel], [paths, sort_dispatch]}].
+
 all() ->
-    [paths, sort_dispatch].
+    [{group, main}].
 
 paths(_) ->
     Ctx1 = #ctx{handler=leptus_routes1, route="/", handler_state=[]},

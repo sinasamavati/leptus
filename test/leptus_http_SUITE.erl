@@ -25,6 +25,7 @@
 %% Common Test callbacks
 -export([init_per_suite/1]).
 -export([end_per_suite/1]).
+-export([groups/0]).
 -export([all/0]).
 
 %% test cases
@@ -54,11 +55,14 @@ init_per_suite(Config) ->
 end_per_suite(_Config) ->
     ok = leptus:stop_listener(http).
 
+groups() ->
+    [{main, [parallel], [
+                         http_get, http_post, http_put, http_delete, http_404,
+                         http_405, http_is_authorized, http_msgpack
+                        ]}].
+
 all() ->
-    [
-     http_get, http_post, http_put, http_delete,
-     http_404, http_405, http_is_authorized, http_msgpack
-    ].
+    [{group, main}].
 
 http_get(_) ->
     M = <<"GET">>,
