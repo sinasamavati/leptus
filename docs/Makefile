@@ -20,18 +20,6 @@ all: deps $(TMP_DIR)
 
 deps: $(DEPS_DIR) $(DEPS)
 
-clean:
-	rm -rf $(CURDIR)/public_html $(TMP_DIR)
-
-distclean: clean
-	rm -rf $(DEPS_DIR)
-
-$(TMP_DIR):
-	mkdir -p $(TMP_DIR)
-
-$(DEPS_DIR):
-	mkdir -p $(DEPS_DIR)
-
 $(ORG_MODE):
 	wget $(ORG_MODE_URL) -O $(ORG_MODE)
 	cd $(DEPS_DIR); tar xzf $(ORG_MODE)
@@ -39,3 +27,12 @@ $(ORG_MODE):
 
 $(HTMLIZE):
 	wget $(HTMLIZE_URL) -O $(HTMLIZE)
+
+$(CURDIR)/%:
+	mkdir -p $@
+
+clean:
+	rm -rf $(CURDIR)/public_html $(TMP_DIR)
+
+distclean: clean
+	rm -rf $(DEPS_DIR)

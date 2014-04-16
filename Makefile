@@ -136,7 +136,6 @@ test: clean deps app
 dialyze: $(PLT_FILE)
 	@dialyzer +S 8 --src src --plt $(PLT_FILE) --no_native $(DIALYZER_OPTS)
 
-PLT_APPS ?=
 $(CURDIR)/%.plt:
 	$(gen_verbose) dialyzer +S 8 --build_plt --output_plt $@ \
 		--apps erts kernel stdlib $(PLT_APPS) \
@@ -152,14 +151,14 @@ clean:
 # clean docs
 # ------------------------------------------------------------------------------
 clean-docs:
-	rm -rf $(DOCS_DIR)/docs/public_html $(DOCS_DIR)/docs/tmp \
-		$(DOCS_DIR)/docs/elisp
+	$(MAKE) -C $(DOCS_DIR) clean
 
 # ------------------------------------------------------------------------------
 # clean project
 # ------------------------------------------------------------------------------
 distclean: clean clean-docs
-	rm -rf $(DEPS_DIR) $(CURDIR)/logs $(CURDIR)/*.beam $(CURDIR)/.leptus.plt
+	rm -rf $(DEPS_DIR) $(CURDIR)/logs $(CURDIR)/*.beam $(PLT_FILE)
+	$(MAKE) -C $(DOCS_DIR) distclean
 
 $(CURDIR)/%:
 	mkdir -p $@
