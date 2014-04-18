@@ -50,7 +50,19 @@ paths(Handlers) ->
 %% -----------------------------------------------------------------------------
 -spec sort_dispatch(Dispatch) -> Dispatch when Dispatch :: dispatch().
 sort_dispatch(Dispatch) ->
-    sort_dispatch(Dispatch, []).
+    %% merge duplicate HostMatches
+    F = fun(E = {HostMatch, _, Paths}, Acc) ->
+                case lists:keyfind(HostMatch, 1, Acc) of
+                    {HostMatch, Constraints, Paths1} ->
+                        lists:keystore(HostMatch, 1, Acc, {HostMatch,
+                                                           Constraints,
+                                                           Paths1 ++ Paths});
+                    _ ->
+                        [E|Acc]
+                end
+        end,
+    Dispatch1 = lists:foldr(F, [], Dispatch),
+    sort_dispatch(Dispatch1, []).
 
 %% -----------------------------------------------------------------------------
 %% make routes to serve static files using cowboy static handler
