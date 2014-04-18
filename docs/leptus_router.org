@@ -48,3 +48,34 @@
     #+BEGIN_SRC erlang
     sort_dispatch(Dispatch) -> Dispatch
     #+END_SRC
+
+*** static_file_routes/1
+    :PROPERTIES:
+    :CUSTOM_ID: static_file_routes-1
+    :END:
+
+    Makes routes to serve static files using Cowboy static handler.
+
+    #+BEGIN_SRC erlang
+    static_file_routes({HostMatch, Dir | {priv_dir, App, Dir}}) -> Routes
+    #+END_SRC
+
+    NOTE: ~{priv_dir, App, Dir}~ will use the directory ~App/priv/Dir~.
+
+    Assume we want to serve static files in ~/var/www~ which contains
+    ~index.html~ and ~static/css/style.css~, we call this function like the
+    following:
+
+    #+BEGIN_SRC erlang
+    static_file_routes({'_', "/var/www"})
+    #+END_SRC
+
+    and this will return:
+
+    #+BEGIN_SRC erlang
+    [{'_', [
+            {"/", cowboy_static, {file, "/var/www/index.html"}},
+            {"/index.html", cowboy_static, {file, "/var/www/index.html"}},
+            {"/static/css/style.css", cowboy_static, {file, "/var/www/static/css/style.css"}}
+           ]}]
+    #+END_SRC

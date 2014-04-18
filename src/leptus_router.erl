@@ -27,6 +27,7 @@
 %% -----------------------------------------------------------------------------
 -export([paths/1]).
 -export([sort_dispatch/1]).
+-export([static_file_routes/1]).
 
 -include("leptus.hrl").
 
@@ -50,6 +51,25 @@ paths(Handlers) ->
 -spec sort_dispatch(Dispatch) -> Dispatch when Dispatch :: dispatch().
 sort_dispatch(Dispatch) ->
     sort_dispatch(Dispatch, []).
+
+%% -----------------------------------------------------------------------------
+%% make routes to serve static files using cowboy static handler
+%% -----------------------------------------------------------------------------
+static_file_routes({HostMatch, priv_dir, App, Dir}) ->
+    Dir1 = filename:join(leptus_utils:priv_dir(App), Dir),
+    static_file_routes({HostMatch, Dir1});
+static_file_routes({HostMatch, Dir}) ->
+    Files = static_files(Dir),
+    F = fun(E, Acc) ->
+                Acc1 = [static_route("/" ++ E, filename:join(Dir, E))|Acc],
+                case is_index_file(E) of
+                    true ->
+                        [static_route(index_url(E), filename:join(Dir, E))|Acc1];
+                    false ->
+                        Acc1
+                end
+        end,
+    [{HostMatch, lists:foldr(F, [], Files)}].
 
 %% -----------------------------------------------------------------------------
 %% internal
@@ -127,3 +147,43 @@ egt(PathRule, Y) ->
         N when N >= Y -> true;
         _ -> false
     end.
+
+%% -----------------------------------------------------------------------------
+%% collect static file names
+%% -----------------------------------------------------------------------------
+static_files(Dir) ->
+    Files = filelib:fold_files(Dir, ".*", true, fun(F, Acc) -> [F|Acc] end, []),
+    DirComponentsLength = length(filename:split(Dir)),
+    F = fun(File, Acc) ->
+                FileComponents = filename:split(File),
+                FileComponentsLength = length(FileComponents),
+                [filename:join(lists:sublist(FileComponents,
+                                             DirComponentsLength + 1,
+                                             FileComponentsLength))|Acc]
+        end,
+    lists:usort(lists:foldr(F, [], Files)).
+
+%% -----------------------------------------------------------------------------
+%% check if a file is an index file
+%% -----------------------------------------------------------------------------
+is_index_file(File) ->
+    case filename:basename(File) of
+        "index.html" -> true;
+        "index.htm" -> true;
+        _ -> false
+    end.
+
+%% -----------------------------------------------------------------------------
+%% prepare index url
+%% -----------------------------------------------------------------------------
+index_url(File) ->
+    case filename:dirname(File) of
+        "." -> "/";
+        Else -> "/" ++ Else
+    end.
+
+%% -----------------------------------------------------------------------------
+%% cowboy static handler
+%% -----------------------------------------------------------------------------
+static_route(Path, File) ->
+    {Path, cowboy_static, {file, File}}.

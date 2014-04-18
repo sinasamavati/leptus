@@ -26,11 +26,13 @@
 -export([all/0]).
 -export([paths/1]).
 -export([sort_dispatch/1]).
+-export([static_file_routes/1]).
 
+-include_lib("common_test/include/ct.hrl").
 -include("src/leptus.hrl").
 
 groups() ->
-    [{main, [parallel], [paths, sort_dispatch]}].
+    [{main, [parallel], [paths, sort_dispatch, static_file_routes]}].
 
 all() ->
     [{group, main}].
@@ -113,3 +115,13 @@ sort_dispatch(_) ->
        {[a, b, <<"x">>, d], [], handler, undefined},
        {[a, <<"x">>, c, d], [], handler, undefined}
       ]}] = leptus_router:sort_dispatch(Dispatch1).
+
+static_file_routes(Conf) ->
+    Dir = filename:join(?config(data_dir, Conf), "www"),
+    Index = filename:join(Dir, "index.html"),
+    Style = filename:join([Dir, "static", "css", "style.css"]),
+    [{'_', [
+            {"/", cowboy_static, {file, Index}},
+            {"/index.html", cowboy_static, {file, Index}},
+            {"/static/css/style.css", cowboy_static, {file, Style}}
+           ]}] = leptus_router:static_file_routes({'_', Dir}).
