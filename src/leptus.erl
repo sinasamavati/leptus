@@ -46,12 +46,15 @@
 -export_type([handlers/0]).
 
 -type listener() :: http | https | spdy.
+-type static_directory() :: Dir :: file:name()
+                          | {priv_dir, App :: atom(), Dir :: file:name()}.
 -type option() :: {nb_acceptors, non_neg_integer()}
                 | {ip, inet:ip_address()}
                 | {port, inet:port_number()}
                 | {cacertfile, file:name_all()}
                 | {certfile, file:name_all()}
-                | {keyfile, file:name_all()}.
+                | {keyfile, file:name_all()}
+                | {static_dir, {host_match(), static_directory()}}.
 -type options() :: [option()].
 -export_type([listener/0]).
 -export_type([options/0]).
@@ -81,7 +84,14 @@ start_listener(Listener, Handlers, Opts) ->
 
     %% routes
     Paths = leptus_router:paths(Handlers),
-    Dispatch = cowboy_router:compile(Paths),
+    %% serving static files
+    Paths1 = case opt(static_dir, Opts, undefined) of
+                 undefined ->
+                     [];
+                 Path ->
+                     leptus_router:static_file_routes(Path)
+             end,
+    Dispatch = cowboy_router:compile(Paths ++ Paths1),
     %% sort compiled routes
     Dispatch1 = leptus_router:sort_dispatch(Dispatch),
 
