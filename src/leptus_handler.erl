@@ -60,8 +60,8 @@ init(_Transport, Req, Ctx=#ctx{route=Route, handler=Handler,
                                               Ctx :: ctx().
 handle(_Req, Ctx) ->
     %% convert the http method to a lowercase atom
-    Func = http_method(leptus_req:method(Ctx#ctx.req_pid)),
-    handle_request(Func, Ctx).
+    MethodBin = leptus_req:method(Ctx#ctx.req_pid),
+    handle_request(http_method(MethodBin), MethodBin, Ctx).
 
 -spec terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
 terminate(Reason, _Req, Ctx) ->
@@ -81,6 +81,8 @@ http_method(<<"GET">>) -> get;
 http_method(<<"PUT">>) -> put;
 http_method(<<"POST">>) -> post;
 http_method(<<"DELETE">>) -> delete;
+%% just to deal with CORS preflight request
+http_method(<<"OPTIONS">>) -> options;
 http_method(_) -> not_allowed.
 
 %% -----------------------------------------------------------------------------
@@ -94,17 +96,29 @@ handler_init(Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
--spec handle_request(not_allowed, Ctx) ->
+-spec handle_request(not_allowed, binary(), Ctx) ->
                             {ok, cowboy_req:req(), Ctx} when Ctx :: ctx();
-                    (method(), Ctx) ->
+                    (options, binary(), Ctx) ->
+                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx();
+                    (method(), binary(), Ctx) ->
                             {ok, cowboy_req:req(), Ctx} when Ctx :: ctx().
-handle_request(not_allowed, Ctx=#ctx{handler=Handler, route=Route,
-                                     handler_state=HandlerState}) ->
+handle_request(not_allowed, _, Ctx=#ctx{handler=Handler, route=Route,
+                                        handler_state=HandlerState}) ->
     Response = method_not_allowed(Handler, Route, HandlerState),
     reply(Response, Ctx);
-handle_request(Func, Ctx=#ctx{handler=Handler, route=Route,
-                              handler_state=HandlerState, req_pid=Req}) ->
-    Response = case is_allowed(Handler, Func, Route, Req) of
+handle_request(options, _, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
+                                    handler_state=HandlerState}) ->
+    %% deal with CORS preflight request
+    Method = leptus_req:header(Req, <<"access-control-request-method">>),
+    case is_allowed(Handler, http_method(Method), Route, Method) of
+        true ->
+            reply({<<>>, HandlerState}, Ctx);
+        false ->
+            handle_request(not_allowed, <<>>, Ctx)
+    end;
+handle_request(Func, Method, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
+                                      handler_state=HandlerState}) ->
+    Response = case is_allowed(Handler, Func, Route, Method) of
                    true ->
                        case handler_is_authorized(Handler, Route, Req, HandlerState) of
                            {true, HandlerState1} ->
@@ -146,8 +160,8 @@ handler_is_authorized(Handler, Route, Req, HandlerState) ->
 %% Handler:allowed_methods/1
 %% check if method allowed
 %% -----------------------------------------------------------------------------
--spec is_allowed(handler(), method(), route(), req()) -> boolean().
-is_allowed(Handler, Func, Route, Req) ->
+-spec is_allowed(handler(), method(), route(), binary()) -> boolean().
+is_allowed(Handler, Func, Route, Method) ->
     %% check if Handler:Func/3 is exported
     case is_defined(Handler, Func) of
         true ->
@@ -156,7 +170,7 @@ is_allowed(Handler, Func, Route, Req) ->
             %% e.g.
             %%   lists:member(<<"GET">>, [<<"GET">>, <<"DELETE">>])
             %%
-            lists:member(leptus_req:method(Req), Handler:allowed_methods(Route));
+            lists:member(Method, Handler:allowed_methods(Route));
         false ->
             false
     end.
@@ -173,8 +187,11 @@ method_not_allowed(Handler, Route, HandlerState) ->
     %% e.g.
     %%   allowed_methods("/") -> [<<"GET">>, <<"POST">>]
     %%
-    {405, [{<<"allow">>, join_http_methods(Handler:allowed_methods(Route))}],
-     <<>>, HandlerState}.
+    {405, [{<<"allow">>, allowed_methods(Handler, Route)}], <<>>, HandlerState}.
+
+-spec allowed_methods(handler(), route()) -> binary().
+allowed_methods(Handler, Route) ->
+    join_http_methods(Handler:allowed_methods(Route)).
 
 %% -----------------------------------------------------------------------------
 %% Handler:cross_domains/3
@@ -190,20 +207,45 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
         <<>> ->
             {[], HandlerState};
         Origin ->
+            %% go on if the Origin header is present
             case is_defined(Handler, cross_domains) of
                 false ->
                     {[], HandlerState};
                 true ->
+                    %% go on if Handler:cross_domains/3 is exported
                     {HostMatches, HandlerState1} =
                         Handler:cross_domains(Route, Req, HandlerState),
-                    case origin_matches(Origin, HostMatches) of
+                    Host = case http_uri:parse(binary_to_list(Origin)) of
+                               {ok, {_, _, Host1, _, _, _}} -> Host1;
+                               _ -> Origin
+                           end,
+                    case origin_matches(Host, HostMatches) of
                         false ->
                             {[], HandlerState1};
+                        %% go on if Origin is allowed
                         true ->
-                            {[{<<"access-control-allow-origin">>, Origin}],
+                            {cors_headers(Handler, Route, Origin, Req),
                              HandlerState1}
                     end
             end
+    end.
+
+-spec is_preflight(req()) -> boolean().
+is_preflight(Req) ->
+    case leptus_req:header(Req, <<"access-control-request-method">>) of
+        <<>> -> false;
+        _ -> true
+    end.
+
+-spec cors_headers(handler(), route(), binary(), req()) -> headers().
+cors_headers(Handler, Route, Origin, Req) ->
+    AccessControlAllowOrigin = {<<"access-control-allow-origin">>, Origin},
+    case is_preflight(Req) of
+        true ->
+            [AccessControlAllowOrigin|[{<<"access-control-allow-methods">>,
+                                        allowed_methods(Handler, Route)}]];
+        false ->
+            [AccessControlAllowOrigin]
     end.
 
 %% -----------------------------------------------------------------------------
