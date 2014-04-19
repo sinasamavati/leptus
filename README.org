@@ -28,7 +28,7 @@
    #+END_SRC
 
    NOTE: if you prefer [[https://github.com/talentdeficit/jsx][jsx]] rather than [[https://github.com/davisp/jiffy][jiffy]]
-   the environment variable `USE_JSX` must be set to `true` when getting
+   the environment variable ~USE_JSX~ must be set to ~true~ when getting
    dependencies and/or compiling.
 
    i.e.
@@ -71,7 +71,7 @@
    #+BEGIN_SRC erlang
    1> c(hello).
    2> leptus:start_listener(http, [{'_', [{hello, undefined_state}]}]).
-   Leptus 0.4.0 started on http://127.0.0.1:8080
+   Leptus started on http://127.0.0.1:8080
    #+END_SRC
 
    #+BEGIN_SRC
@@ -86,6 +86,7 @@
    - Supports basic authentication
    - Can be upgraded while it's running (no stopping is required)
    - Supports HTTPS and SPDY
+   - Provides a simple way for dealing with Cross-Origin Resource Sharing
 
 ** Documentation
 
