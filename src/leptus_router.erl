@@ -67,7 +67,7 @@ sort_dispatch(Dispatch) ->
 %% -----------------------------------------------------------------------------
 %% make routes to serve static files using cowboy static handler
 %% -----------------------------------------------------------------------------
-static_file_routes({HostMatch, priv_dir, App, Dir}) ->
+static_file_routes({HostMatch, {priv_dir, App, Dir}}) ->
     Dir1 = filename:join(leptus_utils:priv_dir(App), Dir),
     static_file_routes({HostMatch, Dir1});
 static_file_routes({HostMatch, Dir}) ->
