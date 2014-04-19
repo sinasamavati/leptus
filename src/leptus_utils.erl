@@ -86,17 +86,16 @@ listener_handlers(Listener) ->
         not_found ->
             {error, not_found};
         #listener_bucket{handlers = Handlers} ->
-            F = fun({_, A}, Acc) ->
-                        Acc ++ A
-                end,
-            lists:foldl(F, [], Handlers)
+            Handlers
     end.
 
 %% -----------------------------------------------------------------------------
 %% print a running listener information
 %% -----------------------------------------------------------------------------
 print_listener_info(Listener) ->
-    Modules = [M || {M, _} <- listener_handlers(Listener)],
+    Handlers = lists:foldl(fun({_, A}, Acc) -> Acc ++ A end, [],
+                            listener_handlers(Listener)),
+    Modules = [M || {M, _} <- Handlers],
     F = fun(H) ->
                 Prefix = try H:prefix() of
                              X -> X
