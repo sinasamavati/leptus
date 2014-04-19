@@ -1,12 +1,31 @@
-%% This file is part of leptus, and released under the MIT license.
-%% See LICENSE for more information.
+%% The MIT License
+
+%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+
+%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%% of this software and associated documentation files (the "Software"), to deal
+%% in the Software without restriction, including without limitation the rights
+%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%% copies of the Software, and to permit persons to whom the Software is
+%% furnished to do so, subject to the following conditions:
+
+%% The above copyright notice and this permission notice shall be included in
+%% all copies or substantial portions of the Software.
+
+%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+%% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%% THE SOFTWARE.
 
 -module(leptus_config).
 -behaviour(gen_server).
 
--author("Sina Samavati <sina.samv@gmail.com>").
-
+%% -----------------------------------------------------------------------------
 %% gen_server
+%% -----------------------------------------------------------------------------
 -export([init/1]).
 -export([handle_call/3]).
 -export([handle_cast/2]).
@@ -14,6 +33,9 @@
 -export([terminate/2]).
 -export([code_change/3]).
 
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -export([start/0]).
 -export([start_link/0]).
 -export([stop/0]).
@@ -21,10 +43,10 @@
 -export([lookup/2]).
 -export([set/2]).
 -export([config_file/1]).
--export([priv_dir/1]).
 
-
+%% -----------------------------------------------------------------------------
 %% for test purposes
+%% -----------------------------------------------------------------------------
 -spec start() -> {ok, pid()} | {error, any()}.
 start() ->
     gen_server:start({local, ?MODULE}, ?MODULE, [], []).
@@ -37,12 +59,16 @@ start_link() ->
 stop() ->
     gen_server:cast(?MODULE, stop).
 
+%% -----------------------------------------------------------------------------
 %% find a k/v
+%% -----------------------------------------------------------------------------
 -spec lookup(any()) -> any() | undefined.
 lookup(Key) ->
     lookup(Key, undefined).
 
+%% -----------------------------------------------------------------------------
 %% find a k/v and return Default if not found
+%% -----------------------------------------------------------------------------
 -spec lookup(any(), Default) -> any() | Default.
 lookup(Key, Default) ->
     case ets:lookup(?MODULE, Key) of
@@ -54,32 +80,28 @@ lookup(Key, Default) ->
             V
     end.
 
+%% -----------------------------------------------------------------------------
 %% set a k/v
+%% -----------------------------------------------------------------------------
 -spec set(any(), any()) -> ok.
 set(Key, Value) ->
     gen_server:call(?MODULE, {set, {Key, Value}}).
 
-%% read priv/leptus.config file
+%% -----------------------------------------------------------------------------
+%% read App/priv/leptus.config file
+%% -----------------------------------------------------------------------------
 config_file(App) ->
-    case file:consult(filename:join([priv_dir(App), "leptus.config"])) of
+    case file:consult(filename:join(leptus_utils:priv_dir(App),
+                                    "leptus.config")) of
         {ok, Terms} ->
             Terms;
         Else ->
             Else
     end.
 
-%% find the path to the priv directory in an application
-priv_dir(App) ->
-    case code:priv_dir(App) of
-        {error, bad_name} ->
-            Ebin = filename:dirname(code:which(App)),
-            filename:join(filename:dirname(Ebin), "priv");
-        PrivDir ->
-            PrivDir
-    end.
-
-
+%% -----------------------------------------------------------------------------
 %% gen_server
+%% -----------------------------------------------------------------------------
 init([]) ->
     ets:new(?MODULE, [set, named_table, protected]),
     {ok, ?MODULE}.

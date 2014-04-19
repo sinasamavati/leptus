@@ -1,129 +1,140 @@
-%% This file is part of leptus, and released under the MIT license.
-%% See LICENSE for more information.
+%% The MIT License
+
+%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+
+%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%% of this software and associated documentation files (the "Software"), to deal
+%% in the Software without restriction, including without limitation the rights
+%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%% copies of the Software, and to permit persons to whom the Software is
+%% furnished to do so, subject to the following conditions:
+
+%% The above copyright notice and this permission notice shall be included in
+%% all copies or substantial portions of the Software.
+
+%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+%% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%% THE SOFTWARE.
 
 -module(leptus_handler).
--author("Sina Samavati <sina.samv@gmail.com>").
 
 %% cowboy callbacks
 -export([init/3]).
 -export([handle/2]).
 -export([terminate/3]).
 
--type handler() :: module().
--type route() :: cowboy_router:route_match().
--type status() :: non_neg_integer() | binary().
+-include("leptus.hrl").
+
+%% -----------------------------------------------------------------------------
+%% types
+%% -----------------------------------------------------------------------------
+-type req() :: pid().
+-type status() :: non_neg_integer() | binary() | atom().
 -type headers() :: cowboy:http_headers().
--type body() :: binary() | string() | {json | msgpack, json_term()}.
--type handler_state() :: any().
+-type body() :: binary() | string() | {json | msgpack, leptus_json:json_term()}
+              | {html, binary()}.
 -type method() :: get | put | post | delete.
--type json_term() :: [json_term()]
-                   | {binary() | atom(), json_term()}
-                   | true
-                   | false
-                   | null
-                   | integer()
-                   | float()
-                   | binary().
 -type response() :: {body(), handler_state()}
                   | {status(), body(), handler_state()}
                   | {status(), headers(), body(), handler_state()}.
 -type terminate_reason() :: {normal, timeout | shutdown} | {error, atom()}.
--type data_format() :: text | json | msgpack.
+-type data_format() :: text | json | msgpack | html.
+-type status_code() :: 100..101 | 200..206 | 300..307 | 400..417 | 500..505.
 
--record(ctx, {
-          handler :: module(),
-          route :: route(),
-          handler_state :: handler_state()
-         }).
--type ctx() :: #ctx{}.
-
-
+%% -----------------------------------------------------------------------------
+%% cowboy callbacks
+%% -----------------------------------------------------------------------------
 -spec init({module(), http}, Req, Ctx) ->
-                  {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
-init(_Transport, Req, Ctx) ->
-    Handler = get_handler(Ctx),
-    Route = get_route(Ctx),
-    HandlerState = get_handler_state(Ctx),
-    {ok, HandlerState1} = handler_init(Handler, Route, Req, HandlerState),
-    {ok, Req, set_handler_state(Ctx, HandlerState1)}.
+                  {ok, Req, Ctx} when Req :: cowboy_req:req(), Ctx :: ctx().
+init(_Transport, Req, Ctx=#ctx{route=Route, handler=Handler,
+                               handler_state=HandlerState}) ->
+    {ok, ReqPid} = leptus_req_sup:start_child(Req),
+    {ok, HandlerState1} = handler_init(Handler, Route, ReqPid, HandlerState),
+    {ok, Req, Ctx#ctx{handler_state = HandlerState1, req_pid = ReqPid}}.
 
-
--spec handle(Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
-handle(Req, Ctx) ->
-    Handler = get_handler(Ctx),
-    Route = get_route(Ctx),
-
+-spec handle(Req, Ctx) -> {ok, Req, Ctx} when Req :: cowboy_req:req(),
+                                              Ctx :: ctx().
+handle(_Req, Ctx) ->
     %% convert the http method to a lowercase atom
-    Func = http_method(leptus_req:method(Req)),
-    handle_request(Handler, Func, Route, Req, Ctx).
+    MethodBin = leptus_req:method(Ctx#ctx.req_pid),
+    handle_request(http_method(MethodBin), MethodBin, Ctx).
 
 -spec terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
-terminate(Reason, Req, Ctx) ->
-    handler_terminate(Reason, Req, Ctx).
+terminate(Reason, _Req, Ctx) ->
+    Res = handler_terminate(Reason, Ctx),
+    leptus_req:stop(Ctx#ctx.req_pid),
+    Res.
 
-
+%% -----------------------------------------------------------------------------
 %% internal
--spec get_handler(ctx()) -> handler().
-get_handler(Ctx) ->
-    Ctx#ctx.handler.
-
--spec get_route(ctx()) -> route().
-get_route(Ctx) ->
-    Ctx#ctx.route.
-
--spec get_handler_state(ctx()) -> any().
-get_handler_state(Ctx) ->
-    Ctx#ctx.handler_state.
-
--spec set_handler_state(Ctx, any()) -> Ctx when Ctx::ctx().
-set_handler_state(Ctx, HandlerState) ->
-    Ctx#ctx{handler_state=HandlerState}.
-
+%% -----------------------------------------------------------------------------
 -spec is_defined(module(), atom()) -> boolean().
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
 
--spec http_method(binary()) -> method() | badarg.
+-spec http_method(binary()) -> method() | not_allowed.
 http_method(<<"GET">>) -> get;
 http_method(<<"PUT">>) -> put;
 http_method(<<"POST">>) -> post;
 http_method(<<"DELETE">>) -> delete;
-http_method(_) -> badarg.
+%% just to deal with CORS preflight request
+http_method(<<"OPTIONS">>) -> options;
+http_method(_) -> not_allowed.
 
+%% -----------------------------------------------------------------------------
+%% Handler:init/3
+%% -----------------------------------------------------------------------------
 -spec handler_init(handler(), route(), Req, handler_state()) ->
-                          {ok, handler_state()} when Req::cowboy_req:req().
+                          {ok, handler_state()} when Req :: req().
 handler_init(Handler, Route, Req, HandlerState) ->
     Handler:init(Route, Req, HandlerState).
 
--spec handle_request(handler(), method() | badarg, route(), Req, Ctx) ->
-                            {ok, Req, Ctx} when Req::cowboy_req:req(),
-                                                Ctx::ctx().
-handle_request(Handler, badarg, Route, Req, Ctx) ->
-    Response = method_not_allowed(Handler, Route, get_handler_state(Ctx)),
-    reply(Response, Req, Ctx);
-handle_request(Handler, Func, Route, Req, Ctx) ->
-    HandlerState = get_handler_state(Ctx),
-    Response = case is_defined(Handler, Func) of
+%% -----------------------------------------------------------------------------
+%% Handler:Method/3 (Method :: get | put | post | delete)
+%% -----------------------------------------------------------------------------
+-spec handle_request(not_allowed, binary(), Ctx) ->
+                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx();
+                    (options, binary(), Ctx) ->
+                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx();
+                    (method(), binary(), Ctx) ->
+                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx().
+handle_request(not_allowed, _, Ctx=#ctx{handler=Handler, route=Route,
+                                        handler_state=HandlerState}) ->
+    Response = method_not_allowed(Handler, Route, HandlerState),
+    reply(Response, Ctx);
+handle_request(options, _, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
+                                    handler_state=HandlerState}) ->
+    %% deal with CORS preflight request
+    Method = leptus_req:header(Req, <<"access-control-request-method">>),
+    case is_allowed(Handler, http_method(Method), Route, Method) of
+        true ->
+            reply({<<>>, HandlerState}, Ctx);
+        false ->
+            handle_request(not_allowed, <<>>, Ctx)
+    end;
+handle_request(Func, Method, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
+                                      handler_state=HandlerState}) ->
+    Response = case is_allowed(Handler, Func, Route, Method) of
                    true ->
                        case handler_is_authorized(Handler, Route, Req, HandlerState) of
                            {true, HandlerState1} ->
-                               %% method not allowed if function doesn't match
-                               try
-                                   Handler:Func(Route, Req, HandlerState1)
-                               catch
-                                   error:function_clause ->
-                                       method_not_allowed(Handler, Route, HandlerState)
-                               end;
+                               Handler:Func(Route, Req, HandlerState1);
                            {false, Res} ->
                                Res
                        end;
                    false ->
-                       %% method not allowed if function is not exported
                        method_not_allowed(Handler, Route, HandlerState)
                end,
-    reply(Response, Req, Ctx).
+    reply(Response, Ctx).
 
--spec handler_is_authorized(handler(), route(), cowboy_req:req(), handler_state()) ->
+%% -----------------------------------------------------------------------------
+%% Handler:is_authorized/3
+%% -----------------------------------------------------------------------------
+-spec handler_is_authorized(handler(), route(), req(), handler_state()) ->
                                    {true, handler_state()} | {false, response()}.
 handler_is_authorized(Handler, Route, Req, HandlerState) ->
     %%
@@ -145,52 +156,252 @@ handler_is_authorized(Handler, Route, Req, HandlerState) ->
             {true, HandlerState}
     end.
 
+%% -----------------------------------------------------------------------------
+%% Handler:allowed_methods/1
+%% check if method allowed
+%% -----------------------------------------------------------------------------
+-spec is_allowed(handler(), method(), route(), binary()) -> boolean().
+is_allowed(Handler, Func, Route, Method) ->
+    %% check if Handler:Func/3 is exported
+    case is_defined(Handler, Func) of
+        true ->
+            %% check if the http method is existing in allowed methods list
+            %%
+            %% e.g.
+            %%   lists:member(<<"GET">>, [<<"GET">>, <<"DELETE">>])
+            %%
+            lists:member(Method, Handler:allowed_methods(Route));
+        false ->
+            false
+    end.
+
+%% -----------------------------------------------------------------------------
+%% Handler:allowed_methods/1
+%% 'Method not Allowed' response
+%% -----------------------------------------------------------------------------
 -spec method_not_allowed(handler(), route(), handler_state()) -> response().
 method_not_allowed(Handler, Route, HandlerState) ->
     %%
     %% spec:
-    %%   allowed_methods(Route) -> binary()
+    %%   allowed_methods(Route) -> [binary()]
     %% e.g.
-    %%   allowed_methods("/") -> <<"GET, "POST">>
+    %%   allowed_methods("/") -> [<<"GET">>, <<"POST">>]
     %%
-    {405, [{<<"allow">>, Handler:allowed_methods(Route)}], <<>>, HandlerState}.
+    {405, [{<<"allow">>, allowed_methods(Handler, Route)}], <<>>, HandlerState}.
 
--spec reply(response(), Req, Ctx) -> {ok, Req, Ctx} when Req::cowboy_req:req(),
-                                                         Ctx::ctx().
-reply({Body, HandlerState}, Req, Ctx) ->
-    reply(200, [], Body, HandlerState, Req, Ctx);
-reply({Status, Body, HandlerState}, Req, Ctx) ->
-    reply(Status, [], Body, HandlerState, Req, Ctx);
-reply({Status, Headers, Body, HandlerState}, Req, Ctx) ->
-    reply(Status, Headers, Body, HandlerState, Req, Ctx).
+-spec allowed_methods(handler(), route()) -> binary().
+allowed_methods(Handler, Route) ->
+    join_http_methods(Handler:allowed_methods(Route)).
 
--spec reply(status(), headers(), body(), handler_state(), Req, Ctx) ->
-                   {ok, Req, Ctx} when Req::cowboy_req:req(), Ctx::ctx().
-reply(Status, Headers, Body, HandlerState, Req, Ctx) ->
-    {
-      Headers1,
-      Body1
-    } = case Body of
-            {json, Body2} ->
-                {set_content_type(json, Headers), leptus_json:encode(Body2)};
-            {msgpack, Body2}->
-                {set_content_type(msgpack, Headers), msgpack:pack({Body2}, [jiffy])};
-            _ ->
-                {set_content_type(text, Headers), Body}
-        end,
-    {ok, Req1} = cowboy_req:reply(Status, Headers1, Body1, Req),
-    {ok, Req1, set_handler_state(Ctx, HandlerState)}.
+%% -----------------------------------------------------------------------------
+%% Handler:cross_domains/3
+%% -----------------------------------------------------------------------------
+-spec handler_cross_domains(handler(), route(), req(), handler_state()) ->
+                                   {headers(), handler_state()}.
+handler_cross_domains(Handler, Route, Req, HandlerState) ->
+    %%
+    %% spec:
+    %%   Handler:cross_domains(Route, Req, State) -> {[string()], State}
+    %%
+    case leptus_req:header(Req, <<"origin">>) of
+        <<>> ->
+            {[], HandlerState};
+        Origin ->
+            %% go on if the Origin header is present
+            case is_defined(Handler, cross_domains) of
+                false ->
+                    {[], HandlerState};
+                true ->
+                    %% go on if Handler:cross_domains/3 is exported
+                    {HostMatches, HandlerState1} =
+                        Handler:cross_domains(Route, Req, HandlerState),
+                    Host = case http_uri:parse(binary_to_list(Origin)) of
+                               {ok, {_, _, Host1, _, _, _}} -> Host1;
+                               _ -> Origin
+                           end,
+                    case origin_matches(Host, HostMatches) of
+                        false ->
+                            {[], HandlerState1};
+                        %% go on if Origin is allowed
+                        true ->
+                            {cors_headers(Handler, Route, Origin, Req),
+                             HandlerState1}
+                    end
+            end
+    end.
 
--spec handler_terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
-handler_terminate(Reason, Req, Ctx) ->
-    Handler = get_handler(Ctx),
-    HandlerState = get_handler_state(Ctx),
-    Handler:terminate(Reason, Req, HandlerState).
+-spec is_preflight(req()) -> boolean().
+is_preflight(Req) ->
+    case leptus_req:header(Req, <<"access-control-request-method">>) of
+        <<>> -> false;
+        _ -> true
+    end.
 
--spec set_content_type(data_format(), headers()) -> headers().
-set_content_type(Type, Headers) ->
-    [{<<"content-type">>, content_type(Type)}|Headers].
+-spec cors_headers(handler(), route(), binary(), req()) -> headers().
+cors_headers(Handler, Route, Origin, Req) ->
+    AccessControlAllowOrigin = {<<"access-control-allow-origin">>, Origin},
+    case is_preflight(Req) of
+        true ->
+            [AccessControlAllowOrigin|[{<<"access-control-allow-methods">>,
+                                        allowed_methods(Handler, Route)}]];
+        false ->
+            [AccessControlAllowOrigin]
+    end.
 
+%% -----------------------------------------------------------------------------
+%% Handler:terminate/4
+%% -----------------------------------------------------------------------------
+-spec handler_terminate(terminate_reason(), ctx()) -> ok.
+handler_terminate(Reason, #ctx{handler=Handler, route=Route, req_pid=Req,
+                               handler_state=HandlerState}) ->
+    Handler:terminate(Reason, Route, Req, HandlerState).
+
+%% -----------------------------------------------------------------------------
+%% reply - prepare stauts, headers and body
+%% -----------------------------------------------------------------------------
+-spec reply(response(), Ctx) -> {ok, Req, Ctx} when Req :: cowboy_req:req(),
+                                                    Ctx :: ctx().
+reply({Body, HandlerState}, Ctx) ->
+    reply(200, [], Body, Ctx#ctx{handler_state = HandlerState});
+reply({Status, Body, HandlerState}, Ctx) ->
+    reply(Status, [], Body, Ctx#ctx{handler_state = HandlerState});
+reply({Status, Headers, Body, HandlerState}, Ctx) ->
+    reply(Status, Headers, Body, Ctx#ctx{handler_state = HandlerState}).
+
+-spec reply(status(), headers(), body(), Ctx) ->
+                   {ok, Req, Ctx} when Req :: cowboy_req:req(), Ctx :: ctx().
+reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
+                                      handler_state=HandlerState}) ->
+    %% encode Body and set content-type
+    {Headers1, Body1} = prepare_headers_body(Headers, Body),
+
+    %% enable or disable cross-domain requests
+    {Headers2, HandlerState1} = handler_cross_domains(Handler, Route, Req,
+                                                      HandlerState),
+    Headers3 = Headers1 ++ Headers2,
+    Req1 = leptus_req:get_req(Req),
+    {ok, Req2} = cowboy_req:reply(status(Status), Headers3, Body1, Req1),
+    leptus_req:set_req(Req, Req2),
+    {ok, Req2, Ctx#ctx{handler_state = HandlerState1}}.
+
+-spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
+prepare_headers_body(Headers, {json, Body}) ->
+    {maybe_set_content_type(json, Headers), leptus_json:encode(Body)};
+prepare_headers_body(Headers, {msgpack, Body}) ->
+    {maybe_set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
+prepare_headers_body(Headers, {html, Body}) ->
+    {maybe_set_content_type(html, Headers), Body};
+prepare_headers_body(Headers, Body) ->
+    {maybe_set_content_type(text, Headers), Body}.
+
+-spec maybe_set_content_type(data_format(), headers()) -> headers().
+maybe_set_content_type(Type, Headers) ->
+    Headers1 = [{cowboy_bstr:to_lower(N), V} || {N, V} <- Headers],
+    %% don't set content-type if it's already been set
+    case lists:keyfind(<<"content-type">>, 1, Headers1) of
+        {_, _} ->
+            Headers;
+        _ ->
+            [{<<"content-type">>, content_type(Type)}|Headers]
+    end.
+
+-spec content_type(data_format()) -> binary().
 content_type(text) -> <<"text/plain">>;
+content_type(html) -> <<"text/html">>;
 content_type(json) -> <<"application/json">>;
 content_type(msgpack) -> <<"application/x-msgpack">>.
+
+%% -----------------------------------------------------------------------------
+%% HTTP status code bindings
+%% -----------------------------------------------------------------------------
+-spec status(atom() | A) -> status_code() | A when A :: any().
+%% informational
+status(continue) -> 100;
+status(switching_protocols) -> 101;
+%% successful
+status(ok) -> 200;
+status(created) -> 201;
+status(accepted) -> 202;
+status(non_authoritative_information) -> 203;
+status(no_content) -> 204;
+status(reset_content) -> 205;
+status(partial_content) -> 206;
+%% redirection
+status(multiple_choices) -> 300;
+status(moved_permanently) -> 301;
+status(found) -> 302;
+status(see_other) -> 303;
+status(not_modified) -> 304;
+status(use_proxy) -> 305;
+status(switch_proxy) -> 306;
+status(temporary_redirect) -> 307;
+%% client error
+status(bad_request) -> 400;
+status(unauthorized) -> 401;
+status(payment_required) -> 402;
+status(forbidden) -> 403;
+status(not_found) -> 404;
+status(not_allowed) -> 405;
+status(not_acceptable) -> 406;
+status(proxy_authentication_required) -> 407;
+status(request_timeout) -> 408;
+status(conflict) -> 409;
+status(gone) -> 410;
+status(length_required) -> 411;
+status(precondition_failed) -> 412;
+status(request_entity_too_large) -> 413;
+status(request_uri_too_long) -> 414;
+status(unsupported_media_type) -> 415;
+status(requested_range_not_satisfiable) -> 416;
+status(expectation_failed) -> 417;
+%% server error
+status(internal_server_error) -> 500;
+status(not_implemented) -> 501;
+status(bad_gateway) -> 502;
+status(service_unavailable) -> 503;
+status(gateway_timeout) -> 504;
+status(http_version_not_supported) -> 505;
+status(A) -> A.
+
+-spec join_http_methods([binary()]) -> binary().
+join_http_methods(Methods) ->
+    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
+    Allow.
+
+-spec compile_host(string() | binary()) -> [[binary() | atom()]] | [atom()].
+compile_host(HostMatch) ->
+    [X || {X, _, _} <- cowboy_router:compile([{HostMatch, []}])].
+
+-spec origin_matches(binary(), [atom() | string() | binary()]) -> boolean().
+origin_matches(Origin, HostMatches) ->
+    %% [<<"com">>, <<"example">>], "example.com", [...]
+    domains_match(hd(compile_host(Origin)), HostMatches).
+
+%% TODO: write tests
+domains_match(_, []) ->
+    false;
+domains_match(OriginToks, [HostMatch|Rest]) ->
+    %% [<<"com">>, <<"example">>], [[<<"com">>, <<"example">>], ...], [...]
+    domains_match(OriginToks, compile_host(HostMatch), Rest, OriginToks).
+
+domains_match(_, ['_'], _, _) ->
+    true;
+domains_match(OriginToks, [HMToks|Rest], HostMatches, OriginToks) ->
+    domain_matches(OriginToks, HMToks, Rest, HostMatches, OriginToks).
+
+domain_matches(OriginToks, OriginToks, _, _, _) ->
+    true;
+domain_matches(_, ['...'|_], _, _, _) ->
+    true;
+domain_matches([], [], _, _, _) ->
+    true;
+domain_matches([_|T], ['_'|HMToks], Rest, HostMatches, OriginToksReplica) ->
+    domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
+domain_matches([H|T], [H|HMToks], Rest, HostMatches, OriginToksReplica) ->
+    domain_matches(T, HMToks, Rest, HostMatches, OriginToksReplica);
+domain_matches(_, _, [HMToks|Rest], HostMatches, OriginToksReplica) ->
+    domain_matches(OriginToksReplica, HMToks, Rest, HostMatches, OriginToksReplica);
+domain_matches(_, _, [], [], _) ->
+    false;
+domain_matches(_, _, [], HostMatches, OriginToks) ->
+    domains_match(OriginToks, HostMatches).

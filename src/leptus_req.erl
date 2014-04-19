@@ -1,9 +1,45 @@
-%% This file is part of leptus, and released under the MIT license.
-%% See LICENSE for more information.
+%% The MIT License
+
+%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+
+%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%% of this software and associated documentation files (the "Software"), to deal
+%% in the Software without restriction, including without limitation the rights
+%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%% copies of the Software, and to permit persons to whom the Software is
+%% furnished to do so, subject to the following conditions:
+
+%% The above copyright notice and this permission notice shall be included in
+%% all copies or substantial portions of the Software.
+
+%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+%% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%% THE SOFTWARE.
 
 %% a bunch of functions to deal with a request
 -module(leptus_req).
+-behaviour(gen_server).
 
+%% -----------------------------------------------------------------------------
+%% gen_server callbacks
+%% -----------------------------------------------------------------------------
+-export([init/1]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([terminate/2]).
+-export([code_change/3]).
+
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
+-export([start_link/1]).
+-export([start/1]).
+-export([stop/1]).
 -export([param/2]).
 -export([params/1]).
 -export([qs/1]).
@@ -17,51 +53,60 @@
 -export([header/2]).
 -export([parse_header/2]).
 -export([auth/2]).
+-export([get_req/1]).
+-export([set_req/2]).
 
--include("leptus.hrl").
+-spec start_link(cowboy_req:req()) -> {ok, pid()} | ignore | {error, any()}.
+start_link(Req) ->
+    gen_server:start_link(?MODULE, Req, []).
 
+-spec start(cowboy_req:req()) -> {ok, pid()} | ignore | {error, any()}.
+start(Req) ->
+    gen_server:start(?MODULE, Req, []).
 
--spec param(atom(), cowboy_req:req()) -> binary() | undefined.
-param(Key, Req) ->
-    invoke(binding, [Key, Req]).
+-spec stop(pid()) -> ok.
+stop(Pid) ->
+    gen_server:call(Pid, stop).
 
--spec params(cowboy_req:req()) -> [{atom(), binary()}] | undefined.
-params(Req) ->
-    Req#http_req.bindings.
+-spec param(pid(), atom()) -> binary() | undefined.
+param(Pid, Key) ->
+    invoke(Pid, binding, [Key]).
 
--spec qs(cowboy_req:req()) -> binary().
-qs(Req) ->
-    Req#http_req.qs.
+-spec params(pid()) -> [{atom(), binary()}] | undefined.
+params(Pid) ->
+    invoke(Pid, bindings, []).
 
--spec qs_val(binary(), cowboy_req:req()) -> binary() | undefined.
-qs_val(Key, Req) ->
-    invoke(qs_val, [Key, Req]).
+-spec qs(pid()) -> binary().
+qs(Pid) ->
+    invoke(Pid, qs, []).
 
--spec uri(cowboy_req:req()) -> binary().
-uri(Req) ->
-    Path = Req#http_req.path,
-    QS = Req#http_req.qs,
+-spec qs_val(pid(), binary()) -> binary() | undefined.
+qs_val(Pid, Key) ->
+    invoke(Pid, qs_val, [Key]).
+
+-spec uri(pid()) -> binary().
+uri(Pid) ->
+    Path = invoke(Pid, path, []),
+    QS = qs(Pid),
 
     %% e.g <<"/path?query=string">>
-
     case QS of
         <<>> -> Path;
         _ -> <<Path/binary, "?", QS/binary>>
     end.
 
--spec version(cowboy_req:req()) -> cowboy:http_version().
-version(Req) ->
-    Req#http_req.version.
+-spec version(pid()) -> cowboy:http_version().
+version(Pid) ->
+    invoke(Pid, version, []).
 
--spec method(cowboy_req:req()) -> binary().
-method(Req) ->
-    Req#http_req.method.
+-spec method(pid()) -> binary().
+method(Pid) ->
+    invoke(Pid, method, []).
 
--spec body(cowboy_req:req()) -> binary() | leptus_handler:json_term() |
-                                msgpack:msgpack_term() | {error, any()}.
-body(Req) ->
-    Body = body_raw(Req),
-    case header(<<"content-type">>, Req) of
+-spec body(pid()) -> binary() | leptus_json:json_term() | {error, any()}.
+body(Pid) ->
+    Body = body_raw(Pid),
+    case header(Pid, <<"content-type">>) of
         %% decode body if content-type is json or msgpack
         <<"application/json">> ->
             leptus_json:decode(Body);
@@ -76,39 +121,91 @@ body(Req) ->
             Body
     end.
 
--spec body_raw(cowboy_req:req()) -> binary().
-body_raw(Req) ->
-    invoke(body, [infinity, Req]).
+-spec body_raw(pid()) -> binary().
+body_raw(Pid) ->
+    invoke(Pid, body, [infinity]).
 
--spec body_qs(cowboy_req:req()) -> [{binary(), binary() | true}].
-body_qs(Req) ->
-    invoke(body_qs, [infinity, Req]).
+-spec body_qs(pid()) -> [{binary(), binary() | true}].
+body_qs(Pid) ->
+    invoke(Pid, body_qs, [infinity]).
 
--spec header(binary(), cowboy_req:req()) -> binary().
-header(Name, Req) ->
-    invoke(header, [Name, Req, <<>>]).
+-spec header(pid(), binary()) -> binary().
+header(Pid, Name) ->
+    invoke(Pid, header, [Name, <<>>]).
 
--spec parse_header(binary(), cowboy_req:req()) -> any() | <<>>.
-parse_header(Name, Req) ->
-    invoke(parse_header, [Name, Req, <<>>]).
+-spec parse_header(pid(), binary()) -> any() | <<>>.
+parse_header(Pid, Name) ->
+    invoke(Pid, parse_header, [Name, <<>>]).
 
--spec auth(basic, cowboy_req:req()) -> {binary(), binary()} | <<>> | error.
-auth(basic, Req) ->
-    case parse_header(<<"authorization">>, Req) of
+-spec auth(pid(), basic) -> {binary(), binary()} | <<>> | error.
+auth(Pid, basic) ->
+    case parse_header(Pid, <<"authorization">>) of
         {<<"basic">>, UserPass} ->
             UserPass;
         Value ->
             Value
     end.
 
+-spec get_req(pid()) -> cowboy_req:req().
+get_req(Pid) ->
+    gen_server:call(Pid, get_req).
 
+-spec set_req(pid(), cowboy_req:req()) -> ok.
+set_req(Pid, Req) ->
+    gen_server:cast(Pid, {set_req, Req}).
+
+%% -----------------------------------------------------------------------------
+%% gen_server callbacks
+%% -----------------------------------------------------------------------------
+init(Req) ->
+    {ok, Req}.
+
+handle_call(stop, _From, Req) ->
+    {stop, shutdown, ok, Req};
+handle_call(get_req, _From, Req) ->
+    {reply, Req, Req};
+handle_call({F, A}, _From, Req) ->
+    {Value, Req1} = call_cowboy_req(F, A, Req),
+    {reply, Value, Req1}.
+
+handle_cast({set_req, NewReq}, _Req) ->
+    {noreply, NewReq};
+handle_cast(_Msg, Req) ->
+    {noreply, Req}.
+
+handle_info(_Info, Req) ->
+    {noreply, Req}.
+
+terminate(_Reason, _Req) ->
+    ok.
+
+code_change(_OldVsn, Req, _Extra) ->
+    {ok, Req}.
+
+%% -----------------------------------------------------------------------------
 %% internal
-invoke(F, A) ->
-    get_value(apply(cowboy_req, F, A)).
+%% -----------------------------------------------------------------------------
+-spec invoke(pid(), atom(), [any()]) -> any().
+invoke(Pid, F, A) ->
+    gen_server:call(Pid, {F, A}).
 
-get_value({Value, _}) ->
-    Value;
-get_value({ok, Value, _}) ->
-    Value;
-get_value({undefined, Value, _}) ->
-    Value.
+-spec call_cowboy_req(atom(), [any()], cowboy_req:req()) -> any().
+call_cowboy_req(F, [], Req) ->
+    call_cowboy_req(F, [Req]);
+call_cowboy_req(F, [H|T], Req) ->
+    A = [H] ++ [Req|T],
+    call_cowboy_req(F, A).
+
+-spec call_cowboy_req(atom(), [any()]) -> any().
+call_cowboy_req(F, A) ->
+    get_vr(apply(cowboy_req, F, A)).
+
+%% get value and req
+-spec get_vr({atom(), any(), cowboy_req:req()} | {any(), cowboy_req:req()}) ->
+                    {any(), cowboy_req:req()}.
+get_vr(Res={_, _}) ->
+    Res;
+get_vr({ok, Value, Req}) ->
+    {Value, Req};
+get_vr({undefined, Value, Req}) ->
+    {Value, Req}.

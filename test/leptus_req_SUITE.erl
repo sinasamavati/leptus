@@ -3,6 +3,11 @@
 
 -module(leptus_req_SUITE).
 
+-include_lib("common_test/include/ct.hrl").
+
+-export([init_per_testcase/2]).
+-export([end_per_testcase/2]).
+-export([groups/0]).
 -export([all/0]).
 -export([param/1]).
 -export([params/1]).
@@ -17,100 +22,173 @@
 -export([parse_header/1]).
 -export([auth/1]).
 -export([method/1]).
+-export([get_req/1]).
+-export([set_req/1]).
 
+init_per_testcase(_, Config) ->
+    {ok, Req1} = leptus_req:start(req1()),
+    {ok, Req2} = leptus_req:start(req2()),
+    {ok, Req3} = leptus_req:start(req3()),
+    {ok, Req4} = leptus_req:start(req4()),
+    {ok, Req5} = leptus_req:start(req5()),
+    {ok, Req6} = leptus_req:start(req6()),
+    {ok, Req7} = leptus_req:start(req7()),
+    [{req1, Req1}, {req2, Req2}, {req3, Req3}, {req4, Req4}, {req5, Req5},
+     {req6, Req6}, {req7, Req7}] ++ Config.
+
+end_per_testcase(_, Config) ->
+    ok = leptus_req:stop(?config(req1, Config)),
+    ok = leptus_req:stop(?config(req2, Config)),
+    ok = leptus_req:stop(?config(req3, Config)),
+    ok = leptus_req:stop(?config(req4, Config)),
+    ok = leptus_req:stop(?config(req5, Config)),
+    ok = leptus_req:stop(?config(req6, Config)),
+    ok = leptus_req:stop(?config(req7, Config)),
+    Config.
+
+groups() ->
+    [{main, [parallel], [
+                         param, params, qs, qs_val, uri, version, body, body_raw,
+                         body_qs, header, parse_header, auth, method, get_req,
+                         set_req
+                        ]}].
 
 all() ->
-    [
-     param, params, qs, qs_val, uri, version, body, body_raw, body_qs,
-     header, parse_header, auth, method
-    ].
+    [{group, main}].
 
-param(_) ->
-    true = undefined =:= leptus_req:param(namez, req1()),
-    <<"leptus">> = leptus_req:param(name, req1()),
-    true = undefined =:= leptus_req:param(idz, req1()),
-    <<"97dba1">> = leptus_req:param(id, req1()),
-    undefined = leptus_req:param(id, req2()).
+param(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    true = undefined =:= leptus_req:param(Req1, namez),
+    <<"leptus">> = leptus_req:param(Req1, name),
+    true = undefined =:= leptus_req:param(Req1, idz),
+    <<"97dba1">> = leptus_req:param(Req1, id),
+    undefined = leptus_req:param(Req2, id).
 
-params(_) ->
-    [{name, <<"leptus">>}, {id, <<"97dba1">>}] = leptus_req:params(req1()),
-    [] = leptus_req:params(req2()).
+params(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    [{name, <<"leptus">>}, {id, <<"97dba1">>}] = leptus_req:params(Req1),
+    [] = leptus_req:params(Req2).
 
-qs(_) ->
-    <<>> = leptus_req:qs(req1()),
-    <<"q=123&b=456">> = leptus_req:qs(req2()).
+qs(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    <<>> = leptus_req:qs(Req1),
+    <<"q=123&b=456">> = leptus_req:qs(Req2).
 
-qs_val(_) ->
-    undefined = leptus_req:qs_val(<<"p">>, req1()),
-    undefined = leptus_req:qs_val(<<"p">>, req2()),
-    <<"123">> = leptus_req:qs_val(<<"q">>, req2()),
-    <<"456">> = leptus_req:qs_val(<<"b">>, req2()).
+qs_val(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    undefined = leptus_req:qs_val(Req1, <<"p">>),
+    undefined = leptus_req:qs_val(Req2, <<"p">>),
+    <<"123">> = leptus_req:qs_val(Req2, <<"q">>),
+    <<"456">> = leptus_req:qs_val(Req2, <<"b">>).
 
-uri(_) ->
-    <<"/hello/leptus/97dba1">> = leptus_req:uri(req1()),
-    <<"/hello/leptus/97dba1?q=123&b=456">> = leptus_req:uri(req2()).
+uri(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    <<"/hello/leptus/97dba1">> = leptus_req:uri(Req1),
+    <<"/hello/leptus/97dba1?q=123&b=456">> = leptus_req:uri(Req2).
 
-version(_) ->
-    'HTTP/1.1' = leptus_req:version(req1()),
-    'HTTP/1.1' = leptus_req:version(req2()).
+version(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    'HTTP/1.1' = leptus_req:version(Req1),
+    'HTTP/1.1' = leptus_req:version(Req2).
 
-body(_) ->
-    <<>> = leptus_req:body(req1()),
-    <<"AAAAAAAAAAA">> = leptus_req:body(req3()),
+body(Config) ->
+    Req1 = ?config(req1, Config),
+    Req3 = ?config(req3, Config),
+    Req5 = ?config(req5, Config),
+    Req7 = ?config(req7, Config),
+
+    <<>> = leptus_req:body(Req1),
+    <<"AAAAAAAAAAA">> = leptus_req:body(Req3),
 
     %% when content-type is application/json
     [
      {<<"firstname">>, <<"Sina">>},
      {<<"lastname">>, <<"Samavati">>}
-    ] = leptus_req:body(req5()),
+    ] = leptus_req:body(Req5),
 
     %% when content-type is application/x-msgpack
     [
      {<<"abc">>, 123},
      {456, <<"def">>}
-    ] = leptus_req:body(req7()).
+    ] = leptus_req:body(Req7).
 
-body_raw(_) ->
-    <<>> = leptus_req:body_raw(req1()),
-    <<"AAAAAAAAAAA">> = leptus_req:body_raw(req3()),
+body_raw(Config) ->
+    Req1 = ?config(req1, Config),
+    Req3 = ?config(req3, Config),
+    Req5 = ?config(req5, Config),
+    <<>> = leptus_req:body_raw(Req1),
+    <<"AAAAAAAAAAA">> = leptus_req:body_raw(Req3),
     <<"{\"firstname\": \"Sina\","
-      " \"lastname\": \"Samavati\"}">> = leptus_req:body_raw(req5()).
+      " \"lastname\": \"Samavati\"}">> = leptus_req:body_raw(Req5).
 
-body_qs(_) ->
-    [] = leptus_req:body_qs(req1()),
-    [{<<"AAAAAAAAAAA">>, true}] = leptus_req:body_qs(req3()),
+body_qs(Config) ->
+    Req1 = ?config(req1, Config),
+    Req3 = ?config(req3, Config),
+    Req4 = ?config(req4, Config),
+    [] = leptus_req:body_qs(Req1),
+    [{<<"AAAAAAAAAAA">>, true}] = leptus_req:body_qs(Req3),
     [
      {<<"firstname">>, <<"Sina">>},
      {<<"lastname">>, <<"Samavati">>}
-    ] = leptus_req:body_qs(req4()).
+    ] = leptus_req:body_qs(Req4).
 
-header(_) ->
-    <<>> = leptus_req:header(<<"content-type">>, req1()),
-    <<"localhost:8080">> = leptus_req:header(<<"host">>, req2()),
+header(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    Req3 = ?config(req3, Config),
+    <<>> = leptus_req:header(Req1, <<"content-type">>),
+    <<"localhost:8080">> = leptus_req:header(Req2, <<"host">>),
     <<"application/x-www-form-urlencoded">> =
-        leptus_req:header(<<"content-type">>, req3()).
+        leptus_req:header(Req3, <<"content-type">>).
 
-parse_header(_) ->
-    <<>> = leptus_req:parse_header(<<"content-type">>, req1()),
-    <<"localhost:8080">> = leptus_req:parse_header(<<"host">>, req2()),
+parse_header(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    Req3 = ?config(req3, Config),
+    Req5 = ?config(req5, Config),
+    <<>> = leptus_req:parse_header(Req1, <<"content-type">>),
+    <<"localhost:8080">> = leptus_req:parse_header(Req2, <<"host">>),
     {
       <<"application">>, <<"x-www-form-urlencoded">>, []
-    } = leptus_req:parse_header(<<"content-type">>, req3()),
+    } = leptus_req:parse_header(Req3, <<"content-type">>),
     {
       <<"application">>, <<"json">>, []
-    } = leptus_req:parse_header(<<"content-type">>, req5()).
+    } = leptus_req:parse_header(Req5, <<"content-type">>).
 
-auth(_) ->
-    <<>> = leptus_req:auth(basic, req1()),
-    <<>> = leptus_req:auth(basic, req3()),
-    {<<"123">>, <<"456">>} = leptus_req:auth(basic, req5()),
-    error = leptus_req:auth(basic, req6()).
+auth(Config) ->
+    Req1 = ?config(req1, Config),
+    Req3 = ?config(req3, Config),
+    Req5 = ?config(req5, Config),
+    Req6 = ?config(req6, Config),
+    <<>> = leptus_req:auth(Req1, basic),
+    <<>> = leptus_req:auth(Req3, basic),
+    {<<"123">>, <<"456">>} = leptus_req:auth(Req5, basic),
+    error = leptus_req:auth(Req6, basic).
 
-method(_) ->
-    <<"GET">> = leptus_req:method(req1()),
-    <<"GET">> = leptus_req:method(req2()),
-    <<"POST">> = leptus_req:method(req3()),
-    <<"POST">> = leptus_req:method(req4()).
+method(Config) ->
+    Req1 = ?config(req1, Config),
+    Req2 = ?config(req2, Config),
+    Req3 = ?config(req3, Config),
+    Req4 = ?config(req4, Config),
+    <<"GET">> = leptus_req:method(Req1),
+    <<"GET">> = leptus_req:method(Req2),
+    <<"POST">> = leptus_req:method(Req3),
+    <<"POST">> = leptus_req:method(Req4).
+
+get_req(Config) ->
+    Req1 = ?config(req1, Config),
+    true = (req1() =:= leptus_req:get_req(Req1)).
+
+set_req(Config) ->
+    Req1 = ?config(req1, Config),
+    ok = leptus_req:set_req(Req1, empty),
+    empty = leptus_req:get_req(Req1).
 
 
 req1() ->

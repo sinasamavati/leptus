@@ -1,133 +1,213 @@
-%% This file is part of leptus, and released under the MIT license.
-%% See LICENSE for more information.
+%% The MIT License
+
+%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+
+%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%% of this software and associated documentation files (the "Software"), to deal
+%% in the Software without restriction, including without limitation the rights
+%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%% copies of the Software, and to permit persons to whom the Software is
+%% furnished to do so, subject to the following conditions:
+
+%% The above copyright notice and this permission notice shall be included in
+%% all copies or substantial portions of the Software.
+
+%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+%% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%% THE SOFTWARE.
 
 -module(leptus).
--author("Sina Samavati <sina.samv@gmail.com>").
 
--export([start_http/1]).
--export([start_https/1]).
--export([start_spdy/1]).
--export([stop_http/0]).
--export([stop_https/0]).
--export([stop_spdy/0]).
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
+-export([start_listener/2]).
+-export([start_listener/3]).
 -export([upgrade/0]).
 -export([upgrade/1]).
+-export([upgrade/2]).
+-export([stop_listener/1]).
+-export([running_listeners/0]).
+-export([listener_uptime/1]).
 
+-include("leptus_stats.hrl").
+
+%% -----------------------------------------------------------------------------
+%% types
+%% -----------------------------------------------------------------------------
+-type host_match() :: term().
 -type handler() :: {module(), State :: any()}.
--type handlers() :: [handler()].
+-type handlers() :: [{host_match(), [handler()]}].
+-export_type([handler/0]).
 -export_type([handlers/0]).
 
 -type listener() :: http | https | spdy.
--type listener_option() :: {ip, inet:ip_address()}
-                         | {port, inet:port_number()}
-                         | {hostmatch, cowboy_router:dispatch_match()}
-                         | {cacertfile, file:name_all()}
-                         | {certfile, file:name_all()}
-                         | {keyfile, file:name_all()}.
--type option() :: {handlers, handlers()} | {listener(), [listener_option()]}.
+-type static_directory() :: Dir :: file:name()
+                          | {priv_dir, App :: atom(), Dir :: file:name()}.
+-type option() :: {nb_acceptors, non_neg_integer()}
+                | {ip, inet:ip_address()}
+                | {port, inet:port_number()}
+                | {cacertfile, file:name_all()}
+                | {certfile, file:name_all()}
+                | {keyfile, file:name_all()}
+                | {static_dir, {host_match(), static_directory()}}.
 -type options() :: [option()].
+-export_type([listener/0]).
 -export_type([options/0]).
 
--type app_name() :: atom().
 
+%% -----------------------------------------------------------------------------
+%% start a listener
+%% -----------------------------------------------------------------------------
+-spec start_listener(listener(), atom() | handlers()) ->
+                            {ok, pid()} | {error, any()}.
+start_listener(Listener, App) when is_atom(App)->
+    %% App/priv/leptus.config should have two sections:
+    %%   * {handlers, handlers()}
+    %%   * {options, options()}
+    Conf = leptus_config:config_file(App),
+    Handlers = opt(handlers, Conf, []),
+    Opts = opt(options, Conf, []),
+    start_listener(Listener, Handlers, Opts);
+start_listener(Listener, Handlers) ->
+    start_listener(Listener, Handlers, []).
 
--spec start_http(options() | app_name()) -> {ok, pid()} | {error, any()}.
-start_http(OptionsOrApp) ->
-    start_listener(http, OptionsOrApp).
-
--spec start_https(options() | app_name()) -> {ok, pid()} | {error, any()}.
-start_https(OptionsOrApp) ->
-    start_listener(https, OptionsOrApp).
-
--spec start_spdy(options() | app_name()) -> {ok, pid()} | {error, any()}.
-start_spdy(OptionsOrApp) ->
-    start_listener(spdy, OptionsOrApp).
-
--spec stop_http() -> ok | {error, not_found}.
-stop_http() ->
-    cowboy:stop_listener(leptus_http).
-
--spec stop_https() -> ok | {error, not_found}.
-stop_https() ->
-    cowboy:stop_listener(leptus_https).
-
--spec stop_spdy() -> ok | {error, not_found}.
-stop_spdy() ->
-    cowboy:stop_listener(leptus_spdy).
-
--spec upgrade() -> ok.
-upgrade() ->
-    upgrade(leptus_config:lookup(handlers)).
-
--spec upgrade(handlers()) -> ok.
-upgrade(Handlers) ->
-    leptus_config:set(handlers, Handlers),
-    Handlers = leptus_config:lookup(handlers), %% make sure it's been set
-    Listener = leptus_config:lookup(listener),
-    Paths = leptus_router:paths(Handlers),
-    HostMatch = get_value(hostmatch, leptus_config:lookup(Listener), '_'),
-    Dispatch = cowboy_router:compile([{HostMatch, Paths}]),
-    Ref = get_ref_name(Listener),
-    cowboy:set_env(Ref, dispatch, Dispatch).
-
-
-%% internal
-start_listener(Listener, App) when is_atom(App) ->
-    Options = leptus_config:config_file(App),
-    Ref = get_ref_name(Listener),
-    start_listener(Ref, Listener, Options);
-start_listener(Listener, Options) when is_list(Options) ->
-    Ref = get_ref_name(Listener),
-    start_listener(Ref, Listener, Options);
-start_listener(_, _) ->
-    error(badarg).
-
-start_listener(Ref, Listener, Options) ->
+-spec start_listener(listener(), handlers(), options()) ->
+                            {ok, pid()} | {error, any()}.
+start_listener(Listener, Handlers, Opts) ->
     ensure_deps_started(),
     ensure_started(leptus),
 
-    Handlers = get_value(handlers, Options, []),
-    ListenerOpts = get_value(Listener, Options, []),
-    %% initialize 'listener', 'handlers' and Listener k/v
-    leptus_config:set(listener, Listener),
-    leptus_config:set(Listener, ListenerOpts),
-    leptus_config:set(handlers, Handlers),
-
     %% routes
     Paths = leptus_router:paths(Handlers),
-    HostMatch = get_value(hostmatch, ListenerOpts, '_'),
-    Dispatch = cowboy_router:compile([{HostMatch, Paths}]),
+    %% serving static files
+    Paths1 = case opt(static_dir, Opts, undefined) of
+                 undefined ->
+                     [];
+                 Path ->
+                     leptus_router:static_file_routes(Path)
+             end,
+    Dispatch = cowboy_router:compile(Paths ++ Paths1),
     %% sort compiled routes
     Dispatch1 = leptus_router:sort_dispatch(Dispatch),
 
-    %% basic listener configuration
-    IP = get_value(ip, ListenerOpts, {127, 0, 0, 1}),
-    Port = get_value(port, ListenerOpts, 8080),
-
     ListenerFunc = get_listener_func(Listener),
-    cowboy:ListenerFunc(Ref, 100,
-                        [{ip, IP}, {port, Port}] ++ get_extra_opts(ListenerOpts),
-                        [
-                         {env, [{dispatch, Dispatch1}]},
-                         {onresponse, fun leptus_hooks:console_log/4}
-                        ]).
+    Ref = get_ref(Listener),
+    NbAcceptors = opt(nb_acceptors, Opts, 100),
 
+    %% basic listener configuration
+    IP = opt(ip, Opts, {127, 0, 0, 1}),
+    Port = opt(port, Opts, 8080),
+
+    ListenerOpts = listener_opts(Listener, IP, Port, Opts),
+    Res = cowboy:ListenerFunc(Ref, NbAcceptors, ListenerOpts,
+                              [
+                               {env, [{dispatch, Dispatch1}]},
+                               {onresponse, fun leptus_hooks:console_log/4}
+                              ]),
+    case Res of
+        {ok, _} ->
+            update_listener_bucket({Listener, {Handlers, ListenerOpts}}),
+            print_info(IP, Port);
+        _ ->
+            ok
+    end,
+    Res.
+
+%% -----------------------------------------------------------------------------
+%% upgrade running listeners
+%% -----------------------------------------------------------------------------
+-spec upgrade() -> ok.
+upgrade() ->
+    upgrade(running_listeners()).
+
+-spec upgrade([listener()]) -> ok.
+upgrade(Listeners) ->
+    LH = [{L, leptus_utils:listener_handlers(L)} || L <- Listeners],
+    [upgrade(L, H) || {L, H} <- LH],
+    ok.
+
+%% -----------------------------------------------------------------------------
+%% upgrade a listener
+%% -----------------------------------------------------------------------------
+-spec upgrade(listener(), handlers()) -> ok.
+upgrade(Listener, Handlers) ->
+    Paths = leptus_router:paths(Handlers),
+    Dispatch = cowboy_router:compile(Paths),
+    %% sort compiled routes
+    Dispatch1 = leptus_router:sort_dispatch(Dispatch),
+    Ref = get_ref(Listener),
+    cowboy:set_env(Ref, dispatch, Dispatch1).
+
+%% -----------------------------------------------------------------------------
+%% stop a listener
+%% -----------------------------------------------------------------------------
+-spec stop_listener(listener()) -> ok | {error, not_found}.
+stop_listener(Listener) ->
+    cowboy:stop_listener(get_ref(Listener)).
+
+%% -----------------------------------------------------------------------------
+%% get a list of running listeners
+%% -----------------------------------------------------------------------------
+-spec running_listeners() -> [listener()].
+running_listeners() ->
+    F = fun({L, _}, Acc) ->
+                [L|Acc]
+        end,
+    lists:foldr(F, [], leptus_config:lookup(listeners)).
+
+%% -----------------------------------------------------------------------------
+%% get uptime of a running listener
+%% -----------------------------------------------------------------------------
+-spec listener_uptime(listener()) -> {Days :: integer(), calendar:time()} |
+                                     {error, not_found}.
+listener_uptime(Listener) ->
+    case leptus_utils:listener_bucket(Listener) of
+        not_found ->
+            {error, not_found};
+        #listener_bucket{started_timestamp = Started} ->
+            StartedDatetime = calendar:now_to_local_time(Started),
+            Localtime = calendar:local_time(),
+            calendar:time_difference(StartedDatetime, Localtime)
+    end.
+
+%% -----------------------------------------------------------------------------
+%% internal
+%% -----------------------------------------------------------------------------
+-spec get_listener_func(listener()) -> atom().
 get_listener_func(http) -> start_http;
 get_listener_func(https) -> start_https;
 get_listener_func(spdy) -> start_spdy.
 
-get_ref_name(http) -> leptus_http;
-get_ref_name(https) -> leptus_https;
-get_ref_name(spdy) -> leptus_spdy.
+-spec get_ref(listener()) -> ranch:ref().
+get_ref(http) -> leptus_http;
+get_ref(https) -> leptus_https;
+get_ref(spdy) -> leptus_spdy.
 
-%% get extra options based on listener
-get_extra_opts(http) -> [];
-get_extra_opts(Listener) ->
-    Opts = leptus_config:lookup(Listener),
+%% -----------------------------------------------------------------------------
+%% listener options
+%% -----------------------------------------------------------------------------
+-spec listener_opts(listener(), inet:ip_address(), inet:port_number(),
+                    options()) -> options().
+listener_opts(http, IP, Port, _) ->
+    basic_listener_opts(IP, Port);
+listener_opts(_, IP, Port, Opts) ->
+    basic_listener_opts(IP, Port) ++ extra_listener_opts(Opts).
+
+-spec basic_listener_opts(inet:ip_address(), inet:port_number()) -> options().
+basic_listener_opts(IP, Port) ->
+    [{ip, IP}, {port, Port}].
+
+-spec extra_listener_opts(options()) -> options().
+extra_listener_opts(Opts) ->
     [
-     {cacertfile, get_value(cacertfile, Opts, "")},
-     {certfile, get_value(certfile, Opts, "")},
-     {keyfile, get_value(keyfile, Opts, "")}
+     {cacertfile, opt(cacertfile, Opts, "")},
+     {certfile, opt(certfile, Opts, "")},
+     {keyfile, opt(keyfile, Opts, "")}
     ].
 
 ensure_started(App) ->
@@ -145,12 +225,32 @@ ensure_deps_started() ->
     ensure_started(cowlib),
     ensure_started(cowboy).
 
-get_value(_, [], Default) ->
-    Default;
-get_value(_, undefined, Default) ->
-    Default;
-get_value(Key, Opts, Default) ->
-    case lists:keyfind(Key, 1, Opts) of
-        {_, V} -> V;
-        _ -> Default
-    end.
+opt(Key, [{Key, Value}|_], _) ->
+    Value;
+opt(Key, [_|Rest], Default) ->
+    opt(Key, Rest, Default);
+opt(_, [], Default) ->
+    Default.
+
+inet_ip_to_str({A, B, C, D}) ->
+    lists:concat([A, ".", B, ".", C, ".", D]).
+
+%% -----------------------------------------------------------------------------
+%% print the version number and what ip/port it's started on
+%% -----------------------------------------------------------------------------
+print_info(IP, Port) ->
+    {ok, Vsn} = application:get_key(leptus, vsn),
+    io:format("Leptus ~s started on http://~s:~p~n",
+              [Vsn, inet_ip_to_str(IP), Port]).
+
+%% -----------------------------------------------------------------------------
+%% update leptus_config ETS table
+%% keep handlers and options in an ETS table
+%% -----------------------------------------------------------------------------
+update_listener_bucket({Listener, {Handlers, Opts}}) ->
+    %% [{Listener, Bucket}]
+    Bucket = #listener_bucket{handlers = Handlers, options = Opts,
+                              started_timestamp = now()},
+    Listeners = leptus_config:lookup(listeners, []),
+    Listeners1 = lists:keystore(Listener, 1, Listeners, {Listener, Bucket}),
+    leptus_config:set(listeners, Listeners1).

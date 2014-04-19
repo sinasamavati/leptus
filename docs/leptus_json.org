@@ -1,0 +1,61 @@
+#+TITLE:    leptus_json module
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil num:nil
+
+* leptus_json module
+  :PROPERTIES:
+  :CUSTOM_ID: leptus_json
+  :END:
+
+  This is a simple bridge for encoding/decoding JSON.
+
+  This module requires either jiffy or jsx.
+
+** Types
+   :PROPERTIES:
+   :CUSTOM_ID: types
+   :END:
+
+   #+BEGIN_SRC erlang
+   json_term() = [json_term()]
+               | {binary() | atom(), json_term()}
+               | true
+               | false
+               | null
+               | integer()
+               | float()
+               | binary()
+   #+END_SRC
+
+** Functions
+   :PROPERTIES:
+   :CUSTOM_ID: functions
+   :END:
+
+*** encode/1
+    :PROPERTIES:
+    :CUSTOM_ID: encode-1
+    :END:
+
+    #+BEGIN_SRC erlang
+    encode(json_term()) -> binary()
+    #+END_SRC
+
+*** decode/1
+    :PROPERTIES:
+    :CUSTOM_ID: decode-1
+    :END:
+
+    #+BEGIN_SRC erlang
+    decode(binary()) -> json_term()
+    #+END_SRC
+
+*** parser/0
+    :PROPERTIES:
+    :CUSTOM_ID: parser-1
+    :END:
+
+    #+BEGIN_SRC erlang
+    parser() -> jiffy | jsx
+    #+END_SRC

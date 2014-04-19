@@ -1,0 +1,36 @@
+#+TITLE:    Types
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil num:nil
+
+* Types
+  :PROPERTIES:
+  :CUSTOM_ID: types
+  :END:
+
+  #+BEGIN_SRC erlang
+  json_term() = [json_term()]
+                | {binary() | atom(), json_term()}
+                | true
+                | false
+                | null
+                | integer()
+                | float()
+                | binary()
+
+  Route    = cowboy_router:route_match()
+  Req      = pid()
+  Status   = non_neg_integer() | binary()
+  Body     = string() | binary() | {json | msgpack, json_term()} | {html, binary()}
+  Headers  = [{binary(), iodata()}]
+
+  Handlers = [{HostMatch, [{module(), any()}]}]
+
+  Option   = {nb_acceptors, non_neg_integer()}
+           | {ip, inet:ip_address()}
+           | {port, inet:port_number()}
+           | {cacertfile, file:name_all()}
+           | {certfile, file:name_all()}
+           | {keyfile, file:name_all()}
+  Options  = [Option]
+  #+END_SRC

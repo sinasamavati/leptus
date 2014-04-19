@@ -1,0 +1,133 @@
+#+TITLE:    leptus_utils module
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil num:nil
+
+* leptus_utils module
+  :PROPERTIES:
+  :CUSTOM_ID: leptus_utils
+  :END:
+
+  This module provides a bunch of utilities.
+
+** Functions
+   :PROPERTIES:
+   :CUSTOM_ID: functions
+   :END:
+
+*** priv_dir/1
+    :PROPERTIES:
+    :CUSTOM_ID: priv_dir-1
+    :END:
+
+    Finds the path to the priv directory in an application.
+
+    #+BEGIN_SRC erlang
+    priv_dir(App) -> Dir | {error, bad_name}
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    App = atom()
+    Dir = file:name_all()
+    #+END_SRC
+
+*** paginator/1
+    :PROPERTIES:
+    :CUSTOM_ID: paginator-1
+    :END:
+
+    Generates a paginator function for paginating a list of elements.
+
+    #+BEGIN_SRC erlang
+    paginator(NElementPerPage) -> fun((Page, Objects) -> Objects)
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    NElementPerPage = Page = non_neg_integer()
+    Objects = [any()]
+    #+END_SRC
+
+    Example:
+
+    #+BEGIN_SRC erlang
+    1> Page = paginator(3).
+    2> Page(2, [1,2,3,4,5,6,7,8,9]).
+    [4,5,6]
+    #+END_SRC
+
+*** paginate/3
+    :PROPERTIES:
+    :CUSTOM_ID: paginate-3
+    :END:
+
+    Paginates a list of objects.
+
+    #+BEGIN_SRC erlang
+    paginate(NElementPerPage, Objects, Page) -> Objects
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    NElementPerPage = Page = non_neg_integer()
+    Objects = [any()]
+    #+END_SRC
+
+*** listener_bucket/1
+    :PROPERTIES:
+    :CUSTOM_ID: listener_bucket-1
+    :END:
+
+    Returns a running listener bucket that includes Handlers, Options and
+    started date-time.
+
+    #+BEGIN_SRC erlang
+    listener_bucket(Listener) -> Bucket | not_found
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    Listener = http | https | spdy
+    Bucket = #listener_bucket{}
+    #+END_SRC
+
+*** listener_handlers/1
+    :PROPERTIES:
+    :CUSTOM_ID: listener_handlers-1
+    :END:
+
+    Returns handlers of a running listener.
+
+    #+BEGIN_SRC erlang
+    listener_handlers(Listener) -> Handlers | {error, not_found}
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    Listener = http | https | spdy
+    Handlers = [{module(), State :: any()}]
+    #+END_SRC
+
+*** print_listener_info/1
+    :PROPERTIES:
+    :CUSTOM_ID: print_listener_info-1
+    :END:
+
+    Prints a running listener information, such as handlers, routes and allowed
+    methods.
+
+    #+BEGIN_SRC erlang
+    print_listener_info(Listener) -> ok
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    Listener = http | https | spdy
+    #+END_SRC

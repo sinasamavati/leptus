@@ -1,11 +1,31 @@
-%% This file is part of leptus, and released under the MIT license.
-%% See LICENSE for more information.
+%% The MIT License
+
+%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+
+%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%% of this software and associated documentation files (the "Software"), to deal
+%% in the Software without restriction, including without limitation the rights
+%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%% copies of the Software, and to permit persons to whom the Software is
+%% furnished to do so, subject to the following conditions:
+
+%% The above copyright notice and this permission notice shall be included in
+%% all copies or substantial portions of the Software.
+
+%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+%% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%% THE SOFTWARE.
 
 -module(leptus_http_SUITE).
 
 %% Common Test callbacks
 -export([init_per_suite/1]).
 -export([end_per_suite/1]).
+-export([groups/0]).
 -export([all/0]).
 
 %% test cases
@@ -29,17 +49,20 @@ init_per_suite(Config) ->
                 {leptus_http3, []},
                 {leptus_http4, []}
                ],
-    {ok, _} = leptus:start_http([{handlers, Handlers}]),
+    {ok, _} = leptus:start_listener(http, [{'_', Handlers}], []),
     Config.
 
 end_per_suite(_Config) ->
-    ok = leptus:stop_http().
+    ok = leptus:stop_listener(http).
+
+groups() ->
+    [{main, [parallel], [
+                         http_get, http_post, http_put, http_delete, http_404,
+                         http_405, http_is_authorized, http_msgpack
+                        ]}].
 
 all() ->
-    [
-     http_get, http_post, http_put, http_delete,
-     http_404, http_405, http_is_authorized, http_msgpack
-    ].
+    [{group, main}].
 
 http_get(_) ->
     M = <<"GET">>,

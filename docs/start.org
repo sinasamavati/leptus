@@ -1,0 +1,67 @@
+#+TITLE:    Start
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil num:nil
+
+* Start
+   :PROPERTIES:
+   :CUSTOM_ID: start
+   :END:
+
+** Types
+   :PROPERTIES:
+   :CUSTOM_ID: types
+   :END:
+
+   #+BEGIN_SRC erlang
+   Listener          = http | https | spdy
+   AppName           = atom()
+   HandlersOrAppName = Handlers | AppName
+   #+END_SRC
+
+** leptus functions
+   :PROPERTIES:
+   :CUSTOM_ID: leptus-functions
+   :END:
+
+*** start_listener/2
+    :PROPERTIES:
+    :CUSTOM_ID: start_listener-2
+    :END:
+
+    Starts leptus' dependencies and a listener of type ~Listener~.
+
+    #+BEGIN_SRC erlang
+    leptus:start_listener(Listener, HandlersOrAppName) -> {ok, pid()}
+    #+END_SRC
+
+    Note that if you use ~AppName~, Leptus will try to read
+    ~AppName/priv/leptus.config~ file
+    which should contain
+    #+BEGIN_SRC erlang
+    {handlers, Handlers}.
+    {options, Options}.
+    #+END_SRC
+
+*** start_listener/3
+    :PROPERTIES:
+    :CUSTOM_ID: start_listener-3
+    :END:
+
+    Starts leptus' dependencies and a listener of type ~Listener~.
+
+    #+BEGIN_SRC erlang
+    leptus:start_listener(Listener, Handlers, Options) -> {ok, pid()}
+    #+END_SRC
+
+** The OTP way
+
+   The way everyone recommends for starting an OTP application:
+   #+BEGIN_SRC erlang
+   application:start(crypto),
+   application:start(ranch),
+   application:start(cowboy),
+   application:start(leptus).
+   #+END_SRC
+   and then the function that is described above should be called to start a
+   listener.

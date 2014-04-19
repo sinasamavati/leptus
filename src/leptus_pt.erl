@@ -1,8 +1,26 @@
-%% This file is part of leptus, and released under the MIT license.
-%% See LICENSE for more information.
+%% The MIT License
+
+%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+
+%% Permission is hereby granted, free of charge, to any person obtaining a copy
+%% of this software and associated documentation files (the "Software"), to deal
+%% in the Software without restriction, including without limitation the rights
+%% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+%% copies of the Software, and to permit persons to whom the Software is
+%% furnished to do so, subject to the following conditions:
+
+%% The above copyright notice and this permission notice shall be included in
+%% all copies or substantial portions of the Software.
+
+%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+%% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+%% THE SOFTWARE.
 
 -module(leptus_pt).
--author("Sina Samavati <sina.samv@gmail.com>").
 
 -export([parse_transform/2]).
 
@@ -85,7 +103,7 @@ add_routes_fun(AST) ->
             ].
 
 %% add allowed_methods/1 to the module
-%% e.g allowed_methods("/") -> <<"GET, PUT">>.
+%% e.g allowed_methods("/") -> [<<"GET">>, <<"PUT">>].
 add_allowed_methods_fun(AST) ->
     {eof, L} = lists:keyfind(eof, 1, AST),
     Routes = get(routes),
@@ -95,7 +113,7 @@ add_allowed_methods_fun(AST) ->
              {function, L, allowed_methods, 1,
               [
                {clause, L, [{string, L, R}], [],
-                [erl_parse:abstract(join(get(R)), [{line, L}])]
+                [erl_parse:abstract(get(R), [{line, L}])]
                } || R <- Routes
               ]
              },
@@ -114,7 +132,3 @@ http_method(get) -> <<"GET">>;
 http_method(put) -> <<"PUT">>;
 http_method(post) -> <<"POST">>;
 http_method(delete) -> <<"DELETE">>.
-
-join(Methods) ->
-    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
-    Allow.
