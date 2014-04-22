@@ -25,6 +25,7 @@
           | {cacertfile, file:name_all()}
           | {certfile, file:name_all()}
           | {keyfile, file:name_all()}
+          | {static_dir, Dir :: file:name() | {priv_dir, App :: atom(), Dir :: file:name()}}
    Options = [Option]
 
    #+END_SRC
