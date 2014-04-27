@@ -1,11 +1,11 @@
-#+TITLE:    Request
+#+TITLE:    leptus_req module
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
 #+OPTIONS:  ^:nil num:nil
 
-* Request
+* leptus_req module
   :PROPERTIES:
-  :CUSTOM_ID: request
+  :CUSTOM_ID: leptus_req
   :END:
 
   Please keep it in mind that ~Req~ is a Pid that should be used as the first
@@ -16,7 +16,7 @@
 
 ** Types
    :PROPERTIES:
-   :CUSTOM_ID:       types
+   :CUSTOM_ID: types
    :END:
 
    #+BEGIN_SRC erlang
