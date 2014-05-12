@@ -131,16 +131,16 @@
     If one of the HostMatches and the Origin match, ~access-control-allow-origin~
     will be set to the Origin.
 
-*** is_authorized/3
+*** is_authenticated/3
     :PROPERTIES:
-    :CUSTOM_ID: is_authorized-3
+    :CUSTOM_ID: is_authenticated-3
     :END:
 
      Exporting this callback in a module means that every request that should
      come to the handler needs authorization.
 
      #+BEGIN_SRC erlang
-     Module:is_authorized(Route, Req, State) ->
+     Module:is_authenticated(Route, Req, State) ->
          {true, State} | {false, Body, State} | {false, Headers, Body, State}
      #+END_SRC
 
@@ -152,7 +152,7 @@
     This is an optional callback which lets you handle if a request has
     permission to proceed or not.
 
-    This callback will be called after ~Module:is_authorized/3~ if
+    This callback will be called after ~Module:is_authenticated/3~ if
     authentication succeeds.
 
     #+BEGIN_SRC erlang
@@ -218,7 +218,7 @@
    -export([prefix/0]).
    -export([init/3]).
    -export([cross_domains/3]).
-   -export([is_authorized/3]).
+   -export([is_authenticated/3]).
    -export([get/3]).
    -export([terminate/4]).
 
@@ -230,7 +230,7 @@
    cross_domains(_Route, _Req, State) ->
        {['_'], State}.
 
-   is_authorized(_Route, _Req, State) ->
+   is_authenticated(_Route, _Req, State) ->
        {true, State}.
 
    %% Route is "/1" in every callback in this example,

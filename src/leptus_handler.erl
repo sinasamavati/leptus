@@ -132,19 +132,19 @@ handle_request(Func, Method, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
     reply(Response, Ctx).
 
 %% -----------------------------------------------------------------------------
-%% Handler:is_authorized/3 and Handler:has_permission/3
+%% Handler:is_authenticated/3 and Handler:has_permission/3
 %% -----------------------------------------------------------------------------
 -spec authorization(handler(), route(), req(), handler_state()) ->
                            {true, handler_state()} | {false, response()}.
 authorization(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
-    %%   is_authorized(Route, Req, State) ->
+    %%   is_authenticated(Route, Req, State) ->
     %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
     %%
-    Res = case is_defined(Handler, is_authorized) of
+    Res = case is_defined(Handler, is_authenticated) of
               true ->
-                  case Handler:is_authorized(Route, Req, HandlerState) of
+                  case Handler:is_authenticated(Route, Req, HandlerState) of
                       {true, HandlerState1} ->
                           {true, HandlerState1};
                       {false, Body, HandlerState1} ->

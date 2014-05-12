@@ -25,7 +25,7 @@
 -export([routes/0]).
 -export([allowed_methods/1]).
 -export([init/3]).
--export([is_authorized/3]).
+-export([is_authenticated/3]).
 -export([has_permission/3]).
 -export([get/3]).
 -export([terminate/4]).
@@ -37,7 +37,7 @@ allowed_methods(_) -> [<<"GET">>].
 init(_Route, _Req, State) ->
     {ok, State}.
 
-is_authorized(_Route, Req, State) ->
+is_authenticated(_Route, Req, State) ->
     case leptus_req:auth(Req, basic) of
         {<<"123">>, <<"456">>} ->
             {true, no_perm};

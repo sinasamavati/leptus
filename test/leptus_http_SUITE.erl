@@ -35,7 +35,7 @@
 -export([http_delete/1]).
 -export([http_404/1]).
 -export([http_405/1]).
--export([http_is_authorized/1]).
+-export([http_is_authenticated/1]).
 -export([http_has_permission/1]).
 -export([http_msgpack/1]).
 
@@ -60,7 +60,7 @@ end_per_suite(_Config) ->
 groups() ->
     [{main, [parallel], [
                          http_get, http_post, http_put, http_delete, http_404,
-                         http_405, http_is_authorized, http_has_permission,
+                         http_405, http_is_authenticated, http_has_permission,
                          http_msgpack
                         ]}].
 
@@ -156,7 +156,7 @@ http_405(_) ->
     <<"GET, PUT, POST">> = F(H6),
     <<"DELETE">> = F(H7).
 
-http_is_authorized(_) ->
+http_is_authenticated(_) ->
     A1 = base64:encode(<<"123:456">>),
     A2 = base64:encode(<<"123:986">>),
     A3 = base64:encode(<<"sina:wrote_me">>),

@@ -25,7 +25,7 @@
 %% leptus callbacks
 -export([routes/0]).
 -export([init/3]).
--export([is_authorized/3]).
+-export([is_authenticated/3]).
 -export([allowed_methods/1]).
 -export([get/3]).
 -export([put/3]).
@@ -43,7 +43,7 @@ allowed_methods("/users/:id") -> [<<"GET">>, <<"PUT">>, <<"POST">>];
 allowed_methods("/users/:id/interests") -> [<<"GET">>];
 allowed_methods("/users/:id/profile") -> [<<"GET">>].
 
-is_authorized("/users/:id", Req, State) ->
+is_authenticated("/users/:id", Req, State) ->
     case leptus_req:method(Req) of
         <<"PUT">> ->
             check_auth(Req, State);
@@ -57,7 +57,7 @@ is_authorized("/users/:id", Req, State) ->
         _ ->
             {true, State}
     end;
-is_authorized(_Route, _Req, State) ->
+is_authenticated(_Route, _Req, State) ->
     {true, State}.
 
 get("/users/:id", Req, State) ->
