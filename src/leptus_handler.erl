@@ -120,7 +120,7 @@ handle_request(Func, Method, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
                                       handler_state=HandlerState}) ->
     Response = case is_allowed(Handler, Func, Route, Method) of
                    true ->
-                       case handler_is_authorized(Handler, Route, Req, HandlerState) of
+                       case authorization(Handler, Route, Req, HandlerState) of
                            {true, HandlerState1} ->
                                Handler:Func(Route, Req, HandlerState1);
                            {false, Res} ->
@@ -132,28 +132,52 @@ handle_request(Func, Method, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
     reply(Response, Ctx).
 
 %% -----------------------------------------------------------------------------
-%% Handler:is_authorized/3
+%% Handler:is_authorized/3 and Handler:has_permission/3
 %% -----------------------------------------------------------------------------
--spec handler_is_authorized(handler(), route(), req(), handler_state()) ->
-                                   {true, handler_state()} | {false, response()}.
-handler_is_authorized(Handler, Route, Req, HandlerState) ->
+-spec authorization(handler(), route(), req(), handler_state()) ->
+                           {true, handler_state()} | {false, response()}.
+authorization(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
     %%   is_authorized(Route, Req, State) ->
     %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
     %%
-    case is_defined(Handler, is_authorized) of
-        true ->
-            case Handler:is_authorized(Route, Req, HandlerState) of
-                {true, HandlerState1} ->
-                    {true, HandlerState1};
-                {false, Body, HandlerState1} ->
-                    {false, {401, Body, HandlerState1}};
-                {false, Headers, Body, HandlerState1} ->
-                    {false, {401, Headers, Body, HandlerState1}}
-            end;
-        false ->
-            {true, HandlerState}
+    Res = case is_defined(Handler, is_authorized) of
+              true ->
+                  case Handler:is_authorized(Route, Req, HandlerState) of
+                      {true, HandlerState1} ->
+                          {true, HandlerState1};
+                      {false, Body, HandlerState1} ->
+                          {false, {401, Body, HandlerState1}};
+                      {false, Headers, Body, HandlerState1} ->
+                          {false, {401, Headers, Body, HandlerState1}}
+                  end;
+              false ->
+                  {true, HandlerState}
+          end,
+
+    %%
+    %% spec:
+    %%   has_permission(Route, Req, State) ->
+    %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
+    %%
+    case Res of
+        {false, _} ->
+            Res;
+        {true, HandlerState2} ->
+            case is_defined(Handler, has_permission) of
+                true ->
+                    case Handler:has_permission(Route, Req, HandlerState2) of
+                        {true, HandlerState3} ->
+                            {true, HandlerState3};
+                        {false, Body1, HandlerState3} ->
+                            {false, {403, Body1, HandlerState3}};
+                        {false, Headers1, Body1, HandlerState3} ->
+                            {false, {403, Headers1, Body1, HandlerState3}}
+                    end;
+                false ->
+                    {true, HandlerState2}
+            end
     end.
 
 %% -----------------------------------------------------------------------------

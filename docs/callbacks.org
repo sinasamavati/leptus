@@ -144,6 +144,22 @@
          {true, State} | {false, Body, State} | {false, Headers, Body, State}
      #+END_SRC
 
+*** has_permission/3
+    :PROPERTIES:
+    :CUSTOM_ID: has_permission-3
+    :END:
+
+    This is an optional callback which lets you handle if a request has
+    permission to proceed or not.
+
+    This callback will be called after ~Module:is_authorized/3~ if
+    authentication succeeds.
+
+    #+BEGIN_SRC erlang
+    Module:has_permission(Route, Req, State) ->
+        {true, State} | {false, Body, State} | {false, Headers, Body, State}
+    #+END_SRC
+
 *** HttpMethod/3
     :PROPERTIES:
     :CUSTOM_ID: HttpMethod-3

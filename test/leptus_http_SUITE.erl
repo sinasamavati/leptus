@@ -36,6 +36,7 @@
 -export([http_404/1]).
 -export([http_405/1]).
 -export([http_is_authorized/1]).
+-export([http_has_permission/1]).
 -export([http_msgpack/1]).
 
 %% helpers
@@ -47,7 +48,8 @@ init_per_suite(Config) ->
                 {leptus_http1, []},
                 {leptus_http2, []},
                 {leptus_http3, []},
-                {leptus_http4, []}
+                {leptus_http4, []},
+                {leptus_http5, []}
                ],
     {ok, _} = leptus:start_listener(http, [{'_', Handlers}], []),
     Config.
@@ -58,7 +60,8 @@ end_per_suite(_Config) ->
 groups() ->
     [{main, [parallel], [
                          http_get, http_post, http_put, http_delete, http_404,
-                         http_405, http_is_authorized, http_msgpack
+                         http_405, http_is_authorized, http_has_permission,
+                         http_msgpack
                         ]}].
 
 all() ->
@@ -170,6 +173,16 @@ http_is_authorized(_) ->
     <<"{\"error\":\"unauthorized\"}">> = response_body(C),
     <<"application/json">> = proplists:get_value(<<"content-type">>, H1),
     <<"{\"error\":\"unauthorized\"}">> = response_body(C1).
+
+http_has_permission(_) ->
+    Auth = fun(D) -> [{<<"Authorization">>, <<"Basic ", D/binary>>}] end,
+    A1 = Auth(base64:encode(<<"123:456">>)),
+    A2 = Auth(base64:encode(<<"asdf:zxcv">>)),
+
+    {403, _, C1} = request(<<"GET">>, "/needs-perm", A1),
+    {200, _, C2} = request(<<"GET">>, "/needs-perm", A2),
+    <<"you don't have permission to do this shit!">> = response_body(C1),
+    <<"hah, see you got permission">> = response_body(C2).
 
 http_msgpack(_) ->
     M = <<"GET">>,
