@@ -37,6 +37,7 @@
      - [[callbacks.org#init3][init/3]]
      - [[callbacks.org#cross_domains3][cross_domains/3]]
      - [[callbacks.org#is_authorized3][is_authorized/3]]
+     - [[callbacks.org#has_permission3][has_permission/3]]
      - [[callbacks.org#httpmethod3][HttpMethod/3]]
      - [[callbacks.org#terminate4][terminate/4]]
 
