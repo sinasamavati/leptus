@@ -41,33 +41,48 @@
 -type response() :: {body(), handler_state()}
                   | {status(), body(), handler_state()}
                   | {status(), headers(), body(), handler_state()}.
--type terminate_reason() :: {normal, timeout | shutdown} | {error, atom()}.
+-type terminate_reason() :: normal | not_allowed | unauthenticated
+                          | no_permission | {error, any()}.
 -type data_format() :: text | json | msgpack | html.
 -type status_code() :: 100..101 | 200..206 | 300..307 | 400..417 | 500..505.
 
 %% -----------------------------------------------------------------------------
+%% internal state record
+%% -----------------------------------------------------------------------------
+-record(state, {
+          resrc = #resrc{} :: resrc(),
+          method = <<"GET">> :: binary(),
+          req_pid :: req(),
+          terminate_reason = normal :: terminate_reason()
+         }).
+-type state() :: #state{}.
+
+%% -----------------------------------------------------------------------------
 %% cowboy callbacks
 %% -----------------------------------------------------------------------------
--spec init({module(), http}, Req, Ctx) ->
-                  {ok, Req, Ctx} when Req :: cowboy_req:req(), Ctx :: ctx().
-init(_Transport, Req, Ctx=#ctx{route=Route, handler=Handler,
-                               handler_state=HandlerState}) ->
+-spec init(term(), Req, resrc()) ->
+                  {ok, Req, State} when Req::cowboy_req:req(), State::state().
+init(_Transport, Req, Resrc=#resrc{handler=Handler, route=Route,
+                                   handler_state=HandlerState}) ->
     {ok, ReqPid} = leptus_req_sup:start_child(Req),
     {ok, HandlerState1} = handler_init(Handler, Route, ReqPid, HandlerState),
-    {ok, Req, Ctx#ctx{handler_state = HandlerState1, req_pid = ReqPid}}.
+    Method = leptus_req:method(ReqPid),
+    State = #state{resrc = Resrc#resrc{handler_state = HandlerState1},
+                   req_pid = ReqPid, method = Method},
+    {ok, Req, State}.
 
--spec handle(Req, Ctx) -> {ok, Req, Ctx} when Req :: cowboy_req:req(),
-                                              Ctx :: ctx().
-handle(_Req, Ctx) ->
-    %% convert the http method to a lowercase atom
-    MethodBin = leptus_req:method(Ctx#ctx.req_pid),
-    handle_request(http_method(MethodBin), MethodBin, Ctx).
+-spec handle(Req, State) -> {ok, Req, State} when Req :: cowboy_req:req(),
+                                                  State :: state().
+handle(_Req, State=#state{method=Method}) ->
+    handle_request(http_method(Method), State).
 
--spec terminate(terminate_reason(), cowboy_req:req(), ctx()) -> ok.
-terminate(Reason, _Req, Ctx) ->
-    Res = handler_terminate(Reason, Ctx),
-    leptus_req:stop(Ctx#ctx.req_pid),
-    Res.
+-spec terminate(any(), cowboy_req:req(), state()) -> ok.
+terminate(CowReason, _, #state{resrc=#resrc{handler=Handler, route=Route,
+                                            handler_state=HandlerState},
+                               req_pid=ReqPid, terminate_reason=Reason}) ->
+    Reason1 = prepare_terminate_reason(CowReason, Reason),
+    handler_terminate(Reason1, Handler, Route, ReqPid, HandlerState),
+    leptus_req:stop(ReqPid).
 
 %% -----------------------------------------------------------------------------
 %% internal
@@ -96,61 +111,70 @@ handler_init(Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
--spec handle_request(not_allowed, binary(), Ctx) ->
-                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx();
-                    (options, binary(), Ctx) ->
-                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx();
-                    (method(), binary(), Ctx) ->
-                            {ok, cowboy_req:req(), Ctx} when Ctx :: ctx().
-handle_request(not_allowed, _, Ctx=#ctx{handler=Handler, route=Route,
-                                        handler_state=HandlerState}) ->
+-spec handle_request(not_allowed, State) ->
+                            {ok, cowboy_req:req(), State} when State :: state();
+                    (options, State) ->
+                            {ok, cowboy_req:req(), State} when State :: state();
+                    (method(), State) ->
+                            {ok, cowboy_req:req(), State} when State :: state().
+handle_request(not_allowed, State=#state{resrc=#resrc{handler_state=HandlerState,
+                                                      handler=Handler,
+                                                      route=Route}}) ->
     Response = method_not_allowed(Handler, Route, HandlerState),
-    reply(Response, Ctx);
-handle_request(options, _, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
-                                    handler_state=HandlerState}) ->
+    reply(Response, State#state{terminate_reason=not_allowed});
+handle_request(options, State=#state{resrc=#resrc{handler=Handler, route=Route,
+                                                  handler_state=HandlerState},
+                                     req_pid=Req}) ->
     %% deal with CORS preflight request
     Method = leptus_req:header(Req, <<"access-control-request-method">>),
     case is_allowed(Handler, http_method(Method), Route, Method) of
         true ->
-            reply({<<>>, HandlerState}, Ctx);
+            reply({<<>>, HandlerState}, State);
         false ->
-            handle_request(not_allowed, <<>>, Ctx)
+            handle_request(not_allowed, State)
     end;
-handle_request(Func, Method, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
-                                      handler_state=HandlerState}) ->
-    Response = case is_allowed(Handler, Func, Route, Method) of
-                   true ->
-                       case authorization(Handler, Route, Req, HandlerState) of
-                           {true, HandlerState1} ->
-                               Handler:Func(Route, Req, HandlerState1);
-                           {false, Res} ->
-                               Res
-                       end;
-                   false ->
-                       method_not_allowed(Handler, Route, HandlerState)
-               end,
-    reply(Response, Ctx).
+handle_request(Func, State=#state{resrc=#resrc{handler=Handler, route=Route,
+                                               handler_state=HandlerState},
+                                  req_pid=Req, method=Method}) ->
+    %% reasponse and terminate reason
+    {Response,
+     TReason} = case is_allowed(Handler, Func, Route, Method) of
+                    true ->
+                        case authorization(Handler, Route, Req, HandlerState) of
+                            {true, HandlerState1} ->
+                                {Handler:Func(Route, Req, HandlerState1),
+                                 normal};
+                            {false, Resp, TR} ->
+                                {Resp, TR}
+                        end;
+                    false ->
+                        {method_not_allowed(Handler, Route, HandlerState),
+                         not_allowed}
+                end,
+    reply(Response, State#state{terminate_reason=TReason}).
 
 %% -----------------------------------------------------------------------------
 %% Handler:is_authenticated/3 and Handler:has_permission/3
 %% -----------------------------------------------------------------------------
 -spec authorization(handler(), route(), req(), handler_state()) ->
-                           {true, handler_state()} | {false, response()}.
+                           {true, handler_state()} |
+                           {false, response(), terminate_reason()}.
 authorization(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
     %%   is_authenticated(Route, Req, State) ->
     %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
     %%
+    TR1 = unauthenticated, %% terminate reason
     Res = case is_defined(Handler, is_authenticated) of
               true ->
                   case Handler:is_authenticated(Route, Req, HandlerState) of
                       {true, HandlerState1} ->
                           {true, HandlerState1};
                       {false, Body, HandlerState1} ->
-                          {false, {401, Body, HandlerState1}};
+                          {false, {401, Body, HandlerState1}, TR1};
                       {false, Headers, Body, HandlerState1} ->
-                          {false, {401, Headers, Body, HandlerState1}}
+                          {false, {401, Headers, Body, HandlerState1}, TR1}
                   end;
               false ->
                   {true, HandlerState}
@@ -161,8 +185,9 @@ authorization(Handler, Route, Req, HandlerState) ->
     %%   has_permission(Route, Req, State) ->
     %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
     %%
+    TR2 = no_permission, %% terminate reason
     case Res of
-        {false, _} ->
+        {false, _, _} ->
             Res;
         {true, HandlerState2} ->
             case is_defined(Handler, has_permission) of
@@ -171,9 +196,9 @@ authorization(Handler, Route, Req, HandlerState) ->
                         {true, HandlerState3} ->
                             {true, HandlerState3};
                         {false, Body1, HandlerState3} ->
-                            {false, {403, Body1, HandlerState3}};
+                            {false, {403, Body1, HandlerState3}, TR2};
                         {false, Headers1, Body1, HandlerState3} ->
-                            {false, {403, Headers1, Body1, HandlerState3}}
+                            {false, {403, Headers1, Body1, HandlerState3}, TR2}
                     end;
                 false ->
                     {true, HandlerState2}
@@ -275,27 +300,29 @@ cors_headers(Handler, Route, Origin, Req) ->
 %% -----------------------------------------------------------------------------
 %% Handler:terminate/4
 %% -----------------------------------------------------------------------------
--spec handler_terminate(terminate_reason(), ctx()) -> ok.
-handler_terminate(Reason, #ctx{handler=Handler, route=Route, req_pid=Req,
-                               handler_state=HandlerState}) ->
+-spec handler_terminate(terminate_reason(), handler(), route(), req(),
+                        handler_state()) -> ok.
+handler_terminate(Reason, Handler, Route, Req, HandlerState) ->
     Handler:terminate(Reason, Route, Req, HandlerState).
 
 %% -----------------------------------------------------------------------------
 %% reply - prepare stauts, headers and body
 %% -----------------------------------------------------------------------------
--spec reply(response(), Ctx) -> {ok, Req, Ctx} when Req :: cowboy_req:req(),
-                                                    Ctx :: ctx().
-reply({Body, HandlerState}, Ctx) ->
-    reply(200, [], Body, Ctx#ctx{handler_state = HandlerState});
-reply({Status, Body, HandlerState}, Ctx) ->
-    reply(Status, [], Body, Ctx#ctx{handler_state = HandlerState});
-reply({Status, Headers, Body, HandlerState}, Ctx) ->
-    reply(Status, Headers, Body, Ctx#ctx{handler_state = HandlerState}).
+-spec reply(response(), State) -> {ok, Req, State} when Req :: cowboy_req:req(),
+                                                        State :: state().
+reply({Body, HandlerState}, St=#state{resrc=Resrc}) ->
+    reply(200, [], Body, St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
+reply({Status, Body, HandlerState}, St=#state{resrc=Resrc}) ->
+    reply(Status, [], Body, St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
+reply({Status, Headers, Body, HandlerState}, St=#state{resrc=Resrc}) ->
+    reply(Status, Headers, Body, St#state{resrc=Resrc#resrc{handler_state = HandlerState}}).
 
--spec reply(status(), headers(), body(), Ctx) ->
-                   {ok, Req, Ctx} when Req :: cowboy_req:req(), Ctx :: ctx().
-reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
-                                      handler_state=HandlerState}) ->
+-spec reply(status(), headers(), body(), St) ->
+                   {ok, Req, St} when Req :: cowboy_req:req(), St :: state().
+reply(Status, Headers, Body,
+      State=#state{resrc=Resrc=#resrc{handler=Handler,route=Route,
+                                      handler_state=HandlerState},
+                   req_pid=Req}) ->
     %% encode Body and set content-type
     {Headers1, Body1} = prepare_headers_body(Headers, Body),
 
@@ -306,7 +333,7 @@ reply(Status, Headers, Body, Ctx=#ctx{handler=Handler, route=Route, req_pid=Req,
     Req1 = leptus_req:get_req(Req),
     {ok, Req2} = cowboy_req:reply(status(Status), Headers3, Body1, Req1),
     leptus_req:set_req(Req, Req2),
-    {ok, Req2, Ctx#ctx{handler_state = HandlerState1}}.
+    {ok, Req2, State#state{resrc=Resrc#resrc{handler_state = HandlerState1}}}.
 
 -spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
 prepare_headers_body(Headers, {json, Body}) ->
@@ -429,3 +456,10 @@ domain_matches(_, _, [], [], _) ->
     false;
 domain_matches(_, _, [], HostMatches, OriginToks) ->
     domains_match(OriginToks, HostMatches).
+
+%% -----------------------------------------------------------------------------
+%% prepare terminate reason - use cowboy terminate reason if needed
+%% -----------------------------------------------------------------------------
+prepare_terminate_reason({_, Reason=timeout}, _) -> Reason;
+prepare_terminate_reason({_, shutdown}, Reason) -> Reason;
+prepare_terminate_reason(Reason, _) -> {error, Reason}.

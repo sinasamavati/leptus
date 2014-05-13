@@ -24,11 +24,10 @@
 -type handler() :: module().
 -type handler_state() :: any().
 
--record(ctx,
+-record(resrc,
         {
+          handler :: handler(),
           route = "" :: route(),
-          handler :: module(),
-          handler_state :: any(),
-          req_pid :: pid()
+          handler_state :: handler_state()
         }).
--type ctx() :: #ctx{}.
+-type resrc() :: #resrc{}.

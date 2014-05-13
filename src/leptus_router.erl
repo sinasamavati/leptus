@@ -98,8 +98,8 @@ handle_routes([{HostMatch, X}|T], Acc) ->
     handle_routes(T, Acc ++ [{HostMatch, lists:foldl(F, [], X)}]).
 
 new_route(Prefix, Route, Handler, HandlerState) ->
-    {Prefix ++ Route, leptus_handler, #ctx{route=Route, handler=Handler,
-                                           handler_state=HandlerState}}.
+    {Prefix ++ Route, leptus_handler, #resrc{route=Route, handler=Handler,
+                                             handler_state=HandlerState}}.
 
 %% -----------------------------------------------------------------------------
 %% get handler's prefix

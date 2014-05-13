@@ -204,6 +204,11 @@
      Module:terminate(Reason, Route, Req, State) -> ok
      #+END_SRC
 
+    Type:
+    #+BEGIN_SRC erlang
+    Reason = normal | not_allowed | unauthenticated | no_permission | {error, any()}
+    #+END_SRC
+
 ** Example
    :PROPERTIES:
    :CUSTOM_ID: example
