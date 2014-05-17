@@ -74,7 +74,7 @@ jiffy_decode(Bin) ->
 %% before encoding - after decoding (only for jiffy)
 %% -----------------------------------------------------------------------------
 before_encode([{}]) -> {[]};
-before_encode(Term=[H|_]) when is_tuple(H) -> {Term};
+before_encode(Term=[{_,_}|_]) -> {Term};
 before_encode(Term) -> Term.
 
 after_decode({[]}) -> [{}];
