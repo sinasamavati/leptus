@@ -1,17 +1,17 @@
 # The MIT License
-
+#
 # Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
-
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,11 +26,9 @@ CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config
 dep_cowboy = https://github.com/extend/cowboy/archive/0.9.0.tar.gz
 dep_msgpack = https://github.com/msgpack/msgpack-erlang/archive/0.2.8.tar.gz
 ifdef USE_JSX
-    DEPS += jsx
     dep_jsx = https://github.com/talentdeficit/jsx/archive/v1.4.5.tar.gz
     ERLC_OPTS += -DUSE_JSX
 else
-    DEPS += jiffy
     dep_jiffy = https://github.com/davisp/jiffy/archive/0.8.5.tar.gz
 endif
 

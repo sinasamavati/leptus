@@ -1,3 +1,27 @@
+2014-05-18  Sina Samavati  <sina.samv@gmail.com>
+
+	* 0.4.0: add leptus:start_listener/2,3 leptus:stop_listener/1
+	add http status code bindings
+	add Handler:cross_domains/3 to handle cross-domain requests
+	fix broken specs
+	change leptus_req module api - requires a pid as the first argument in every function
+	provide Handler:prefix/0 for prefixing routes
+	improve leptus_router:sort_dispatch/1
+	add '{html, Body}' response type
+	change the terminate/3 callback to terminate/4
+	add leptus:upgrade/0,1,2 to upgrade running listener(s)
+	add leptus:running_listeners/0 to get a list of running listeners
+	add leptus_utils module which provides a number of utilities
+	add leptus:listener_uptime/1 to get uptime of a running listener
+	improve leptus_json to work with both jsx and jiffy
+	add leptus_router:static_file_routes/1 to make routes for serving static files
+	provide 'static_dir' option when starting a listener
+	update leptus_pt module to avoid using the process dictionary
+	provide optional callback Module:has_permission/3 for handling permissions
+	rename is_authorized callback to is_authenticated
+	add terminate reasons to be used in the terminate/4 callbacks
+	update documentations
+
 2014-02-11  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_router.erl: add lt/2, egt/2, segments_length/2 and path_rule/0 type
