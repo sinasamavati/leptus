@@ -70,13 +70,14 @@ upgrade(Req, Env, _Handler,
         State=#state{resrc=#resrc{handler=Handler, route=Route,
                                   handler_state=HState}=Resrc,
                      method=Method}) ->
-    {ok, Req2, State1} =
+    {ok, Req2, State2} =
         try Handler:init(Route, Req, HState) of
             {ok, HState1} ->
-                handle_request(http_method(Method), Req,
-                               State#state{resrc=Resrc#resrc{handler_state=HState1}});
+                State1 = State#state{resrc=Resrc#resrc{handler_state=HState1}},
+                handle_request(http_method(Method), Req, State1);
             Else ->
                 Req1 = leptus_req:get_req(Req),
+                self() ! {500, 0},
                 cowboy_req:maybe_reply(500, Req1),
                 error_logger:error_msg("Bad return ~p in ~p~n",
                                        [Else, {Handler, init, 3}]),
@@ -84,19 +85,30 @@ upgrade(Req, Env, _Handler,
 
         catch Class:Reason ->
                 Req1 = leptus_req:get_req(Req),
+                self() ! {500, 0},
                 cowboy_req:maybe_reply(500, Req1),
-                error_logger:error_msg("Exception ~p in process ~p with exit value: ~p~n",
-                                       [Class, self(),
-                                        [{reason, Reason},
-                                         {mfa, {Handler, init, 3}},
-                                         {req, Req},
-                                         {state, HState},
-                                         {stacktrace, erlang:get_stacktrace()}]]),
+                error_logger:error_msg(
+                  "Exception ~p in process ~p with exit value: ~p~n",
+                  [Class, self(), [{reason, Reason},
+                                   {mfa, {Handler, init, 3}},
+                                   {req, Req},
+                                   {state, HState},
+                                   {stacktrace, erlang:get_stacktrace()}]]
+                 ),
                 {ok, Req1, State#state{terminate_reason={error, Reason}}}
         end,
-    TerminateReason = State1#state.terminate_reason,
-    HState2 = State1#state.resrc#resrc.handler_state,
+    TerminateReason = State2#state.terminate_reason,
+    HState2 = State2#state.resrc#resrc.handler_state,
     handler_terminate(TerminateReason, Handler, Route, Req, HState2),
+
+    %% information event: "METHOD URL VERSION" STATUS CONTENT-LENGTH
+    receive
+        {Status, ContentLength} ->
+            Version = leptus_req:version(Req),
+            URI = leptus_req:uri(Req),
+            error_logger:info_msg("\"\~s ~s ~s\"\ ~w ~p~n",
+                                  [Method, URI, Version, Status, ContentLength])
+    end,
     leptus_req:stop(Req),
     {ok, Req2, Env}.
 
@@ -336,15 +348,19 @@ reply({Status, Headers, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
 reply(Status, Headers, Body, Req,
       State=#state{resrc=Resrc=#resrc{handler=Handler,route=Route,
                                       handler_state=HandlerState}}) ->
+    Status1 = status(Status),
     %% encode Body and set content-type
     {Headers1, Body1} = prepare_headers_body(Headers, Body),
+
+    %% used in upgrade/4 for logging purposes
+    self() ! {Status1, content_length(Body1)},
 
     %% enable or disable cross-domain requests
     {Headers2, HandlerState1} = handler_cross_domains(Handler, Route, Req,
                                                       HandlerState),
     Headers3 = Headers1 ++ Headers2,
     Req1 = leptus_req:get_req(Req),
-    {ok, Req2} = cowboy_req:reply(status(Status), Headers3, Body1, Req1),
+    {ok, Req2} = cowboy_req:reply(Status1, Headers3, Body1, Req1),
     leptus_req:set_req(Req, Req2),
     {ok, Req2, State#state{resrc=Resrc#resrc{handler_state = HandlerState1}}}.
 
@@ -469,3 +485,6 @@ domain_matches(_, _, [], [], _) ->
     false;
 domain_matches(_, _, [], HostMatches, OriginToks) ->
     domains_match(OriginToks, HostMatches).
+
+content_length(B) when is_list(B) -> length(B);
+content_length(B) when is_binary(B) -> byte_size(B).

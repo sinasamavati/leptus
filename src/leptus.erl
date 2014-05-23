@@ -105,10 +105,7 @@ start_listener(Listener, Handlers, Opts) ->
 
     ListenerOpts = listener_opts(Listener, IP, Port, Opts),
     Res = cowboy:ListenerFunc(Ref, NbAcceptors, ListenerOpts,
-                              [
-                               {env, [{dispatch, Dispatch1}]},
-                               {onresponse, fun leptus_hooks:console_log/4}
-                              ]),
+                              [{env, [{dispatch, Dispatch1}]}]),
     case Res of
         {ok, _} ->
             update_listener_bucket({Listener, {Handlers, ListenerOpts}}),

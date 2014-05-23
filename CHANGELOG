@@ -1,7 +1,10 @@
 2014-05-23  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus.erl (start_listener/3): remove onresponse hook
+
 	* src/leptus_handler.erl: remove handle/2, terminate/3
 	turn the module into a cowboy protocol
+	(upgrade/4): log request details by sending information event
 
 2014-05-18  Sina Samavati  <sina.samv@gmail.com>
 
