@@ -25,16 +25,6 @@
 -behaviour(gen_server).
 
 %% -----------------------------------------------------------------------------
-%% gen_server callbacks
-%% -----------------------------------------------------------------------------
--export([init/1]).
--export([handle_call/3]).
--export([handle_cast/2]).
--export([handle_info/2]).
--export([terminate/2]).
--export([code_change/3]).
-
-%% -----------------------------------------------------------------------------
 %% API
 %% -----------------------------------------------------------------------------
 -export([start_link/1]).
@@ -53,9 +43,23 @@
 -export([header/2]).
 -export([parse_header/2]).
 -export([auth/2]).
+-export([reply/4]).
 -export([get_req/1]).
 -export([set_req/2]).
 
+%% -----------------------------------------------------------------------------
+%% gen_server callbacks
+%% -----------------------------------------------------------------------------
+-export([init/1]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([terminate/2]).
+-export([code_change/3]).
+
+%% -----------------------------------------------------------------------------
+%% API
+%% -----------------------------------------------------------------------------
 -spec start_link(cowboy_req:req()) -> {ok, pid()} | ignore | {error, any()}.
 start_link(Req) ->
     gen_server:start_link(?MODULE, Req, []).
@@ -150,6 +154,10 @@ auth(Pid, basic) ->
             Value
     end.
 
+-spec reply(pid(), cowboy:http_status(), cowboy:http_headers(), iodata()) -> ok.
+reply(Pid, Status, Headers, Body) ->
+    invoke(Pid, reply, [Status, Headers, Body]).
+
 -spec get_req(pid()) -> cowboy_req:req().
 get_req(Pid) ->
     gen_server:call(Pid, get_req).
@@ -194,6 +202,8 @@ invoke(Pid, F, A) ->
     gen_server:call(Pid, {F, A}).
 
 -spec call_cowboy_req(atom(), [any()], cowboy_req:req()) -> any().
+call_cowboy_req(reply, Args, Req) ->
+    call_cowboy_req(reply, Args ++ [Req]);
 call_cowboy_req(F, [], Req) ->
     call_cowboy_req(F, [Req]);
 call_cowboy_req(F, [H|T], Req) ->
