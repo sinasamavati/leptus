@@ -1,5 +1,7 @@
 2014-05-23  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus_hooks.erl: remove the module since it's no longer used
+
 	* src/leptus.erl (start_listener/3): remove onresponse hook
 
 	* src/leptus_handler.erl: remove handle/2, terminate/3
