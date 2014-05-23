@@ -22,10 +22,11 @@
 
 -module(leptus_handler).
 
+%% -----------------------------------------------------------------------------
 %% cowboy callbacks
+%% -----------------------------------------------------------------------------
 -export([init/3]).
--export([handle/2]).
--export([terminate/3]).
+-export([upgrade/4]).
 
 -include("leptus.hrl").
 
@@ -52,7 +53,6 @@
 -record(state, {
           resrc = #resrc{} :: resrc(),
           method = <<"GET">> :: binary(),
-          req_pid :: req(),
           terminate_reason = normal :: terminate_reason()
          }).
 -type state() :: #state{}.
@@ -60,29 +60,46 @@
 %% -----------------------------------------------------------------------------
 %% cowboy callbacks
 %% -----------------------------------------------------------------------------
--spec init(term(), Req, resrc()) ->
-                  {ok, Req, State} when Req::cowboy_req:req(), State::state().
-init(_Transport, Req, Resrc=#resrc{handler=Handler, route=Route,
-                                   handler_state=HandlerState}) ->
+init(_, Req, Resrc) ->
     {ok, ReqPid} = leptus_req_sup:start_child(Req),
-    {ok, HandlerState1} = handler_init(Handler, Route, ReqPid, HandlerState),
     Method = leptus_req:method(ReqPid),
-    State = #state{resrc = Resrc#resrc{handler_state = HandlerState1},
-                   req_pid = ReqPid, method = Method},
-    {ok, Req, State}.
+    State = #state{resrc = Resrc, method = Method},
+    {upgrade, protocol, ?MODULE, ReqPid, State}.
 
--spec handle(Req, State) -> {ok, Req, State} when Req :: cowboy_req:req(),
-                                                  State :: state().
-handle(_Req, State=#state{method=Method}) ->
-    handle_request(http_method(Method), State).
+upgrade(Req, Env, _Handler,
+        State=#state{resrc=#resrc{handler=Handler, route=Route,
+                                  handler_state=HState}=Resrc,
+                     method=Method}) ->
+    {ok, Req2, State1} =
+        try Handler:init(Route, Req, HState) of
+            {ok, HState1} ->
+                handle_request(http_method(Method), Req,
+                               State#state{resrc=Resrc#resrc{handler_state=HState1}});
+            Else ->
+                Req1 = leptus_req:get_req(Req),
+                cowboy_req:maybe_reply(500, Req1),
+                error_logger:error_msg("Bad return ~p in ~p~n",
+                                       [Else, {Handler, init, 3}]),
+                {ok, Req1, State#state{terminate_reason={error, badreturn}}}
 
--spec terminate(any(), cowboy_req:req(), state()) -> ok.
-terminate(CowReason, _, #state{resrc=#resrc{handler=Handler, route=Route,
-                                            handler_state=HandlerState},
-                               req_pid=ReqPid, terminate_reason=Reason}) ->
-    Reason1 = prepare_terminate_reason(CowReason, Reason),
-    handler_terminate(Reason1, Handler, Route, ReqPid, HandlerState),
-    leptus_req:stop(ReqPid).
+        catch Class:Reason ->
+                Req1 = leptus_req:get_req(Req),
+                cowboy_req:maybe_reply(500, Req1),
+                error_logger:error_msg("Exception ~p in process ~p with exit value: ~p~n",
+                                       [Class, self(),
+                                        [{reason, Reason},
+                                         {mfa, {Handler, init, 3}},
+                                         {req, Req},
+                                         {state, HState},
+                                         {stacktrace, erlang:get_stacktrace()}]]),
+                {ok, Req1, State#state{terminate_reason={error, Reason}}}
+        end,
+    TerminateReason = State1#state.terminate_reason,
+    HState2 = State1#state.resrc#resrc.handler_state,
+    handler_terminate(TerminateReason, Handler, Route, Req, HState2),
+    leptus_req:stop(Req),
+    {ok, Req2, Env}.
+
 
 %% -----------------------------------------------------------------------------
 %% internal
@@ -101,41 +118,34 @@ http_method(<<"OPTIONS">>) -> options;
 http_method(_) -> not_allowed.
 
 %% -----------------------------------------------------------------------------
-%% Handler:init/3
-%% -----------------------------------------------------------------------------
--spec handler_init(handler(), route(), Req, handler_state()) ->
-                          {ok, handler_state()} when Req :: req().
-handler_init(Handler, Route, Req, HandlerState) ->
-    Handler:init(Route, Req, HandlerState).
-
-%% -----------------------------------------------------------------------------
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
--spec handle_request(not_allowed, State) ->
+-spec handle_request(not_allowed, req(), State) ->
                             {ok, cowboy_req:req(), State} when State :: state();
-                    (options, State) ->
+                    (options, req(), State) ->
                             {ok, cowboy_req:req(), State} when State :: state();
-                    (method(), State) ->
+                    (method(), req(), State) ->
                             {ok, cowboy_req:req(), State} when State :: state().
-handle_request(not_allowed, State=#state{resrc=#resrc{handler_state=HandlerState,
-                                                      handler=Handler,
-                                                      route=Route}}) ->
+handle_request(not_allowed, Req,
+               State=#state{resrc=#resrc{handler_state=HandlerState,
+                                         handler=Handler, route=Route}}) ->
     Response = method_not_allowed(Handler, Route, HandlerState),
-    reply(Response, State#state{terminate_reason=not_allowed});
-handle_request(options, State=#state{resrc=#resrc{handler=Handler, route=Route,
-                                                  handler_state=HandlerState},
-                                     req_pid=Req}) ->
+    reply(Response, Req, State#state{terminate_reason=not_allowed});
+handle_request(options, Req,
+               State=#state{resrc=#resrc{handler=Handler, route=Route,
+                                         handler_state=HandlerState}}) ->
     %% deal with CORS preflight request
     Method = leptus_req:header(Req, <<"access-control-request-method">>),
     case is_allowed(Handler, http_method(Method), Route, Method) of
         true ->
-            reply({<<>>, HandlerState}, State);
+            reply({<<>>, HandlerState}, Req, State);
         false ->
-            handle_request(not_allowed, State)
+            handle_request(not_allowed, Req, State)
     end;
-handle_request(Func, State=#state{resrc=#resrc{handler=Handler, route=Route,
-                                               handler_state=HandlerState},
-                                  req_pid=Req, method=Method}) ->
+handle_request(Func, Req,
+               State=#state{resrc=#resrc{handler=Handler, route=Route,
+                                         handler_state=HandlerState},
+                            method=Method}) ->
     %% reasponse and terminate reason
     {Response,
      TReason} = case is_allowed(Handler, Func, Route, Method) of
@@ -151,7 +161,7 @@ handle_request(Func, State=#state{resrc=#resrc{handler=Handler, route=Route,
                         {method_not_allowed(Handler, Route, HandlerState),
                          not_allowed}
                 end,
-    reply(Response, State#state{terminate_reason=TReason}).
+    reply(Response, Req, State#state{terminate_reason=TReason}).
 
 %% -----------------------------------------------------------------------------
 %% Handler:is_authenticated/3 and Handler:has_permission/3
@@ -308,21 +318,24 @@ handler_terminate(Reason, Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% reply - prepare stauts, headers and body
 %% -----------------------------------------------------------------------------
--spec reply(response(), State) -> {ok, Req, State} when Req :: cowboy_req:req(),
-                                                        State :: state().
-reply({Body, HandlerState}, St=#state{resrc=Resrc}) ->
-    reply(200, [], Body, St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
-reply({Status, Body, HandlerState}, St=#state{resrc=Resrc}) ->
-    reply(Status, [], Body, St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
-reply({Status, Headers, Body, HandlerState}, St=#state{resrc=Resrc}) ->
-    reply(Status, Headers, Body, St#state{resrc=Resrc#resrc{handler_state = HandlerState}}).
+-spec reply(response(), req(), State) ->
+                   {ok, Req, State} when Req :: cowboy_req:req(),
+                                         State :: state().
+reply({Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
+    reply(200, [], Body, Req,
+          St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
+reply({Status, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
+    reply(Status, [], Body, Req,
+          St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
+reply({Status, Headers, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
+    reply(Status, Headers, Body, Req,
+          St#state{resrc=Resrc#resrc{handler_state = HandlerState}}).
 
--spec reply(status(), headers(), body(), St) ->
+-spec reply(status(), headers(), body(), req(), St) ->
                    {ok, Req, St} when Req :: cowboy_req:req(), St :: state().
-reply(Status, Headers, Body,
+reply(Status, Headers, Body, Req,
       State=#state{resrc=Resrc=#resrc{handler=Handler,route=Route,
-                                      handler_state=HandlerState},
-                   req_pid=Req}) ->
+                                      handler_state=HandlerState}}) ->
     %% encode Body and set content-type
     {Headers1, Body1} = prepare_headers_body(Headers, Body),
 
@@ -456,10 +469,3 @@ domain_matches(_, _, [], [], _) ->
     false;
 domain_matches(_, _, [], HostMatches, OriginToks) ->
     domains_match(OriginToks, HostMatches).
-
-%% -----------------------------------------------------------------------------
-%% prepare terminate reason - use cowboy terminate reason if needed
-%% -----------------------------------------------------------------------------
-prepare_terminate_reason({_, Reason=timeout}, _) -> Reason;
-prepare_terminate_reason({_, shutdown}, Reason) -> Reason;
-prepare_terminate_reason(Reason, _) -> {error, Reason}.
