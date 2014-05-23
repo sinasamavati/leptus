@@ -70,32 +70,20 @@ upgrade(Req, Env, _Handler,
         State=#state{resrc=#resrc{handler=Handler, route=Route,
                                   handler_state=HState}=Resrc,
                      method=Method}) ->
-    {ok, Req2, State2} =
+    {ok, State2} =
         try Handler:init(Route, Req, HState) of
             {ok, HState1} ->
                 State1 = State#state{resrc=Resrc#resrc{handler_state=HState1}},
                 handle_request(http_method(Method), Req, State1);
             Else ->
-                Req1 = leptus_req:get_req(Req),
-                self() ! {500, 0},
-                cowboy_req:maybe_reply(500, Req1),
-                error_logger:error_msg("Bad return ~p in ~p~n",
-                                       [Else, {Handler, init, 3}]),
-                {ok, Req1, State#state{terminate_reason={error, badreturn}}}
+                reply(500, [], <<>>, Req),
+                error_msg(badmatch, Else, {Handler, init, 3}),
+                {ok, State#state{terminate_reason={error, badmatch}}}
 
         catch Class:Reason ->
-                Req1 = leptus_req:get_req(Req),
-                self() ! {500, 0},
-                cowboy_req:maybe_reply(500, Req1),
-                error_logger:error_msg(
-                  "Exception ~p in process ~p with exit value: ~p~n",
-                  [Class, self(), [{reason, Reason},
-                                   {mfa, {Handler, init, 3}},
-                                   {req, Req},
-                                   {state, HState},
-                                   {stacktrace, erlang:get_stacktrace()}]]
-                 ),
-                {ok, Req1, State#state{terminate_reason={error, Reason}}}
+                reply(500, [], <<>>, Req),
+                error_msg({Class, Reason}, {Handler, init, 3}, Req, HState),
+                {ok, State#state{terminate_reason={error, Reason}}}
         end,
     TerminateReason = State2#state.terminate_reason,
     HState2 = State2#state.resrc#resrc.handler_state,
@@ -109,8 +97,9 @@ upgrade(Req, Env, _Handler,
             error_logger:info_msg("\"\~s ~s ~s\"\ ~w ~p~n",
                                   [Method, URI, Version, Status, ContentLength])
     end,
+    Req1 = leptus_req:get_req(Req),
     leptus_req:stop(Req),
-    {ok, Req2, Env}.
+    {ok, Req1, Env}.
 
 
 %% -----------------------------------------------------------------------------
@@ -133,11 +122,11 @@ http_method(_) -> not_allowed.
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
 -spec handle_request(not_allowed, req(), State) ->
-                            {ok, cowboy_req:req(), State} when State :: state();
+                            {ok, State} when State :: state();
                     (options, req(), State) ->
-                            {ok, cowboy_req:req(), State} when State :: state();
+                            {ok, State} when State :: state();
                     (method(), req(), State) ->
-                            {ok, cowboy_req:req(), State} when State :: state().
+                            {ok, State} when State :: state().
 handle_request(not_allowed, Req,
                State=#state{resrc=#resrc{handler_state=HandlerState,
                                          handler=Handler, route=Route}}) ->
@@ -187,16 +176,25 @@ authorization(Handler, Route, Req, HandlerState) ->
     %%   is_authenticated(Route, Req, State) ->
     %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
     %%
+    F1 = is_authenticated,
     TR1 = unauthenticated, %% terminate reason
-    Res = case is_defined(Handler, is_authenticated) of
+    Res = case is_defined(Handler, F1) of
               true ->
-                  case Handler:is_authenticated(Route, Req, HandlerState) of
+                  try Handler:F1(Route, Req, HandlerState) of
                       {true, HandlerState1} ->
                           {true, HandlerState1};
                       {false, Body, HandlerState1} ->
                           {false, {401, Body, HandlerState1}, TR1};
                       {false, Headers, Body, HandlerState1} ->
-                          {false, {401, Headers, Body, HandlerState1}, TR1}
+                          {false, {401, Headers, Body, HandlerState1}, TR1};
+                      Else ->
+                          error_msg(badmatch, Else, {Handler, F1, 3}),
+                          {false, {500, <<>>, HandlerState}, badmatch}
+
+                  catch Class:Reason ->
+                          error_msg({Class, Reason}, {Handler, F1, 3}, Req,
+                                    HandlerState),
+                          {false, {500, <<>>, HandlerState}, {error, Reason}}
                   end;
               false ->
                   {true, HandlerState}
@@ -207,20 +205,29 @@ authorization(Handler, Route, Req, HandlerState) ->
     %%   has_permission(Route, Req, State) ->
     %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
     %%
+    F2 = has_permission,
     TR2 = no_permission, %% terminate reason
     case Res of
         {false, _, _} ->
             Res;
         {true, HandlerState2} ->
-            case is_defined(Handler, has_permission) of
+            case is_defined(Handler, F2) of
                 true ->
-                    case Handler:has_permission(Route, Req, HandlerState2) of
+                    try Handler:F2(Route, Req, HandlerState2) of
                         {true, HandlerState3} ->
                             {true, HandlerState3};
                         {false, Body1, HandlerState3} ->
                             {false, {403, Body1, HandlerState3}, TR2};
                         {false, Headers1, Body1, HandlerState3} ->
-                            {false, {403, Headers1, Body1, HandlerState3}, TR2}
+                            {false, {403, Headers1, Body1, HandlerState3}, TR2};
+                        Else1 ->
+                            error_msg(badmatch, Else1, {Handler, F2, 3}),
+                            {false, {500, <<>>, HandlerState2}, badmatch}
+
+                    catch Class1:Reason1 ->
+                            error_msg({Class1, Reason1}, {Handler, F2, 3}, Req,
+                                      HandlerState2),
+                            {false, {500, <<>>, HandlerState2}, {error, Reason1}}
                     end;
                 false ->
                     {true, HandlerState2}
@@ -284,19 +291,29 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
                     {[], HandlerState};
                 true ->
                     %% go on if Handler:cross_domains/3 is exported
-                    {HostMatches, HandlerState1} =
-                        Handler:cross_domains(Route, Req, HandlerState),
-                    Host = case http_uri:parse(binary_to_list(Origin)) of
-                               {ok, {_, _, Host1, _, _, _}} -> Host1;
-                               _ -> Origin
-                           end,
-                    case origin_matches(Host, HostMatches) of
-                        false ->
-                            {[], HandlerState1};
-                        %% go on if Origin is allowed
-                        true ->
-                            {cors_headers(Handler, Route, Origin, Req),
-                             HandlerState1}
+                    F = cross_domains,
+                    try Handler:F(Route, Req, HandlerState) of
+                        {HostMatches, HandlerState1} ->
+                            Host = case http_uri:parse(binary_to_list(Origin)) of
+                                       {ok, {_, _, Host1, _, _, _}} -> Host1;
+                                       _ -> Origin
+                                   end,
+                            case origin_matches(Host, HostMatches) of
+                                false ->
+                                    {[], HandlerState1};
+                                %% go on if Origin is allowed
+                                true ->
+                                    {cors_headers(Handler, Route, Origin, Req),
+                                     HandlerState1}
+                            end;
+                        Else ->
+                            error_msg(badmatch, Else, {Handler, F, 3}),
+                            throw(badmatch)
+
+                    catch Class:Reason ->
+                            error_msg({Class, Reason}, {Handler, F, 3}, Req,
+                                      HandlerState),
+                            throw(Reason)
                     end
             end
     end.
@@ -330,9 +347,7 @@ handler_terminate(Reason, Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% reply - prepare stauts, headers and body
 %% -----------------------------------------------------------------------------
--spec reply(response(), req(), State) ->
-                   {ok, Req, State} when Req :: cowboy_req:req(),
-                                         State :: state().
+-spec reply(response(), req(), State) -> {ok, State} when State :: state().
 reply({Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
     reply(200, [], Body, Req,
           St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
@@ -343,8 +358,17 @@ reply({Status, Headers, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
     reply(Status, Headers, Body, Req,
           St#state{resrc=Resrc#resrc{handler_state = HandlerState}}).
 
+-spec reply(status(), headers(), body(), req()) -> ok.
+reply(Status, Headers, Body, Req) ->
+    %% used in upgrade/4 for logging purposes
+    self() ! {Status, content_length(Body)},
+    leptus_req:reply(Req, Status, Headers, Body).
+
 -spec reply(status(), headers(), body(), req(), St) ->
-                   {ok, Req, St} when Req :: cowboy_req:req(), St :: state().
+                   {ok, St} when St :: state().
+reply(Status, Headers, Body, Req, State=#state{terminate_reason={error, _}}) ->
+    reply(Status, Headers, Body, Req),
+    {ok, State};
 reply(Status, Headers, Body, Req,
       State=#state{resrc=Resrc=#resrc{handler=Handler,route=Route,
                                       handler_state=HandlerState}}) ->
@@ -352,17 +376,16 @@ reply(Status, Headers, Body, Req,
     %% encode Body and set content-type
     {Headers1, Body1} = prepare_headers_body(Headers, Body),
 
-    %% used in upgrade/4 for logging purposes
-    self() ! {Status1, content_length(Body1)},
-
     %% enable or disable cross-domain requests
-    {Headers2, HandlerState1} = handler_cross_domains(Handler, Route, Req,
-                                                      HandlerState),
-    Headers3 = Headers1 ++ Headers2,
-    Req1 = leptus_req:get_req(Req),
-    {ok, Req2} = cowboy_req:reply(Status1, Headers3, Body1, Req1),
-    leptus_req:set_req(Req, Req2),
-    {ok, Req2, State#state{resrc=Resrc#resrc{handler_state = HandlerState1}}}.
+    try handler_cross_domains(Handler, Route, Req, HandlerState) of
+        {Headers2, HandlerState1} ->
+            Headers3 = Headers1 ++ Headers2,
+            reply(Status1, Headers3, Body1, Req),
+            {ok, State#state{resrc=Resrc#resrc{handler_state = HandlerState1}}}
+    catch _:Reason ->
+            reply(500, [], <<>>, Req),
+            {ok, State#state{terminate_reason={error, Reason}}}
+    end.
 
 -spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
 prepare_headers_body(Headers, {json, Body}) ->
@@ -488,3 +511,14 @@ domain_matches(_, _, [], HostMatches, OriginToks) ->
 
 content_length(B) when is_list(B) -> length(B);
 content_length(B) when is_binary(B) -> byte_size(B).
+
+error_msg(badmatch, Value, MFA) ->
+      error_logger:error_msg("Bad return value ~p in ~p~n", [Value, MFA]).
+
+error_msg({Class, Reason}, MFA, Req, State) ->
+    error_logger:error_msg("Exception ~p in process ~p with exit value: ~p~n",
+                           [Class, self(), [{reason, Reason},
+                                            {mfa, MFA},
+                                            {req, Req},
+                                            {state, State},
+                                            {stacktrace, erlang:get_stacktrace()}]]).

@@ -1,3 +1,8 @@
+2014-05-24  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_handler.erl: call every callback in try...catch expression
+	  to catch errors and show error messages when needed
+
 2014-05-23  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_req.erl: add reply/4
