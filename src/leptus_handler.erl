@@ -361,7 +361,7 @@ reply({Status, Headers, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
 -spec reply(status(), headers(), body(), req()) -> ok.
 reply(Status, Headers, Body, Req) ->
     %% used in upgrade/4 for logging purposes
-    self() ! {Status, content_length(Body)},
+    self() ! {Status, iolist_size(Body)},
     leptus_req:reply(Req, Status, Headers, Body).
 
 -spec reply(status(), headers(), body(), req(), St) ->
@@ -508,9 +508,6 @@ domain_matches(_, _, [], [], _) ->
     false;
 domain_matches(_, _, [], HostMatches, OriginToks) ->
     domains_match(OriginToks, HostMatches).
-
-content_length(B) when is_list(B) -> length(B);
-content_length(B) when is_binary(B) -> byte_size(B).
 
 error_msg(badmatch, Value, MFA) ->
       error_logger:error_msg("Bad return value ~p in ~p~n", [Value, MFA]).
