@@ -3,6 +3,7 @@
 	* src/leptus_handler.erl: call every callback in try...catch expression
 	  to catch errors and show error messages when needed
 	remove content_length/1. use iolist_size/1 to get the content-length
+	add status_color/1 & console_log/4. colorize console log
 
 2014-05-23  Sina Samavati  <sina.samv@gmail.com>
 

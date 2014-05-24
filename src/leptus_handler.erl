@@ -89,14 +89,11 @@ upgrade(Req, Env, _Handler,
     HState2 = State2#state.resrc#resrc.handler_state,
     handler_terminate(TerminateReason, Handler, Route, Req, HState2),
 
-    %% information event: "METHOD URL VERSION" STATUS CONTENT-LENGTH
     receive
         {Status, ContentLength} ->
-            Version = leptus_req:version(Req),
-            URI = leptus_req:uri(Req),
-            error_logger:info_msg("\"\~s ~s ~s\"\ ~w ~p~n",
-                                  [Method, URI, Version, Status, ContentLength])
+            console_log(Method, Status, ContentLength, Req)
     end,
+
     Req1 = leptus_req:get_req(Req),
     leptus_req:stop(Req),
     {ok, Req1, Env}.
@@ -514,8 +511,33 @@ error_msg(badmatch, Value, MFA) ->
 
 error_msg({Class, Reason}, MFA, Req, State) ->
     error_logger:error_msg("Exception ~p in process ~p with exit value: ~p~n",
-                           [Class, self(), [{reason, Reason},
-                                            {mfa, MFA},
-                                            {req, Req},
-                                            {state, State},
-                                            {stacktrace, erlang:get_stacktrace()}]]).
+                           [Class, self(),
+                            [{reason, Reason},
+                             {mfa, MFA},
+                             {req, Req},
+                             {state, State},
+                             {stacktrace, erlang:get_stacktrace()}]]).
+
+%% -----------------------------------------------------------------------------
+%% print request date-time, requested URI, response status and content-length
+%% -----------------------------------------------------------------------------
+-spec console_log(binary(), status_code(), non_neg_integer(), req()) -> ok.
+console_log(Method, Status, ContentLength, Req) ->
+    %% [%Y-%m-%d %H:%M:%S] "METHOD URL VERSION" STATUS CONTENT-LENGTH
+    {{Year, Month, Day}, {Hour, Min, Sec}} = erlang:localtime(),
+    Version = leptus_req:version(Req),
+    URI = leptus_req:uri(Req),
+    Color = status_color(Status),
+    io:format("~s[~w-~w-~w ~w:~w:~w] \"\~s ~s ~s\"\ ~w ~p\e[0m~n",
+              [Color, Year, Month, Day, Hour, Min, Sec, Method, URI, Version,
+               Status, ContentLength]).
+
+%% -----------------------------------------------------------------------------
+%% get terminal color escape code based on status code
+%% -----------------------------------------------------------------------------
+-spec status_color(non_neg_integer()) -> string().
+status_color(N) when N >= 200, N < 300 -> "\e[32m"; %% green
+status_color(N) when N >= 300, N < 400 -> "\e[33m"; %% yellow
+status_color(N) when N >= 400, N < 500 -> "\e[31m"; %% red
+status_color(N) when N >= 500 -> "\e[1m\e[31m"; %% bold red
+status_color(_) -> "".
