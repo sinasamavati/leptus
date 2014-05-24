@@ -77,12 +77,12 @@ upgrade(Req, Env, _Handler,
                 handle_request(http_method(Method), Req, State1);
             Else ->
                 reply(500, [], <<>>, Req),
-                error_msg(badmatch, Else, {Handler, init, 3}),
+                badmatch_error_info(Else, {Handler, init, 3}, Route, Req, State),
                 {ok, State#state{terminate_reason={error, badmatch}}}
 
         catch Class:Reason ->
                 reply(500, [], <<>>, Req),
-                error_msg({Class, Reason}, {Handler, init, 3}, Req, HState),
+                error_info(Class, Reason, Route, Req, HState),
                 {ok, State#state{terminate_reason={error, Reason}}}
         end,
     TerminateReason = State2#state.terminate_reason,
@@ -150,8 +150,15 @@ handle_request(Func, Req,
                     true ->
                         case authorization(Handler, Route, Req, HandlerState) of
                             {true, HandlerState1} ->
-                                {Handler:Func(Route, Req, HandlerState1),
-                                 normal};
+                                try Handler:Func(Route, Req, HandlerState1) of
+                                    Resp ->
+                                        {Resp, normal}
+                                catch Class:Reason ->
+                                        error_info(Class, Reason, Route, Req,
+                                                   HandlerState1),
+                                        {{500, <<>>, HandlerState1},
+                                         {error, Reason}}
+                                end;
                             {false, Resp, TR} ->
                                 {Resp, TR}
                         end;
@@ -185,12 +192,12 @@ authorization(Handler, Route, Req, HandlerState) ->
                       {false, Headers, Body, HandlerState1} ->
                           {false, {401, Headers, Body, HandlerState1}, TR1};
                       Else ->
-                          error_msg(badmatch, Else, {Handler, F1, 3}),
+                          badmatch_error_info(Else, {Handler, F1, 3}, Route,
+                                              Req, HandlerState),
                           {false, {500, <<>>, HandlerState}, badmatch}
 
                   catch Class:Reason ->
-                          error_msg({Class, Reason}, {Handler, F1, 3}, Req,
-                                    HandlerState),
+                          error_info(Class, Reason, Route, Req, HandlerState),
                           {false, {500, <<>>, HandlerState}, {error, Reason}}
                   end;
               false ->
@@ -218,12 +225,13 @@ authorization(Handler, Route, Req, HandlerState) ->
                         {false, Headers1, Body1, HandlerState3} ->
                             {false, {403, Headers1, Body1, HandlerState3}, TR2};
                         Else1 ->
-                            error_msg(badmatch, Else1, {Handler, F2, 3}),
+                            badmatch_error_info(Else1, {Handler, F2, 3}, Route,
+                                                Req, HandlerState2),
                             {false, {500, <<>>, HandlerState2}, badmatch}
 
                     catch Class1:Reason1 ->
-                            error_msg({Class1, Reason1}, {Handler, F2, 3}, Req,
-                                      HandlerState2),
+                            error_info(Class1, Reason1, Route, Req,
+                                       HandlerState2),
                             {false, {500, <<>>, HandlerState2}, {error, Reason1}}
                     end;
                 false ->
@@ -304,12 +312,12 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
                                      HandlerState1}
                             end;
                         Else ->
-                            error_msg(badmatch, Else, {Handler, F, 3}),
+                            badmatch_error_info(Else, {Handler, F, 3}, Route,
+                                                Req, HandlerState),
                             throw(badmatch)
 
                     catch Class:Reason ->
-                            error_msg({Class, Reason}, {Handler, F, 3}, Req,
-                                      HandlerState),
+                            error_info(Class, Reason, Route, Req, HandlerState),
                             throw(Reason)
                     end
             end
@@ -506,17 +514,25 @@ domain_matches(_, _, [], [], _) ->
 domain_matches(_, _, [], HostMatches, OriginToks) ->
     domains_match(OriginToks, HostMatches).
 
-error_msg(badmatch, Value, MFA) ->
-      error_logger:error_msg("Bad return value ~p in ~p~n", [Value, MFA]).
+badmatch_error_info(Value, MFA, Route, Req, State) ->
+      error_logger:error_msg("** Leptus handler terminating~n"
+                             "** Bad return value in ~p~n"
+                             "** Route == ~p~n"
+                             "** Req == ~p~n"
+                             "** Handler state == ~p~n"
+                             "** Return value == ~p~n",
+                             [MFA, Route, Req, State, Value]).
 
-error_msg({Class, Reason}, MFA, Req, State) ->
-    error_logger:error_msg("Exception ~p in process ~p with exit value: ~p~n",
-                           [Class, self(),
-                            [{reason, Reason},
-                             {mfa, MFA},
-                             {req, Req},
-                             {state, State},
-                             {stacktrace, erlang:get_stacktrace()}]]).
+error_info(Class, Reason, Route, Req, State) ->
+    error_logger:error_msg("** Leptus handler terminating~n"
+                           "** Exception class ~p in process ~p~n"
+                           "** Route == ~p~n"
+                           "** Req == ~p~n"
+                           "** Handler state == ~p~n"
+                           "** Reason for termination ==~n"
+                           "** ~p~n",
+                           [Class, self(), Route, Req, State,
+                            {Reason, erlang:get_stacktrace()}]).
 
 %% -----------------------------------------------------------------------------
 %% print request date-time, requested URI, response status and content-length

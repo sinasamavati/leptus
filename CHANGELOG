@@ -1,3 +1,8 @@
+2014-05-25  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_handler.erl: add badmatch_error_info/5 & error_info/5
+	  to display error messages with more details
+
 2014-05-24  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_handler.erl: call every callback in try...catch expression
