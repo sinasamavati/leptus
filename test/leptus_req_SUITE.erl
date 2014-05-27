@@ -161,7 +161,7 @@ header(Config) ->
     Req1 = ?config(req1, Config),
     Req2 = ?config(req2, Config),
     Req3 = ?config(req3, Config),
-    <<>> = leptus_req:header(Req1, <<"content-type">>),
+    undefined = leptus_req:header(Req1, <<"content-type">>),
     <<"localhost:8080">> = leptus_req:header(Req2, <<"host">>),
     <<"application/x-www-form-urlencoded">> =
         leptus_req:header(Req3, <<"content-type">>).
@@ -171,7 +171,7 @@ parse_header(Config) ->
     Req2 = ?config(req2, Config),
     Req3 = ?config(req3, Config),
     Req5 = ?config(req5, Config),
-    <<>> = leptus_req:parse_header(Req1, <<"content-type">>),
+    undefined = leptus_req:parse_header(Req1, <<"content-type">>),
     <<"localhost:8080">> = leptus_req:parse_header(Req2, <<"host">>),
     {
       <<"application">>, <<"x-www-form-urlencoded">>, []
@@ -185,10 +185,10 @@ auth(Config) ->
     Req3 = ?config(req3, Config),
     Req5 = ?config(req5, Config),
     Req6 = ?config(req6, Config),
-    <<>> = leptus_req:auth(Req1, basic),
-    <<>> = leptus_req:auth(Req3, basic),
+    undefined = leptus_req:auth(Req1, basic),
+    undefined = leptus_req:auth(Req3, basic),
     {<<"123">>, <<"456">>} = leptus_req:auth(Req5, basic),
-    error = leptus_req:auth(Req6, basic).
+    {error, badarg} = leptus_req:auth(Req6, basic).
 
 method(Config) ->
     Req1 = ?config(req1, Config),

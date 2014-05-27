@@ -133,15 +133,15 @@ body_raw(Pid) ->
 body_qs(Pid) ->
     invoke(Pid, body_qs, [infinity]).
 
--spec header(pid(), binary()) -> binary().
+-spec header(pid(), binary()) -> binary() | undefined.
 header(Pid, Name) ->
-    invoke(Pid, header, [Name, <<>>]).
+    invoke(Pid, header, [Name]).
 
--spec parse_header(pid(), binary()) -> any() | <<>>.
+-spec parse_header(pid(), binary()) -> any() | undefined | {error, any()}.
 parse_header(Pid, Name) ->
-    invoke(Pid, parse_header, [Name, <<>>]).
+    invoke(Pid, parse_header, [Name, undefined]).
 
--spec auth(pid(), basic) -> {binary(), binary()} | <<>> | error.
+-spec auth(pid(), basic) -> {binary(), binary()} | undefined | {error, any()}.
 auth(Pid, basic) ->
     case parse_header(Pid, <<"authorization">>) of
         {<<"basic">>, UserPass} ->
@@ -169,7 +169,10 @@ handle_call(stop, _From, Req) ->
 handle_call(get_req, _From, Req) ->
     {reply, Req, Req};
 handle_call({F, A}, _From, Req) ->
-    {Value, Req1} = call_cowboy_req(F, A, Req),
+    {Value, Req1} = case call_cowboy_req(F, A, Req) of
+                        Err = {error, _} -> {Err, Req};
+                        Else -> Else
+                    end,
     {reply, Value, Req1}.
 
 handle_cast({set_req, NewReq}, _Req) ->

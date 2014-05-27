@@ -182,7 +182,7 @@
     Returns the given header value.
 
     #+BEGIN_SRC erlang
-    header(Req, binary()) -> binary()
+    header(Req, binary()) -> binary() | undefined
 
     %% e.g.
     header(Req, <<"content-type">>) -> <<"application/x-www-form-urlencoded">>
@@ -196,7 +196,7 @@
     Parses the given header.
 
     #+BEGIN_SRC erlang
-    parse_header(Req, binary()) -> any() | <<>>
+    parse_header(Req, binary()) -> any() | undefined | {error, any()}
 
     %% e.g.
     parse_header(Req, <<"content-type">>) -> {<<"application">>, <<"json">>, []}
