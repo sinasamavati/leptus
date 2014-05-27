@@ -1,3 +1,8 @@
+2014-05-27  Sina Samavati  <sina.samv@gmail.com>
+
+	* 0.4.1: update leptus_req:header/2,parse_header/2 to return 'undefined' if nothing found
+	fix the broken sync call to return errors if there's any
+
 2014-05-25  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_handler.erl: add badmatch_error_info/5 & error_info/5
