@@ -128,7 +128,7 @@ handle_request(not_allowed, Req,
                State=#state{resrc=#resrc{handler_state=HandlerState,
                                          handler=Handler, route=Route}}) ->
     Response = method_not_allowed(Handler, Route, HandlerState),
-    reply(Response, Req, State#state{terminate_reason=not_allowed});
+    handle_response(Response, Req, State#state{terminate_reason=not_allowed});
 handle_request(options, Req,
                State=#state{resrc=#resrc{handler=Handler, route=Route,
                                          handler_state=HandlerState}}) ->
@@ -136,7 +136,7 @@ handle_request(options, Req,
     Method = leptus_req:header(Req, <<"access-control-request-method">>),
     case is_allowed(Handler, http_method(Method), Route, Method) of
         true ->
-            reply({<<>>, HandlerState}, Req, State);
+            handle_response({<<>>, HandlerState}, Req, State);
         false ->
             handle_request(not_allowed, Req, State)
     end;
@@ -166,7 +166,7 @@ handle_request(Func, Req,
                         {method_not_allowed(Handler, Route, HandlerState),
                          not_allowed}
                 end,
-    reply(Response, Req, State#state{terminate_reason=TReason}).
+    handle_response(Response, Req, State#state{terminate_reason=TReason}).
 
 %% -----------------------------------------------------------------------------
 %% Handler:is_authenticated/3 and Handler:has_permission/3
@@ -352,31 +352,28 @@ handler_terminate(Reason, Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 %% reply - prepare stauts, headers and body
 %% -----------------------------------------------------------------------------
--spec reply(response(), req(), State) -> {ok, State} when State :: state().
-reply({Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
-    reply(200, [], Body, Req,
-          St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
-reply({Status, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
-    reply(Status, [], Body, Req,
-          St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
-reply({Status, Headers, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
-    reply(Status, Headers, Body, Req,
-          St#state{resrc=Resrc#resrc{handler_state = HandlerState}}).
+-spec handle_response(response(), req(), State) ->
+                             {ok, State} when State :: state().
+handle_response({Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
+    handle_response(200, [], Body, Req,
+                    St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
+handle_response({Status, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
+    handle_response(Status, [], Body, Req,
+                    St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
+handle_response({Status, Headers, Body, HandlerState}, Req,
+                St=#state{resrc=Resrc}) ->
+    handle_response(Status, Headers, Body, Req,
+                    St#state{resrc=Resrc#resrc{handler_state = HandlerState}}).
 
--spec reply(status(), headers(), body(), req()) -> ok.
-reply(Status, Headers, Body, Req) ->
-    %% used in upgrade/4 for logging purposes
-    self() ! {Status, iolist_size(Body)},
-    leptus_req:reply(Req, Status, Headers, Body).
-
--spec reply(status(), headers(), body(), req(), St) ->
-                   {ok, St} when St :: state().
-reply(Status, Headers, Body, Req, State=#state{terminate_reason={error, _}}) ->
+-spec handle_response(status(), headers(), body(), req(), St) ->
+                             {ok, St} when St :: state().
+handle_response(Status, Headers, Body, Req,
+                State=#state{terminate_reason={error, _}}) ->
     reply(Status, Headers, Body, Req),
     {ok, State};
-reply(Status, Headers, Body, Req,
-      State=#state{resrc=Resrc=#resrc{handler=Handler,route=Route,
-                                      handler_state=HandlerState}}) ->
+handle_response(Status, Headers, Body, Req,
+                State=#state{resrc=Resrc=#resrc{handler=Handler,route=Route,
+                                                handler_state=HandlerState}}) ->
     Status1 = status(Status),
     %% encode Body and set content-type
     {Headers1, Body1} = prepare_headers_body(Headers, Body),
@@ -391,6 +388,12 @@ reply(Status, Headers, Body, Req,
             reply(500, [], <<>>, Req),
             {ok, State#state{terminate_reason={error, Reason}}}
     end.
+
+-spec reply(status(), headers(), body(), req()) -> ok.
+reply(Status, Headers, Body, Req) ->
+    %% used in upgrade/4 for logging purposes
+    self() ! {Status, iolist_size(Body)},
+    leptus_req:reply(Req, Status, Headers, Body).
 
 -spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
 prepare_headers_body(Headers, {json, Body}) ->
@@ -515,13 +518,13 @@ domain_matches(_, _, [], HostMatches, OriginToks) ->
     domains_match(OriginToks, HostMatches).
 
 badmatch_error_info(Value, MFA, Route, Req, State) ->
-      error_logger:error_msg("** Leptus handler terminating~n"
-                             "** Bad return value in ~p~n"
-                             "** Route == ~p~n"
-                             "** Req == ~p~n"
-                             "** Handler state == ~p~n"
-                             "** Return value == ~p~n",
-                             [MFA, Route, Req, State, Value]).
+    error_logger:error_msg("** Leptus handler terminating~n"
+                           "** Bad return value in ~p~n"
+                           "** Route == ~p~n"
+                           "** Req == ~p~n"
+                           "** Handler state == ~p~n"
+                           "** Return value == ~p~n",
+                           [MFA, Route, Req, State, Value]).
 
 error_info(Class, Reason, Route, Req, State) ->
     error_logger:error_msg("** Leptus handler terminating~n"
