@@ -229,16 +229,13 @@ opt(Key, [_|Rest], Default) ->
 opt(_, [], Default) ->
     Default.
 
-inet_ip_to_str({A, B, C, D}) ->
-    lists:concat([A, ".", B, ".", C, ".", D]).
-
 %% -----------------------------------------------------------------------------
 %% print the version number and what ip/port it's started on
 %% -----------------------------------------------------------------------------
 print_info(IP, Port) ->
     {ok, Vsn} = application:get_key(leptus, vsn),
     io:format("Leptus ~s started on http://~s:~p~n",
-              [Vsn, inet_ip_to_str(IP), Port]).
+              [Vsn, inet:ntoa(IP), Port]).
 
 %% -----------------------------------------------------------------------------
 %% update leptus_config ETS table
