@@ -1,6 +1,7 @@
 2014-05-28  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus.erl: remove inet_ip_to_str/1 and use inet:ntoa/1 instead
+	(print_info/2): use inet_parse:ntoa/1. R15 doesn't come with inet:ntoa/1
 
 	* src/leptus_handler.erl: rename reply/3 and reply/5 to handle_response
 

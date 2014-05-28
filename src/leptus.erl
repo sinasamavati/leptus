@@ -235,7 +235,7 @@ opt(_, [], Default) ->
 print_info(IP, Port) ->
     {ok, Vsn} = application:get_key(leptus, vsn),
     io:format("Leptus ~s started on http://~s:~p~n",
-              [Vsn, inet:ntoa(IP), Port]).
+              [Vsn, inet_parse:ntoa(IP), Port]).
 
 %% -----------------------------------------------------------------------------
 %% update leptus_config ETS table
