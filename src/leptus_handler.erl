@@ -253,7 +253,7 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
     %%   Handler:cross_domains(Route, Req, State) -> {[string()], State}
     %%
     case leptus_req:header(Req, <<"origin">>) of
-        <<>> ->
+        undefined ->
             {[], HandlerState};
         Origin ->
             %% go on if the Origin header is present
@@ -282,7 +282,7 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
 -spec is_preflight(req()) -> boolean().
 is_preflight(Req) ->
     case leptus_req:header(Req, <<"access-control-request-method">>) of
-        <<>> -> false;
+        undefined -> false;
         _ -> true
     end.
 

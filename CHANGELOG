@@ -1,3 +1,7 @@
+2014-06-05  Sina Samavati  <sina.samv@gmail.com>
+
+	* 0.4.2 - src/leptus_handler.erl: use leptus_req:header/2 correctly (fix handling CORS)
+
 2014-05-27  Sina Samavati  <sina.samv@gmail.com>
 
 	* 0.4.1: update leptus_req:header/2,parse_header/2 to return 'undefined' if nothing found
