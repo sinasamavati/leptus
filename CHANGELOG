@@ -1,5 +1,7 @@
 2014-06-11  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus_logger.erl (datetime/1): update it to return 2 digits for hour, minute and second
+
 	* Makefile: update ERLC_OPTS and the target 'deps' to keep tarballs
 
 	* test/leptus_logger_SUITE.erl: add tests for the leptus_logger module

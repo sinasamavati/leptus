@@ -47,6 +47,9 @@ access_log(LogData) ->
 
 -spec format(string(), log_data()) -> string().
 format(Fmt, LogData) ->
+    %% e.g.
+    %% "~h ~l ~u ~t \"~r\" ~s ~B", LogData ->
+    %%   127.0.0.1 - - [11/Jun/2014:03:07:25 +0450] "GET /b?p=2 HTTP/1.1" 200 83
     format(Fmt, LogData, []).
 
 %% -----------------------------------------------------------------------------
@@ -123,4 +126,5 @@ zone(Val) when Val >= 0 ->
 
 -spec datetime(calendar:datetime()) -> string().
 datetime({{Y, M, D}, {H, Mi, S}}) ->
-    io_lib:format("~w/~s/~w:~w:~w:~w ~s", [D, month(M), Y, H, Mi, S, zone()]).
+    io_lib:format("~w/~s/~w:~2..0w:~2..0w:~2..0w ~s",
+                  [D, month(M), Y, H, Mi, S, zone()]).
