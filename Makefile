@@ -21,7 +21,8 @@
 # THE SOFTWARE.
 
 PROJECT = leptus
-CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config
+CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config \
+	leptus_logger
 
 dep_cowboy = https://github.com/extend/cowboy/archive/0.9.0.tar.gz
 dep_msgpack = https://github.com/msgpack/msgpack-erlang/archive/0.2.8.tar.gz
@@ -38,7 +39,7 @@ DOCS_DIR = $(CURDIR)/docs
 TEST_DIR = $(CURDIR)/test
 PLT_FILE = $(CURDIR)/.$(PROJECT).plt
 
-ERLC_OPTS ?= -Werror +debug_info +warn_export_all +warn_export_vars \
+ERLC_OPTS += -I include -Werror +debug_info +warn_export_all +warn_export_vars \
 	+warn_shadow_vars +warn_obsolete_guard
 
 V ?= 0
@@ -73,18 +74,22 @@ all: deps app
 # ------------------------------------------------------------------------------
 # fetch and build dependencies
 # ------------------------------------------------------------------------------
+.PRECIOUS: deps/%.tar.gz
+
 deps: $(DEPS_DIR) $(patsubst dep_%,deps/%/,$(filter dep_%,$(.VARIABLES)))
 	$(if $(wildcard deps/*/deps/), \
 	    mv -v deps/*/deps/* deps/ && rm -rf $(wildcard deps/*/deps/))
-deps/%/:
-	curl -L $(word 1,$(dep_$*)) -o $@.tar.gz
+
+deps/%/: deps/%.tar.gz
 	mkdir -p $(DEPS_DIR)/$*
 	tar xzf $@.tar.gz -C $(DEPS_DIR)/$* --strip-components=1
 	@if [ -f $@/Makefile ]; \
-	then echo 'make -C $@' ; \
-		make -C $@ all  ; \
+	then $(MAKE) -C $@ all ; \
 	else echo 'cd $@ && rebar get-deps compile' ; \
-		cd $@ && rebar get-deps compile  ; fi
+		cd $@ && rebar get-deps compile ; fi
+
+deps/%.tar.gz:
+	curl -L $(word 1,$(dep_$*)) -o $@
 
 # ------------------------------------------------------------------------------
 # build application
@@ -117,7 +122,7 @@ shell:
 # ------------------------------------------------------------------------------
 # run tests
 # ------------------------------------------------------------------------------
-test: ERLC_OPTS += -DTEST=1
+test: ERLC_OPTS += -DTEST=1 +export_all
 test: clean deps app
 	$(gen_verbose) erlc -v -o test $(ERLC_OPTS) \
 		$(wildcard test/*.erl test/*/*.erl) -pa ebin

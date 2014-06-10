@@ -1,3 +1,14 @@
+2014-06-11  Sina Samavati  <sina.samv@gmail.com>
+
+	* Makefile: update ERLC_OPTS and the target 'deps' to keep tarballs
+
+	* test/leptus_logger_SUITE.erl: add tests for the leptus_logger module
+
+	* include/leptus_logger.hrl: add the record 'log_data' and the macro 'LOGGER'
+
+	* src/leptus_logger.erl: add the module for adding logging handlers to the system
+	  and providing a simple log formatter
+
 2014-06-05  Sina Samavati  <sina.samv@gmail.com>
 
 	* 0.4.2 - src/leptus_handler.erl: use leptus_req:header/2 correctly (fix handling CORS)
