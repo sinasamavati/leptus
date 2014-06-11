@@ -188,6 +188,21 @@
     header(Req, <<"content-type">>) -> <<"application/x-www-form-urlencoded">>
     #+END_SRC
 
+*** header/3
+    :PROPERTIES:
+    :CUSTOM_ID: header-3
+    :END:
+
+    Returns the given header value or the default value if the header does not
+    exist.
+
+    #+BEGIN_SRC erlang
+    header(Req, binary(), Default) -> binary() | Default
+
+    %% e.g.
+    header(Req, <<"content-type">>, undefined) -> undefined
+    #+END_SRC
+
 *** parse_header/2
     :PROPERTIES:
     :CUSTOM_ID: parse_header-2
@@ -216,6 +231,20 @@
 
     %% e.g.
     auth(Req, basic) -> {<<"username">>, <<"p4ssw0rd">>}
+    #+END_SRC
+
+*** auth/2
+    :PROPERTIES:
+    :CUSTOM_ID: peer-1
+    :END:
+
+    Returns the IP address and the port number of the remote host.
+
+    #+BEGIN_SRC erlang
+    peer(Req) -> {inet:ip_address(), inet:port_number()}
+
+    %% e.g.
+    peer(Req) -> {{127, 0, 0, 1}, 3846}
     #+END_SRC
 
 *** get_req/1

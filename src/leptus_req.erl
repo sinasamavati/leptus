@@ -41,8 +41,10 @@
 -export([body_raw/1]).
 -export([body_qs/1]).
 -export([header/2]).
+-export([header/3]).
 -export([parse_header/2]).
 -export([auth/2]).
+-export([peer/1]).
 -export([reply/4]).
 -export([get_req/1]).
 -export([set_req/2]).
@@ -141,6 +143,10 @@ body_qs(Pid) ->
 header(Pid, Name) ->
     invoke(Pid, header, [Name]).
 
+-spec header(pid(), binary(), Default) -> binary() | Default when Default :: any().
+header(Pid, Name, Default) ->
+    invoke(Pid, header, [Name, Default]).
+
 -spec parse_header(pid(), binary()) -> any() | undefined | {error, any()}.
 parse_header(Pid, Name) ->
     invoke(Pid, parse_header, [Name, undefined]).
@@ -153,6 +159,10 @@ auth(Pid, basic) ->
         Value ->
             Value
     end.
+
+-spec peer(pid()) -> {inet:ip_address(), inet:port_number()}.
+peer(Pid) ->
+    invoke(Pid, peer, []).
 
 -spec reply(pid(), cowboy:http_status(), cowboy:http_headers(), iodata()) -> ok.
 reply(Pid, Status, Headers, Body) ->
