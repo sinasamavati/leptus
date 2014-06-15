@@ -1,5 +1,7 @@
 2014-06-15  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus_access_log.erl: update the event handler to make log format customizable
+
 	* src/leptus.erl (start_listener/3): add the option 'log_handlers' to specify log event handlers
 	  and add them to the event manager before starting the listener
 

@@ -36,26 +36,28 @@
 -define(FILENAME_SUFFIX, "-access.log").
 -define(LOG_FORMAT, "~h ~l ~u ~t \"~r\" ~s ~B \"~{referer}\" \"~{user-agent}\"").
 
-init(Dir) ->
+init({Dir, LogFmt}) ->
     Filename = filename(Dir),
     filelib:ensure_dir(Filename),
     {ok, IoDev} = file:open(Filename, [append]),
-    {ok, IoDev}.
+    {ok, {IoDev, LogFmt}};
+init(Dir) ->
+    init({Dir, ?LOG_FORMAT}).
 
-handle_event({access_log, LogData}, IoDev) ->
-    Log = leptus_logger:format(?LOG_FORMAT, LogData),
+handle_event({access_log, LogData}, State={IoDev, LogFmt}) ->
+    Log = leptus_logger:format(LogFmt, LogData),
     file:write(IoDev, [Log, $\n]),
-    {ok, IoDev};
-handle_event(_, IoDev) ->
-    {ok, IoDev}.
+    {ok, State};
+handle_event(_, State) ->
+    {ok, State}.
 
-handle_call(_Request, IoDev) ->
-    {ok, IoDev}.
+handle_call(_Request, State) ->
+    {ok, State}.
 
 handle_info(_Info, State) ->
     {ok, State}.
 
-terminate(_Args, IoDev) ->
+terminate(_Args, {IoDev, _}) ->
     file:close(IoDev),
     ok.
 
