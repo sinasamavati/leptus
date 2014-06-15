@@ -54,7 +54,8 @@
                 | {cacertfile, file:name_all()}
                 | {certfile, file:name_all()}
                 | {keyfile, file:name_all()}
-                | {static_dir, {host_match(), static_directory()}}.
+                | {static_dir, {host_match(), static_directory()}}
+                | {log_handlers, [{module(), any()}]}.
 -type options() :: [option()].
 -export_type([listener/0]).
 -export_type([options/0]).
@@ -81,6 +82,10 @@ start_listener(Listener, Handlers) ->
 start_listener(Listener, Handlers, Opts) ->
     ensure_deps_started(),
     ensure_started(leptus),
+
+    %% add log handlers to the event manager
+    LogHandlers = opt(log_handlers, Opts, []),
+    [ok = leptus_logger:add_handler(M, A) || {M, A} <- LogHandlers],
 
     %% routes
     Paths = leptus_router:paths(Handlers),
