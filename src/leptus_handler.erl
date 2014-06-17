@@ -29,6 +29,7 @@
 -export([upgrade/4]).
 
 -include("leptus.hrl").
+-include("leptus_logger.hrl").
 
 %% -----------------------------------------------------------------------------
 %% types
@@ -53,7 +54,8 @@
 -record(state, {
           resrc = #resrc{} :: resrc(),
           method = <<"GET">> :: binary(),
-          terminate_reason = normal :: terminate_reason()
+          terminate_reason = normal :: terminate_reason(),
+          log_data = #log_data{} :: log_data()
          }).
 -type state() :: #state{}.
 
@@ -61,15 +63,18 @@
 %% cowboy callbacks
 %% -----------------------------------------------------------------------------
 init(_, Req, Resrc) ->
+    LogData = #log_data{},
+    Headers = cowboy_req:get(headers, Req),
     {ok, ReqPid} = leptus_req_sup:start_child(Req),
     Method = leptus_req:method(ReqPid),
-    State = #state{resrc = Resrc, method = Method},
+    LogData1 = LogData#log_data{method = Method, headers = Headers},
+    State = #state{resrc = Resrc, method = Method, log_data = LogData1},
     {upgrade, protocol, ?MODULE, ReqPid, State}.
 
 upgrade(Req, Env, _Handler,
         State=#state{resrc=#resrc{handler=Handler, route=Route,
                                   handler_state=HState}=Resrc,
-                     method=Method}) ->
+                     method=Method, log_data=LogData}) ->
     {ok, State2} =
         try Handler:init(Route, Req, HState) of
             {ok, HState1} ->
@@ -85,15 +90,28 @@ upgrade(Req, Env, _Handler,
                 error_info(Class, Reason, Route, Req, HState),
                 {ok, State#state{terminate_reason={error, Reason}}}
         end,
+
+    LogData1 = LogData#log_data{response_time = erlang:localtime()},
+    receive
+        {Status, ContentLength} ->
+            {IP, _} = leptus_req:peer(Req),
+            Version = leptus_req:version(Req),
+            URI = leptus_req:uri(Req),
+            LogData2 = LogData1#log_data{ip = IP, version = Version,
+                                         uri = URI, status = Status,
+                                         content_length = ContentLength},
+            spawn(leptus_logger, access_log, [LogData2]),
+            spawn(fun() ->
+                          RequestLine = io_lib:format("\"~s ~s ~s\" ~w ~w",
+                                                      [Method, URI, Version,
+                                                       Status, ContentLength]),
+                          console_log(Status, lists:flatten(RequestLine))
+                  end)
+    end,
+
     TerminateReason = State2#state.terminate_reason,
     HState2 = State2#state.resrc#resrc.handler_state,
     handler_terminate(TerminateReason, Handler, Route, Req, HState2),
-
-    receive
-        {Status, ContentLength} ->
-            console_log(Method, Status, ContentLength, Req)
-    end,
-
     Req1 = leptus_req:get_req(Req),
     leptus_req:stop(Req),
     {ok, Req1, Env}.
@@ -540,16 +558,13 @@ error_info(Class, Reason, Route, Req, State) ->
 %% -----------------------------------------------------------------------------
 %% print request date-time, requested URI, response status and content-length
 %% -----------------------------------------------------------------------------
--spec console_log(binary(), status_code(), non_neg_integer(), req()) -> ok.
-console_log(Method, Status, ContentLength, Req) ->
+-spec console_log(status_code(), string()) -> ok.
+console_log(Status, RequestLine) ->
     %% [%Y-%m-%d %H:%M:%S] "METHOD URL VERSION" STATUS CONTENT-LENGTH
     {{Year, Month, Day}, {Hour, Min, Sec}} = erlang:localtime(),
-    Version = leptus_req:version(Req),
-    URI = leptus_req:uri(Req),
     Color = status_color(Status),
-    io:format("~s[~w-~w-~w ~w:~w:~w] \"\~s ~s ~s\"\ ~w ~p\e[0m~n",
-              [Color, Year, Month, Day, Hour, Min, Sec, Method, URI, Version,
-               Status, ContentLength]).
+    io:format("~s[~w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w] ~s\e[0m~n",
+              [Color, Year, Month, Day, Hour, Min, Sec, RequestLine]).
 
 %% -----------------------------------------------------------------------------
 %% get terminal color escape code based on status code
