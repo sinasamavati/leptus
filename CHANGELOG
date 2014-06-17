@@ -1,3 +1,7 @@
+2014-06-17  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_sup.erl (init/1): add logger event manager in the supervisor tree
+
 2014-06-15  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_access_log.erl: update the event handler to make log format customizable
