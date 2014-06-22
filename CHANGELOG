@@ -1,3 +1,8 @@
+2014-06-22  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_access_log.erl: add open_file/1 & millsec_til_tomorrow/0.
+	  add a timer for asking for a new file once a day
+
 2014-06-17  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_handler.erl: spawn processes for doing the access & console log
