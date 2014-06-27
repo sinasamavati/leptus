@@ -112,25 +112,23 @@ month(12) -> "Dec".
 
 -spec timezone() -> io_lib:chars().
 timezone() ->
-    {_, {H, M, _}} = erlang:universaltime(),
-    {_, {H1, M1, _}} = erlang:localtime(),
-    {DiffH, DiffM} = timezone({H, M}, {H1, M1}),
+    {DiffH, DiffM} = timezone(erlang:universaltime(), erlang:localtime()),
+    %% Ugly reformatting code to get times like +0000 and -1300
     if DiffH < 0 ->
-            io_lib:format("-~2..0w~w", [DiffH, DiffM]);
+            io_lib:format("-~2..0w~2..0w", [abs(DiffH), abs(DiffM)]);
        true ->
-            io_lib:format("+~2..0w~w", [DiffH, DiffM])
+            io_lib:format("+~2..0w~2..0w", [DiffH, DiffM])
     end.
 
--spec timezone({integer(), integer()}, {integer(), integer()}) ->
+-spec timezone(calendar:datetime(), calendar:datetime()) ->
                       {integer(), integer()}.
-timezone({H, M}, {H1, M1}) ->
-    TZH = H1 - H,
-    TZM = M1 - M,
-    if TZM < 0 ->
-            {TZH - 1, abs(TZM)};
-       true ->
-            {TZH, TZM}
-    end.
+timezone(UniversalTime, LocalTime) ->
+    DiffSecs = calendar:datetime_to_gregorian_seconds(LocalTime) -
+        calendar:datetime_to_gregorian_seconds(UniversalTime),
+    Mins = (DiffSecs / 60),
+    H = trunc(Mins / 60),
+    M =  trunc(Mins - (H * 60)),
+    {H, M}.
 
 -spec datetime(calendar:datetime()) -> string().
 datetime({{Y, M, D}, {H, Mi, S}}) ->
