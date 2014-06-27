@@ -1,3 +1,7 @@
+2014-06-27  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_logger.erl (timezone): fix timezone calculation
+
 2014-06-22  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_access_log.erl: add open_file/1 & millsec_til_tomorrow/0.

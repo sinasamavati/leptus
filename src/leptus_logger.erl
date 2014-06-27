@@ -110,21 +110,29 @@ month(10) -> "Oct";
 month(11) -> "Nov";
 month(12) -> "Dec".
 
--spec zone() -> string().
-zone() ->
-    Time = erlang:universaltime(),
-    LocalTime = calendar:universal_time_to_local_time(Time),
-    DiffSecs = calendar:datetime_to_gregorian_seconds(LocalTime) -
-        calendar:datetime_to_gregorian_seconds(Time),
-    zone((DiffSecs/3600)*100).
+-spec timezone() -> io_lib:chars().
+timezone() ->
+    {_, {H, M, _}} = erlang:universaltime(),
+    {_, {H1, M1, _}} = erlang:localtime(),
+    {DiffH, DiffM} = timezone({H, M}, {H1, M1}),
+    if DiffH < 0 ->
+            io_lib:format("-~2..0w~w", [DiffH, DiffM]);
+       true ->
+            io_lib:format("+~2..0w~w", [DiffH, DiffM])
+    end.
 
--spec zone(float()) -> string().
-zone(Val) when Val < 0 ->
-    io_lib:format("-~4..0w", [trunc(abs(Val))]);
-zone(Val) when Val >= 0 ->
-    io_lib:format("+~4..0w", [trunc(abs(Val))]).
+-spec timezone({integer(), integer()}, {integer(), integer()}) ->
+                      {integer(), integer()}.
+timezone({H, M}, {H1, M1}) ->
+    TZH = H1 - H,
+    TZM = M1 - M,
+    if TZM < 0 ->
+            {TZH - 1, abs(TZM)};
+       true ->
+            {TZH, TZM}
+    end.
 
 -spec datetime(calendar:datetime()) -> string().
 datetime({{Y, M, D}, {H, Mi, S}}) ->
     io_lib:format("~w/~s/~w:~2..0w:~2..0w:~2..0w ~s",
-                  [D, month(M), Y, H, Mi, S, zone()]).
+                  [D, month(M), Y, H, Mi, S, timezone()]).
