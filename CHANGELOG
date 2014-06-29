@@ -1,3 +1,7 @@
+2014-06-29  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_handler.erl: fix a type error
+
 2014-06-28  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_logger.erl (timezone): re-fix timezone calculation

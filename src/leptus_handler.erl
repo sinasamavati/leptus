@@ -124,7 +124,7 @@ upgrade(Req, Env, _Handler,
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
 
--spec http_method(binary()) -> method() | not_allowed.
+-spec http_method(binary()) -> method() | options | not_allowed.
 http_method(<<"GET">>) -> get;
 http_method(<<"PUT">>) -> put;
 http_method(<<"POST">>) -> post;
@@ -136,11 +136,7 @@ http_method(_) -> not_allowed.
 %% -----------------------------------------------------------------------------
 %% Handler:Method/3 (Method :: get | put | post | delete)
 %% -----------------------------------------------------------------------------
--spec handle_request(not_allowed, req(), State) ->
-                            {ok, State} when State :: state();
-                    (options, req(), State) ->
-                            {ok, State} when State :: state();
-                    (method(), req(), State) ->
+-spec handle_request(not_allowed | options | method(), req(), State) ->
                             {ok, State} when State :: state().
 handle_request(not_allowed, Req,
                State=#state{resrc=#resrc{handler_state=HandlerState,
