@@ -54,7 +54,7 @@ handle_event(_, State) ->
     {ok, State}.
 
 handle_call(_Request, State) ->
-    {ok, State}.
+    {ok, ok, State}.
 
 handle_info(open_new_file, State=#state{dir=Dir, io_dev=IoDev}) ->
     file:close(IoDev),

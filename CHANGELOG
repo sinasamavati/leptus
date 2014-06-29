@@ -1,5 +1,7 @@
 2014-06-29  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus_access_log.erl (handle_call/2): fix return error
+
 	* src/leptus_handler.erl: fix a type error
 
 2014-06-28  Sina Samavati  <sina.samv@gmail.com>
