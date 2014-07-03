@@ -212,6 +212,7 @@ extra_listener_opts(Opts) ->
      {keyfile, opt(keyfile, Opts, "")}
     ].
 
+-spec ensure_started(atom()) -> ok.
 ensure_started(App) ->
     case application:start(App) of
         ok ->
@@ -220,13 +221,17 @@ ensure_started(App) ->
             ok
     end.
 
+%% -----------------------------------------------------------------------------
 %% ensure dependencies are started
+%% -----------------------------------------------------------------------------
+-spec ensure_deps_started() -> ok.
 ensure_deps_started() ->
     ensure_started(crypto),
     ensure_started(ranch),
     ensure_started(cowlib),
     ensure_started(cowboy).
 
+-spec opt(atom(), options(), Default) -> any() | Default when Default :: any().
 opt(Key, [{Key, Value}|_], _) ->
     Value;
 opt(Key, [_|Rest], Default) ->
@@ -237,6 +242,7 @@ opt(_, [], Default) ->
 %% -----------------------------------------------------------------------------
 %% print the version number and what ip/port it's started on
 %% -----------------------------------------------------------------------------
+-spec print_info(inet:ip_address(), inet:portn_number()) -> ok.
 print_info(IP, Port) ->
     {ok, Vsn} = application:get_key(leptus, vsn),
     io:format("Leptus ~s started on http://~s:~p~n",
@@ -246,6 +252,7 @@ print_info(IP, Port) ->
 %% update leptus_config ETS table
 %% keep handlers and options in an ETS table
 %% -----------------------------------------------------------------------------
+-spec update_listener_bucket({listener(), {handlers(), options()}}) -> ok.
 update_listener_bucket({Listener, {Handlers, Opts}}) ->
     %% [{Listener, Bucket}]
     Bucket = #listener_bucket{handlers = Handlers, options = Opts,

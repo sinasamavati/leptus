@@ -1,3 +1,8 @@
+2014-07-03  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus.erl: add function specifications for ensure_started/1,
+	  ensure_deps_started/0, opt/3, print_info/2, update_listener_bucket/1
+
 2014-06-29  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_access_log.erl (handle_call/2): fix return error
