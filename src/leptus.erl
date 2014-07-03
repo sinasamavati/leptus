@@ -160,7 +160,7 @@ running_listeners() ->
     F = fun({L, _}, Acc) ->
                 [L|Acc]
         end,
-    lists:foldr(F, [], leptus_config:lookup(listeners)).
+    lists:foldr(F, [], leptus_config:lookup(listeners, [])).
 
 %% -----------------------------------------------------------------------------
 %% get uptime of a running listener
