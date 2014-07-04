@@ -1,3 +1,7 @@
+2014-07-04  Sina Samavati  <sina.samv@gmail.com>
+
+	* test/leptus_handler_SUITE.erl: add tests for three internal functions of leptus_handler
+
 2014-07-03  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus.erl: add function specifications for ensure_started/1,

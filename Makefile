@@ -21,8 +21,8 @@
 # THE SOFTWARE.
 
 PROJECT = leptus
-CT_SUITES = leptus_router leptus_req leptus_http leptus_pt leptus_config \
-	leptus_logger
+CT_SUITES = leptus_router leptus_req leptus_handler leptus_http leptus_pt \
+	leptus_config leptus_logger
 
 dep_cowboy = https://github.com/extend/cowboy/archive/0.9.0.tar.gz
 dep_msgpack = https://github.com/msgpack/msgpack-erlang/archive/0.2.8.tar.gz
