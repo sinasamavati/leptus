@@ -1,0 +1,117 @@
+#+TITLE:    leptus_router module
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+OPTIONS:  ^:nil num:nil
+
+* leptus_logger module
+  :PROPERTIES:
+  :CUSTOM_ID: leptus_logger
+  :END:
+
+  This module is used for adding/removing log handlers and sending log events.
+
+** Functions
+  :PROPERTIES:
+  :CUSTOM_ID: functions
+  :END:
+
+*** add_handler/2
+    :PROPERTIES:
+    :CUSTOM_ID: add_handler-2
+    :END:
+
+    Adds a new log handler to the gen_event manager leptus_log_man.
+
+    #+BEGIN_SRC erlang
+    add_handler(Handler, Args) -> ok | {'EXIT', any()} | any()
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    Handler = atom() | {atom(), any()}
+    Args = any()
+    #+END_SRC
+
+*** delete_handler/2
+    :PROPERTIES:
+    :CUSTOM_ID: delete_handler-2
+    :END:
+
+    Removes a log handler from the gen_event manager leptus_log_man.
+
+    #+BEGIN_SRC erlang
+    delete_handler(Handler, Args) -> any() | {error, module_not_found} | {'EXIT', any()}
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    Handler = atom() | {atom(), any()}
+    Args = any()
+    #+END_SRC
+
+*** access_log/1
+    :PROPERTIES:
+    :CUSTOM_ID: access_log-2
+    :END:
+
+    Sends the event notification ~{access_log, LogData}~ to the event manager
+    leptus_log_man.
+
+    #+BEGIN_SRC erlang
+    access_log(LogData) -> ok
+    #+END_SRC
+
+    Type:
+
+    #+BEGIN_SRC erlang
+    LogData = #log_data {
+                          request_time :: calendar:datetime(),
+                          response_time :: undefined | calendar:datetime(),
+                          request_line :: string(),
+                          ip :: inet:ip_address(),
+                          version :: atom(),
+                          method :: binary(),
+                          uri :: binary(),
+                          headers :: [{binary(), iodata()}],
+                          status :: non_neg_integer(),
+                          content_length :: non_neg_integer()
+                        }
+    #+END_SRC
+
+*** format/2
+    :PROPERTIES:
+    :CUSTOM_ID: format-2
+    :END:
+
+    Produces a log line with a given format.
+
+    #+BEGIN_SRC erlang
+    format(Fmt, LogData) -> string()
+    #+END_SRC
+
+    Types:
+
+    #+BEGIN_SRC erlang
+    Fmt = string()
+    LogData = #log_data {
+                          request_time :: calendar:datetime(),
+                          response_time :: undefined | calendar:datetime(),
+                          request_line :: string(),
+                          ip :: inet:ip_address(),
+                          version :: atom(),
+                          method :: binary(),
+                          uri :: binary(),
+                          headers :: [{binary(), iodata()}],
+                          status :: non_neg_integer(),
+                          content_length :: non_neg_integer()
+                        }
+    #+END_SRC
+
+    Example:
+
+    #+BEGIN_SRC erlang
+    > format("~h ~l ~u ~t \"~r\" ~s ~B", LogData).
+    "127.0.0.1 - - [11/Jun/2014:03:07:25 +0450] \"GET /b?p=2 HTTP/1.1\" 200 83"
+    #+END_SRC

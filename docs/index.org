@@ -69,6 +69,7 @@
      - [[leptus.org][leptus]]
      - [[leptus_config.org][leptus_config]]
      - [[leptus_json.org][leptus_json]]
+     - [[leptus_logger.org][leptus_logger]]
      - [[leptus_req.org][leptus_req]]
      - [[leptus_router.org][leptus_router]]
      - [[leptus_utils.org][leptus_utils]]
