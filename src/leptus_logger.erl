@@ -28,18 +28,19 @@
 %% API
 %% -----------------------------------------------------------------------------
 -export([add_handler/2]).
--export([delete_handler/1]).
+-export([delete_handler/2]).
 -export([access_log/1]).
 -export([format/2]).
 
--spec add_handler(atom() | {atom(), any()}, any()) -> {'EXIT', any()} | any().
+-spec add_handler(atom() | {atom(), any()}, any()) -> ok | {'EXIT', any()} |
+                                                      any().
 add_handler(Mod, Args) ->
     gen_event:add_handler(?LOGGER, Mod, Args).
 
 -spec delete_handler(atom() | {atom(), any()}) ->
                             any() | {error, module_not_found} | {'EXIT', any()}.
-delete_handler(Mod) ->
-    gen_event:delete_handler(?LOGGER, Mod, []).
+delete_handler(Mod, Args) ->
+    gen_event:delete_handler(?LOGGER, Mod, Args).
 
 -spec access_log(log_data()) -> ok.
 access_log(LogData) ->

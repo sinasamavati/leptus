@@ -1,3 +1,7 @@
+2014-07-13  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_logger.erl: fix type spec of add_handler/2 & add delete_handler/2
+
 2014-07-04  Sina Samavati  <sina.samv@gmail.com>
 
 	* test/leptus_handler_SUITE.erl: add tests for three internal functions of leptus_handler
