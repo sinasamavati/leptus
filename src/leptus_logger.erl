@@ -37,7 +37,7 @@
 add_handler(Mod, Args) ->
     gen_event:add_handler(?LOGGER, Mod, Args).
 
--spec delete_handler(atom() | {atom(), any()}) ->
+-spec delete_handler(atom() | {atom(), any()}, any()) ->
                             any() | {error, module_not_found} | {'EXIT', any()}.
 delete_handler(Mod, Args) ->
     gen_event:delete_handler(?LOGGER, Mod, Args).

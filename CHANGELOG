@@ -1,3 +1,7 @@
+2014-07-14  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus_logger.erl (delete_handler/2): fix type spec
+
 2014-07-13  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_logger.erl: fix type spec of add_handler/2 & add delete_handler/2
