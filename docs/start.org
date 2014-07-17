@@ -17,6 +17,19 @@
    Listener          = http | https | spdy
    AppName           = atom()
    HandlersOrAppName = Handlers | AppName
+
+   HostMatch = term()
+   StaticDir = file:name() | {priv_dir, App :: atom(), Dir :: file:name()}
+
+   Option = {nb_acceptors, non_neg_integer()}
+          | {ip, inet:ip_address()}
+          | {port, inet:port_number()}
+          | {cacertfile, file:name_all()}
+          | {certfile, file:name_all()}
+          | {keyfile, file:name_all()}
+          | {static_dir, {HostMatch, StaticDir}}
+          | {log_handlers, [{module(), any()}]}
+   Options = [Option]
    #+END_SRC
 
 ** leptus functions
