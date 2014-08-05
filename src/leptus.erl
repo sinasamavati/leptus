@@ -113,7 +113,10 @@ start_listener(Listener, Handlers, Opts) ->
                               [{env, [{dispatch, Dispatch1}]}]),
     case Res of
         {ok, _} ->
-            update_listener_bucket({Listener, {Handlers, ListenerOpts}}),
+            Opts1 = lists:keydelete(ip, 1, Opts),
+            Opts2 = lists:keydelete(port, 1, Opts1),
+            Opts3 = [{ip, IP}, {port, Port}|Opts2],
+            update_listener_bucket({Listener, {Handlers, Opts3}}),
             print_info(IP, Port);
         _ ->
             ok

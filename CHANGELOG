@@ -1,3 +1,7 @@
+2014-08-05  Sina Samavati  <sina.samv@gmail.com>
+
+	* src/leptus.erl (start_listener/3): keep used options in an ETS table
+
 2014-07-14  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus_logger.erl (delete_handler/2): fix type spec
