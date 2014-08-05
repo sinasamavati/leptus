@@ -1,6 +1,7 @@
 2014-08-05  Sina Samavati  <sina.samv@gmail.com>
 
 	* src/leptus.erl (start_listener/3): keep used options in an ETS table
+	(upgrade/3): add function upgrade/3 to use options when upgrading a listener
 
 2014-07-14  Sina Samavati  <sina.samv@gmail.com>
 

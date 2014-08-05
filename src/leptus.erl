@@ -30,6 +30,7 @@
 -export([upgrade/0]).
 -export([upgrade/1]).
 -export([upgrade/2]).
+-export([upgrade/3]).
 -export([stop_listener/1]).
 -export([running_listeners/0]).
 -export([listener_uptime/1]).
@@ -141,8 +142,24 @@ upgrade(Listeners) ->
 %% -----------------------------------------------------------------------------
 -spec upgrade(listener(), handlers()) -> ok.
 upgrade(Listener, Handlers) ->
+    Opts = case leptus_utils:listener_bucket(Listener) of
+               not_found ->
+                   [];
+               #listener_bucket{options = Opts1} ->
+                   Opts1
+           end,
+    upgrade(Listener, Handlers, Opts).
+
+-spec upgrade(listener(), handlers(), options()) -> ok.
+upgrade(Listener, Handlers, Opts) ->
     Paths = leptus_router:paths(Handlers),
-    Dispatch = cowboy_router:compile(Paths),
+    Paths1 = case opt(static_dir, Opts, undefined) of
+                 undefined ->
+                     [];
+                 Path ->
+                     leptus_router:static_file_routes(Path)
+             end,
+    Dispatch = cowboy_router:compile(Paths ++ Paths1),
     %% sort compiled routes
     Dispatch1 = leptus_router:sort_dispatch(Dispatch),
     Ref = get_ref(Listener),
