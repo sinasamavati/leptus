@@ -33,8 +33,10 @@ else
     dep_jiffy = https://github.com/davisp/jiffy/archive/0.8.5.tar.gz
 endif
 
+DEPS_DIR ?= $(CURDIR)/deps
+export DEPS_DIR
+
 EBIN = $(CURDIR)/ebin
-DEPS_DIR = $(CURDIR)/deps
 DOCS_DIR = $(CURDIR)/docs
 TEST_DIR = $(CURDIR)/test
 PLT_FILE = $(CURDIR)/.$(PROJECT).plt
@@ -77,19 +79,19 @@ all: deps app
 .PRECIOUS: deps/%.tar.gz
 
 deps: $(DEPS_DIR) $(patsubst dep_%,deps/%/,$(filter dep_%,$(.VARIABLES)))
-	$(if $(wildcard deps/*/deps/), \
-	    mv -v deps/*/deps/* deps/ && rm -rf $(wildcard deps/*/deps/))
+	$(if $(shell find deps/*/deps/* -maxdepth 1 -type d 2> /dev/null), \
+	    mv -v deps/*/deps/* $(DEPS_DIR) && rm -rf deps/*/deps/)
 
 deps/%/: deps/%.tar.gz
 	mkdir -p $(DEPS_DIR)/$*
-	tar xzf $@.tar.gz -C $(DEPS_DIR)/$* --strip-components=1
-	@if [ -f $@/Makefile ]; \
-	then $(MAKE) -C $@ all ; \
+	tar xzf $(DEPS_DIR)/$*.tar.gz -C $(DEPS_DIR)/$* --strip-components=1
+	@if [ -f $(DEPS_DIR)/$*/Makefile ]; \
+	then $(MAKE) -C $(DEPS_DIR)/$* all ; \
 	else echo 'cd $@ && rebar get-deps compile' ; \
-		cd $@ && rebar get-deps compile ; fi
+		cd $(DEPS_DIR)/$* && rebar get-deps compile ; fi
 
 deps/%.tar.gz:
-	curl -L $(word 1,$(dep_$*)) -o $@
+	curl -L $(word 1,$(dep_$*)) -o $(DEPS_DIR)/$*.tar.gz
 
 # ------------------------------------------------------------------------------
 # build application
