@@ -27,6 +27,7 @@
 %% -----------------------------------------------------------------------------
 -export([start_listener/2]).
 -export([start_listener/3]).
+-export([start_listener/4]).
 -export([upgrade/0]).
 -export([upgrade/1]).
 -export([upgrade/2]).
@@ -81,6 +82,11 @@ start_listener(Listener, Handlers) ->
 -spec start_listener(listener(), handlers(), options()) ->
                             {ok, pid()} | {error, any()}.
 start_listener(Listener, Handlers, Opts) ->
+    start_listener(Listener, Handlers, Opts, []).
+
+-spec start_listener(listener(), handlers(), options(), cowboy_protocol:opts()) ->
+                            {ok, pid()} | {error, any()}.
+start_listener(Listener, Handlers, Opts, UserCowboyProtoOpts) ->
     ensure_deps_started(),
     ensure_started(leptus),
 
@@ -110,8 +116,9 @@ start_listener(Listener, Handlers, Opts) ->
     Port = opt(port, Opts, 8080),
 
     ListenerOpts = listener_opts(Listener, IP, Port, Opts),
-    Res = cowboy:ListenerFunc(Ref, NbAcceptors, ListenerOpts,
-                              [{env, [{dispatch, Dispatch1}]}]),
+    CowboyProtoOpts = [{env, [{dispatch, Dispatch1}]} | UserCowboyProtoOpts],
+
+    Res = cowboy:ListenerFunc(Ref, NbAcceptors, ListenerOpts, CowboyProtoOpts),
     case Res of
         {ok, _} ->
             Opts1 = lists:keydelete(ip, 1, Opts),
