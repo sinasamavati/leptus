@@ -95,7 +95,8 @@
 ** Support
 
    - [[https://github.com/s1n4/leptus/issues][Issue tracker]]
-   - #leptus on Freenode
+   - #leptus IRC channel on Freenode
+   - [[https://groups.google.com/groups/leptus][leptus]] mailing-list on Google Groups
 
 ** License
 
