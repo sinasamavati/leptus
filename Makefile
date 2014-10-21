@@ -78,11 +78,11 @@ all: deps app
 # ------------------------------------------------------------------------------
 .PRECIOUS: deps/%.tar.gz
 
-deps: $(DEPS_DIR) $(patsubst dep_%,deps/%/,$(filter dep_%,$(.VARIABLES)))
+deps: $(DEPS_DIR) $(patsubst dep_%,$(DEPS_DIR)/%/,$(filter dep_%,$(.VARIABLES)))
 	$(if $(shell find deps/*/deps/* -maxdepth 1 -type d 2> /dev/null), \
 	    mv -v deps/*/deps/* $(DEPS_DIR) && rm -rf deps/*/deps/)
 
-deps/%/: deps/%.tar.gz
+$(DEPS_DIR)/%/: $(DEPS_DIR)/%.tar.gz
 	mkdir -p $(DEPS_DIR)/$*
 	tar xzf $(DEPS_DIR)/$*.tar.gz -C $(DEPS_DIR)/$* --strip-components=1
 	@if [ -f $(DEPS_DIR)/$*/Makefile ]; \
@@ -90,7 +90,7 @@ deps/%/: deps/%.tar.gz
 	else echo 'cd $@ && rebar get-deps compile' ; \
 		cd $(DEPS_DIR)/$* && rebar get-deps compile ; fi
 
-deps/%.tar.gz:
+$(DEPS_DIR)/%.tar.gz:
 	curl -L $(word 1,$(dep_$*)) -o $(DEPS_DIR)/$*.tar.gz
 
 # ------------------------------------------------------------------------------
