@@ -76,13 +76,16 @@ all: deps app
 # ------------------------------------------------------------------------------
 # fetch and build dependencies
 # ------------------------------------------------------------------------------
-.PRECIOUS: deps/%.tar.gz
+.PRECIOUS: $(DEPS_DIR)/%.tar.gz
 
-deps: $(DEPS_DIR) $(patsubst dep_%,deps/%/,$(filter dep_%,$(.VARIABLES)))
-	$(if $(shell find deps/*/deps/* -maxdepth 1 -type d 2> /dev/null), \
-	    mv -v deps/*/deps/* $(DEPS_DIR) && rm -rf deps/*/deps/)
+deps: $(DEPS_DIR) $(patsubst dep_%,$(DEPS_DIR)/%/,$(filter dep_%,$(.VARIABLES)))
+	$(if $(shell find $(DEPS_DIR)/*/deps/* -maxdepth 1 -type d 2> /dev/null), \
+	    mv -v $(DEPS_DIR)/*/deps/* $(DEPS_DIR) && rm -rf $(DEPS_DIR)/*/deps/)
 
-deps/%/: deps/%.tar.gz
+$(DEPS_DIR):
+	mkdir -p $(DEPS_DIR)
+
+$(DEPS_DIR)/%/: $(DEPS_DIR)/%.tar.gz
 	mkdir -p $(DEPS_DIR)/$*
 	tar xzf $(DEPS_DIR)/$*.tar.gz -C $(DEPS_DIR)/$* --strip-components=1
 	@if [ -f $(DEPS_DIR)/$*/Makefile ]; \
@@ -90,7 +93,7 @@ deps/%/: deps/%.tar.gz
 	else echo 'cd $@ && rebar get-deps compile' ; \
 		cd $(DEPS_DIR)/$* && rebar get-deps compile ; fi
 
-deps/%.tar.gz:
+$(DEPS_DIR)/%.tar.gz:
 	curl -L $(word 1,$(dep_$*)) -o $(DEPS_DIR)/$*.tar.gz
 
 # ------------------------------------------------------------------------------
@@ -161,6 +164,3 @@ clean-docs:
 distclean: clean clean-docs
 	rm -rf $(DEPS_DIR) $(CURDIR)/logs $(CURDIR)/*.beam $(PLT_FILE)
 	$(MAKE) -C $(DOCS_DIR) distclean
-
-$(CURDIR)/%:
-	mkdir -p $@
