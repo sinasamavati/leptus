@@ -1,5 +1,3 @@
-%% The MIT License
-%%
 %% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
