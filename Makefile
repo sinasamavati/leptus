@@ -141,7 +141,7 @@ test: clean deps app
 dialyze: $(PLT_FILE)
 	@dialyzer +S 8 --src src --plt $(PLT_FILE) --no_native $(DIALYZER_OPTS)
 
-$(CURDIR)/%.plt:
+$(PLT_FILE):
 	$(gen_verbose) dialyzer +S 8 --build_plt --output_plt $@ \
 		--apps erts kernel stdlib $(PLT_APPS) \
 		$(patsubst %/,%,$(filter %/,$(wildcard $(DEPS_DIR)/*/)))
