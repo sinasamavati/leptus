@@ -46,9 +46,6 @@ ERLC_OPTS += -I include -Werror +debug_info +warn_export_all +warn_export_vars \
 
 V ?= 0
 
-appsrc_verbose_0 = @echo "  APP   " $(PROJECT).app.src;
-appsrc_verbose = $(appsrc_verbose_$(V))
-
 erlc_verbose_0 = @echo "  ERLC  " $(?F);
 erlc_verbose = $(erlc_verbose_$(V))
 
@@ -105,12 +102,8 @@ ebin/: $(wildcard src/*.erl)
 	@mkdir -p $(EBIN)
 	$(erlc_verbose) erlc -v -o ebin $(ERLC_OPTS) $?
 
-ebin/$(PROJECT).app:
-	$(eval MODULES := $(shell find ebin -type f -name \*.beam \
-		| sed 's/ebin\///;s/\.beam/,/' | sed '$$s/.$$//'))
-	$(appsrc_verbose) cat src/$(PROJECT).app.src \
-		| sed 's/{modules,[[:space:]]*\[\]}/{modules, \[$(MODULES)\]}/' \
-		> ebin/$(PROJECT).app
+ebin/%.app: src/%.app.src
+	cp $< $@
 
 # ------------------------------------------------------------------------------
 # build docs

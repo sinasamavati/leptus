@@ -31,5 +31,11 @@
                  ]},
   {mod, {leptus_app, []}},
   {env, []},
-  {modules, []}
+  {modules, [
+             leptus, leptus_app, leptus_sup,
+             leptus_handler, leptus_router, leptus_pt,
+             leptus_config, leptus_req_sup, leptus_req,
+             leptus_json, leptus_utils, leptus_logger,
+             leptus_access_log
+            ]}
  ]}.
