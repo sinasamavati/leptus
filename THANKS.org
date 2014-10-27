@@ -9,3 +9,4 @@
   - [[https://github.com/wmealing][Wade Mealing]]
   - [[https://github.com/seth][Seth Falcon]]
   - [[https://github.com/jfacorro][Juan Facorro]]
+  - [[https://github.com/ptuckey][Patrick Tuckey]]
