@@ -1,9 +1,9 @@
-#+TITLE:    Leptus documentations
+#+TITLE:    Leptus documentation
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
 #+OPTIONS:  ^:nil toc:nil num:nil
 
-* Leptus documentations
+* Leptus documentation
   :PROPERTIES:
   :CUSTOM_ID: docs
   :END:
