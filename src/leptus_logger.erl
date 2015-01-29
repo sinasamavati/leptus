@@ -56,37 +56,38 @@ format(Fmt, LogData) ->
 %% -----------------------------------------------------------------------------
 -spec format(string(), log_data(), iolist()) -> string().
 format([], _, Acc) ->
-    lists:flatten(Acc);
+    lists:flatten(lists:reverse(Acc));
 format([$~, $h|Fmt], LD=#log_data{ip=IP}, Acc) ->
-    format(Fmt, LD, Acc ++ [inet_parse:ntoa(IP)]);
+    format(Fmt, LD, [inet_parse:ntoa(IP)|Acc]);
 format([$~, $l|Fmt], LD, Acc) ->
-    format(Fmt, LD, Acc ++ [$-]);
+    format(Fmt, LD, [$-|Acc]);
 format([$~, $u|Fmt], LD, Acc) ->
-    format(Fmt, LD, Acc ++ [$-]);
+    format(Fmt, LD, [$-|Acc]);
 format([$~, $t|Fmt], LD=#log_data{request_time=Datetime}, Acc) ->
-    format(Fmt, LD, Acc ++ [$[, datetime(Datetime), $]]);
+    format(Fmt, LD, [[$[, datetime(Datetime), $]]|Acc]);
 format([$~, $r|Fmt], LD=#log_data{method=M, uri=U, version=V}, Acc) ->
-    format(Fmt, LD, Acc ++ [binary_to_list(M), $ , binary_to_list(U), $ ,
-                            atom_to_list(V)]);
+    format(Fmt, LD, [[binary_to_list(M), $ ,
+                      binary_to_list(U), $ ,
+                      atom_to_list(V)]|Acc]);
 format([$~, $s|Fmt], LD=#log_data{status=S}, Acc) ->
-    format(Fmt, LD, Acc ++ [integer_to_list(S)]);
+    format(Fmt, LD, [integer_to_list(S)|Acc]);
 format([$~, $b|Fmt], LD=#log_data{content_length=0}, Acc) ->
-    format(Fmt, LD, Acc ++ [$-]);
+    format(Fmt, LD, [$-|Acc]);
 format([$~, $b|Fmt], LD=#log_data{content_length=B}, Acc) ->
-    format(Fmt, LD, Acc ++ [integer_to_list(B)]);
+    format(Fmt, LD, [integer_to_list(B)|Acc]);
 format([$~, $B|Fmt], LD=#log_data{content_length=B}, Acc) ->
-    format(Fmt, LD, Acc ++ [integer_to_list(B)]);
+    format(Fmt, LD, [integer_to_list(B)|Acc]);
 format([$~, ${|Fmt], LD=#log_data{headers=Headers}, Acc) ->
     {Name, Fmt1} = get_name(Fmt, []),
-    format(Fmt1, LD, Acc ++ [get_value(Name, Headers)]);
+    format(Fmt1, LD, [get_value(Name, Headers)|Acc]);
 format([H|Fmt], LD, Acc) ->
-    format(Fmt, LD, Acc ++ [H]).
+    format(Fmt, LD, [H|Acc]).
 
 -spec get_name(string(), string()) -> {binary(), string()}.
 get_name([$}|Fmt], Acc) ->
-    {list_to_binary(Acc), Fmt};
+    {list_to_binary(lists:reverse(Acc)), Fmt};
 get_name([H|Fmt], Acc) ->
-    get_name(Fmt, Acc ++ [H]).
+    get_name(Fmt, [H|Acc]).
 
 -spec get_value(binary(), [{binary(), iodata()}]) -> list().
 get_value(K, Props) ->
