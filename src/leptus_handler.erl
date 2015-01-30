@@ -145,40 +145,54 @@ handle_request(options, Req,
                State=#state{resrc=#resrc{handler=Handler, route=Route,
                                          handler_state=HandlerState}}) ->
     %% deal with CORS preflight request
-    Method = leptus_req:header(Req, <<"access-control-request-method">>),
-    case is_allowed(Handler, http_method(Method), Route, Method) of
-        true ->
-            handle_response({<<>>, HandlerState}, Req, State);
-        false ->
-            handle_request(not_allowed, Req, State)
-    end;
+    check_cors_preflight(Req, State);
 handle_request(Func, Req,
                State=#state{resrc=#resrc{handler=Handler, route=Route,
                                          handler_state=HandlerState},
                             method=Method}) ->
     %% reasponse and terminate reason
-    {Response,
-     TReason} = case is_allowed(Handler, Func, Route, Method) of
-                    true ->
-                        case authorization(Handler, Route, Req, HandlerState) of
-                            {true, HandlerState1} ->
-                                try Handler:Func(Route, Req, HandlerState1) of
-                                    Resp ->
-                                        {Resp, normal}
-                                catch Class:Reason ->
-                                        error_info(Class, Reason, Route, Req,
-                                                   HandlerState1),
-                                        {{500, <<>>, HandlerState1},
-                                         {error, Reason}}
-                                end;
-                            {false, Resp, TR} ->
-                                {Resp, TR}
-                        end;
-                    false ->
-                        {method_not_allowed(Handler, Route, HandlerState),
-                         not_allowed}
-                end,
+    {Response, TReason} = check_method(Func, Req, Handler, Route, HandlerState, Method),
     handle_response(Response, Req, State#state{terminate_reason=TReason}).
+
+check_method(Func, Req, Handler, Route, HandlerState, Method) ->
+    check_method(Func, Req, Handler, Route, HandlerState, Method, 
+		 is_allowed(Handler, Route, Req, HandlerState).
+
+check_method(Func, Req,  Handler, Route, HandlerState, Method, true) ->
+    check_authorization(Handler, Func, Route, Req, HandlerState);
+check_method(Func, Req,  Handler, Route, HandlerState, Method, false) ->
+    {method_not_allowed(Handler, Route, HandlerState), not_allowed}.
+
+check_authorization(Handler, Func, Route, Req, HandlerState) ->
+    do_handle_request(Handler, Func, Route, Req, authorization(Handler, Route, Req, HandlerState)).
+
+do_handle_request(Handler, Func, Route, Req, {true, HandlerState1}) ->
+    try Handler:Func(Route, Req, HandlerState1) of
+	Resp ->
+	    {Resp, normal}
+    catch Class:Reason ->
+	    error_info(Class, Reason, Route, Req,
+		       HandlerState1),
+	    {{500, <<>>, HandlerState1}, {error, Reason}}
+    end;
+do_handle_request(_, _, _, _, {false, Resp, TR}) ->
+    {Resp, TR}.
+
+check_cors_preflight(Req, State=#state{
+				   resrc=#resrc{
+					    handler_state=HandlerState,
+					    handler=Handler, 
+					    route=Route}}) ->
+    Method = leptus_req:header(Req, <<"access-control-request-method">>),
+    handle_cors_preflight(Req, 
+			  State, 
+			  HandlerState, 
+			  is_allowed(Handler, http_method(Method), Route, Method)).
+
+handle_cors_preflight(Req, State, HandlerState, true) ->
+    handle_response({<<>>, HandlerState}, Req, State);
+handle_cors_preflight(Req, State, _, false) ->
+    handle_request(not_allowed, Req, State).
 
 %% -----------------------------------------------------------------------------
 %% Handler:is_authenticated/3 and Handler:has_permission/3
