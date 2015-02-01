@@ -46,6 +46,8 @@
 -type data_format() :: text | json | msgpack | html.
 -type status_code() :: 100..101 | 200..206 | 300..307 | 400..417 | 500..505.
 
+-export_type([status/0]).
+
 %% -----------------------------------------------------------------------------
 %% internal state record
 %% -----------------------------------------------------------------------------
@@ -98,13 +100,8 @@ upgrade(Req, Env, _Handler,
             LogData2 = LogData1#log_data{ip = IP, version = Version,
                                          uri = URI, status = Status,
                                          content_length = ContentLength},
-            spawn(leptus_logger, access_log, [LogData2]),
-            spawn(fun() ->
-                          RequestLine = io_lib:format("\"~s ~s ~s\" ~w ~w",
-                                                      [Method, URI, Version,
-                                                       Status, ContentLength]),
-                          console_log(Status, lists:flatten(RequestLine))
-                  end)
+            spawn(leptus_logger, send_event, [access_log, LogData2]),
+            spawn(leptus_logger, send_event, [debug_log, LogData2])
     end,
 
     TerminateReason = State2#state.terminate_reason,
@@ -113,7 +110,6 @@ upgrade(Req, Env, _Handler,
     Req1 = leptus_req:get_req(Req),
     leptus_req:stop(Req),
     {ok, Req1, Env}.
-
 
 %% -----------------------------------------------------------------------------
 %% internal
@@ -554,24 +550,3 @@ error_info(Class, Reason, Route, Req, State) ->
                            "** ~p~n",
                            [Class, self(), Route, Req, State,
                             {Reason, erlang:get_stacktrace()}]).
-
-%% -----------------------------------------------------------------------------
-%% print request date-time, requested URI, response status and content-length
-%% -----------------------------------------------------------------------------
--spec console_log(status_code(), string()) -> ok.
-console_log(Status, RequestLine) ->
-    %% [%Y-%m-%d %H:%M:%S] "METHOD URL VERSION" STATUS CONTENT-LENGTH
-    {{Year, Month, Day}, {Hour, Min, Sec}} = erlang:localtime(),
-    Color = status_color(Status),
-    io:format("~s[~w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w] ~s\e[0m~n",
-              [Color, Year, Month, Day, Hour, Min, Sec, RequestLine]).
-
-%% -----------------------------------------------------------------------------
-%% get terminal color escape code based on status code
-%% -----------------------------------------------------------------------------
--spec status_color(non_neg_integer()) -> string().
-status_color(N) when N >= 200, N < 300 -> "\e[32m"; %% green
-status_color(N) when N >= 300, N < 400 -> "\e[33m"; %% yellow
-status_color(N) when N >= 400, N < 500 -> "\e[31m"; %% red
-status_color(N) when N >= 500 -> "\e[1m\e[31m"; %% bold red
-status_color(_) -> "".

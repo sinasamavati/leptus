@@ -40,6 +40,10 @@ add_handler(Mod, Args) ->
 delete_handler(Mod, Args) ->
     gen_event:delete_handler(?LOGGER, Mod, Args).
 
+-spec send_event(atom(), log_data()) -> ok.
+send_event(Event, LogData) ->
+    gen_event:sync_notify(?LOGGER, {Event, LogData}).
+
 -spec access_log(log_data()) -> ok.
 access_log(LogData) ->
     gen_event:sync_notify(?LOGGER, {access_log, LogData}).
