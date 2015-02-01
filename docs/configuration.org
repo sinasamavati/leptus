@@ -1,109 +1,46 @@
-#+TITLE:    Configuration
-#+AUTHOR:   Sina Samavati
-#+EMAIL:    sina.samv@gmail.com
-#+OPTIONS:  ^:nil num:nil
+#+TITLE: Configuration +AUTHOR: Sina Samavati +EMAIL: sina.samv@gmail.com
+#+OPTIONS: ^:nil num:nil
 
 * Configuration
-  :PROPERTIES:
-  :CUSTOM_ID: configuration
-  :END:
+  :PROPERTIES: :CUSTOM_ID: configuration :END:
 
-  NOTE: If you want to pass the ~App~ name as the second argument to
-  ~leptus:start_listener/2~ read this documentation, otherwise you don't need to
-  read this documentation.
+  NOTE: Read this if you want to pass the ~App~ name as the second argument to
+  ~leptus:start_listener/2~.
 
   Leptus configuration file must be named ~leptus.config~ and put in ~priv~
   directory.
 
-  There are two types of configuration that can be defined:
-
 ** Sections
-   :PROPERTIES:
-   :CUSTOM_ID: sections
-   :END:
+   :PROPERTIES: :CUSTOM_ID: sections :END:
 
 *** handlers
-    :PROPERTIES:
-    :CUSTOM_ID: handlers
-    :END:
+    :PROPERTIES: :CUSTOM_ID: handlers :END:
 
-    Leptus must know your request handlers and their states, they should be
-    defined as ~{handlers, [{HostMatch, [{module(), State :: any()}]}]}.~ in
-    ~leptus.config~
+    Your request handlers should be defined as ~{handlers, [{HostMatch,
+    [{module(), State :: any()}]}]}.~ in ~leptus.config~
 
 *** options
-    :PROPERTIES:
-    :CUSTOM_ID: handlers
-    :END:
+    :PROPERTIES: :CUSTOM_ID: handlers :END:
 
     IP address and port number have default values: ~127.0.0.1:8080~, but you
     can override them as follows:
 
-    #+BEGIN_SRC erlang
-    {options,
-     [
-      {ip, inet:ip_address()},
-      {port, inet:port_number()}
-     ]
-    }.
-    #+END_SRC
+    #+BEGIN_SRC erlang {options, [ {ip, inet:ip_address()}, {port,
+    inet:port_number()} ] }.  #+END_SRC
 
-    Note that HTTPS and SPDY require three options that are ~cacertfile~,
-    ~certfile~ and ~keyfile~:
-    #+BEGIN_SRC erlang
-    {options,
-     [
-      {cacertfile, file:name()},
-      {certfile, file:name()},
-      {keyfile, file:name()}
-     ]
-    }.
-    #+END_SRC
+    Note: For HTTPS and SPDY you also need to specify ~cacertfile~, ~certfile~
+    and ~keyfile~:
 
-** Examples
-   :PROPERTIES:
-   :CUSTOM_ID: examples
-   :END:
+    #+BEGIN_SRC erlang {options, [ {cacertfile, file:name()}, {certfile,
+    file:name()}, {keyfile, file:name()} ] }.  #+END_SRC
 
-   #+BEGIN_SRC erlang
-   %% leptus.config
+** Example
+   :PROPERTIES: :CUSTOM_ID: examples :END:
 
-   %% example 1
-   {options,
-    [
-     {ip, {0, 0, 0, 0}},
-     {port, 4000},
-     {hostmatch, "api.example.org"},
-    ]
-   }.
+   #+BEGIN_SRC erlang %% leptus.config
 
-   %% example 2
-   {options,
-    [
-     {ip, {0, 0, 0, 0}},
-     {port, 4443},
-     {cacertfile, "ssl/ca.crt"},
-     {certfile, "ssl/server.crt"},
-     {keyfile, "ssl/server.key"}
-    ]
-   }.
+   {options, [ {ip, {0, 0, 0, 0}}, {port, 4444}, {cacertfile, "ssl/ca.crt"},
+    {certfile, "ssl/server.crt"}, {keyfile, "ssl/server.key"} ] }.
 
-   %% example 3
-   {options,
-    [
-     {ip, {0, 0, 0, 0}},
-     {port, 4444},
-     {cacertfile, "ssl/ca.crt"},
-     {certfile, "ssl/server.crt"},
-     {keyfile, "ssl/server.key"}
-    ]
-   }.
-
-   {handlers,
-    [
-     {'_',
-      [{rq_handler, undefined_state}]
-     }
-    ]
-   }.
-   #+END_SRC
+   {handlers, [ {'_', [{rq_handler1, undefined_state}, {rq_handler2, [admin,
+    dev]}] } ] }.  #+END_SRC
