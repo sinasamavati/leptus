@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,8 @@ init_per_suite(Config) ->
                 {leptus_http4, []},
                 {leptus_http5, []}
                ],
-    {ok, _} = leptus:start_listener(http, [{'_', Handlers}], []),
+    Options = [{log_handlers, [{leptus_debug_log, default}]}],
+    {ok, _} = leptus:start_listener(http, [{'_', Handlers}], Options),
     Config.
 
 end_per_suite(_Config) ->

@@ -18,8 +18,10 @@
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 %% THE SOFTWARE.
 
--module(leptus_access_log).
+-module(leptus_debug_log).
 -behaviour(gen_event).
+
+-include("leptus_logger.hrl").
 
 %% -----------------------------------------------------------------------------
 %% gen_event callbacks
@@ -31,66 +33,46 @@
 -export([terminate/2]).
 -export([code_change/3]).
 
--define(FILENAME_SUFFIX, "-access.log").
 -define(LOG_FORMAT, "~h ~l ~u ~t \"~r\" ~s ~B \"~{referer}\" \"~{user-agent}\"").
 
--record(state, {dir, io_dev, log_fmt, tref}).
+init(default) ->
+    {ok, ?LOG_FORMAT};
+init(LogFmt) ->
+    {ok, LogFmt}.
 
-init({Dir, LogFmt}) ->
-    %% ask for a new file once a day
-    {ok, TRef} = timer:send_interval(millsec_til_tomorrow(), open_new_file),
-    {ok, IoDev} = open_file(Dir),
-    {ok, #state{dir = Dir, io_dev = IoDev, log_fmt = LogFmt, tref = TRef}};
-init(Dir) ->
-    init({Dir, ?LOG_FORMAT}).
-
-handle_event({access_log, LogData}, State=#state{io_dev=IoDev, log_fmt=LogFmt}) ->
+handle_event({debug_log, LogData}, LogFmt) ->
     Log = leptus_logger:format(LogFmt, LogData),
-    file:write(IoDev, [Log, $\n]),
-    {ok, State};
-handle_event(_, State) ->
-    {ok, State}.
+    console_log(LogData#log_data.status, Log),
+    {ok, LogFmt};
+handle_event(_, LogFmt) ->
+    {ok, LogFmt}.
 
-handle_call(_Request, State) ->
-    {ok, ok, State}.
+handle_call(_Request, LogFmt) ->
+    {ok, ok, LogFmt}.
 
-handle_info(open_new_file, State=#state{dir=Dir, io_dev=IoDev}) ->
-    file:close(IoDev),
-    {ok, IoDev1} = open_file(Dir),
-    {ok, State#state{io_dev = IoDev1}};
-handle_info(_Info, State) ->
-    {ok, State}.
+handle_info(_Info, LogFmt) ->
+    {ok, LogFmt}.
 
-terminate(_Args, #state{io_dev=IoDev, tref=TRef}) ->
-    file:close(IoDev),
-    timer:cancel(TRef),
+terminate(_Args, _LogFmt) ->
     ok.
 
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+code_change(_OldVsn, LogFmt, _Extra) ->
+    {ok, LogFmt}.
 
 %% -----------------------------------------------------------------------------
-%% make filename. e.g. "Dir/2014_06_22-access.log"
+%% print request date-time, requested URI, response status and content-length
 %% -----------------------------------------------------------------------------
-filename(Dir) ->
-    {{Y, M, D}, _} = erlang:localtime(),
-    filename:join(Dir, io_lib:format("~w_~2..0w_~2..0w~s",
-                                     [Y, M, D, ?FILENAME_SUFFIX])).
+-spec console_log(leptus_logger:status_code(), string()) -> ok.
+console_log(Status, FormatedLog) ->
+    Color = status_color(Status),
+    io:format("~s~s\e[0m~n", [Color, FormatedLog]).
 
 %% -----------------------------------------------------------------------------
-%% take directory, make a filename, and open file
+%% get terminal color escape code based on status code
 %% -----------------------------------------------------------------------------
-open_file(Dir) ->
-    Filename = filename(Dir),
-    filelib:ensure_dir(Filename),
-    file:open(Filename, [append, raw]).
-
-%% -----------------------------------------------------------------------------
-%% milliseconds left until a new day arrives
-%% -----------------------------------------------------------------------------
-millsec_til_tomorrow() ->
-    {_, {CH, CM, CS}} = erlang:localtime(),
-    H = (23 - CH) * (60 * 60) * 1000,
-    M = (59 - CM) * (60 * 1000),
-    S = (59 - CS) * 1000,
-    (H + M) + S.
+-spec status_color(non_neg_integer()) -> string().
+status_color(N) when N >= 200, N < 300 -> "\e[32m"; %% green
+status_color(N) when N >= 300, N < 400 -> "\e[34m"; %% blue
+status_color(N) when N >= 400, N < 500 -> "\e[31m"; %% red
+status_color(N) when N >= 500 -> "\e[1m\e[31m"; %% bold red
+status_color(_) -> "".

@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,11 @@
 %% -----------------------------------------------------------------------------
 -export([add_handler/2]).
 -export([delete_handler/2]).
--export([access_log/1]).
+-export([send_event/2]).
 -export([format/2]).
 
--spec add_handler(atom() | {atom(), any()}, any()) -> ok | {'EXIT', any()} |
-                                                      any().
+-spec add_handler(atom() | {atom(), any()}, any()) ->
+                         ok | {'EXIT', any()} | any().
 add_handler(Mod, Args) ->
     gen_event:add_handler(?LOGGER, Mod, Args).
 
@@ -40,9 +40,9 @@ add_handler(Mod, Args) ->
 delete_handler(Mod, Args) ->
     gen_event:delete_handler(?LOGGER, Mod, Args).
 
--spec access_log(log_data()) -> ok.
-access_log(LogData) ->
-    gen_event:sync_notify(?LOGGER, {access_log, LogData}).
+-spec send_event(atom(), log_data()) -> ok.
+send_event(Event, LogData) ->
+    gen_event:sync_notify(?LOGGER, {Event, LogData}).
 
 -spec format(string(), log_data()) -> string().
 format(Fmt, LogData) ->
