@@ -7,3 +7,6 @@ erl_crash.dump
 docs/public_html
 docs/tmp
 docs/elisp
+*~
+\#*
+.\#*
