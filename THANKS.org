@@ -10,3 +10,4 @@
   - [[https://github.com/seth][Seth Falcon]]
   - [[https://github.com/jfacorro][Juan Facorro]]
   - [[https://github.com/ptuckey][Patrick Tuckey]]
+  - [[https://github.com/knv][Kamyar Navidan]]
