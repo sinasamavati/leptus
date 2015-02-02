@@ -8,7 +8,7 @@
   :CUSTOM_ID: docs
   :END:
 
-** Preface
+** Overview
    :PROPERTIES:
    :CUSTOM_ID: preface
    :END:
@@ -56,7 +56,6 @@
    $ curl localhost:8080/hi/Leptus
    {"say":"Hi","to":"Leptus"}
    #+END_SRC
-
 
 ** Table of contents
    :PROPERTIES:
