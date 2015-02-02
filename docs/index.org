@@ -13,17 +13,50 @@
    :CUSTOM_ID: preface
    :END:
 
-   Let me talk about a /thing/ that makes Leptus simple. Parse transform,
-   the /thing/ that saves us some headache, so now we've got a rule,
-   using the module ~leptus_pt~ for doing the parse transform when compiling our
-   request/resource handlers (modules).
+   #+BEGIN_SRC erlang
+   -module(hello).
+   -compile({parse_transform, leptus_pt}).
 
-   So, I suggest you using the following in your request/resource handlers
-   (modules):
+   %% leptus callbacks
+   -export([init/3]).
+   -export([get/3]).
+   -export([terminate/4]).
 
+   init(_Route, _Req, State) ->
+       {ok, State}.
+
+   get("/", _Req, State) ->
+       {<<"Hello, leptus!">>, State};
+   get("/hi/:name", Req, State) ->
+       Status = ok,
+       Name = leptus_req:param(Req, name),
+       Body = [{<<"say">>, <<"Hi">>}, {<<"to">>, Name}],
+       {Status, {json, Body}, State}.
+
+   terminate(_Reason, _Route, _Req, _State) ->
+       ok.
+   #+END_SRC
+   
+   Note the use of the following in your request/resource handler module.
    #+BEGIN_SRC erlang
    -compile({parse_transform, leptus_pt}).
    #+END_SRC
+
+   #+BEGIN_SRC erlang
+   $ erl -pa ebin deps/*/ebin
+   #+END_SRC
+
+   #+BEGIN_SRC erlang
+   1> c(hello).
+   2> leptus:start_listener(http, [{'_', [{hello, undefined_state}]}]).
+   Leptus started on http://127.0.0.1:8080
+   #+END_SRC
+
+   #+BEGIN_SRC erlang
+   $ curl localhost:8080/hi/Leptus
+   {"say":"Hi","to":"Leptus"}
+   #+END_SRC
+
 
 ** Table of contents
    :PROPERTIES:
