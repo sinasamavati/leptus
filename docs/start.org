@@ -69,12 +69,11 @@
 
 ** The OTP way
 
-   The way everyone recommends for starting an OTP application:
+   The recommended method for starting an OTP application:
    #+BEGIN_SRC erlang
    application:start(crypto),
    application:start(ranch),
    application:start(cowboy),
    application:start(leptus).
    #+END_SRC
-   and then the function that is described above should be called to start a
-   listener.
+   After that ~start_listener~ function should be called to start a listener.
