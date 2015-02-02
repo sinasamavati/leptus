@@ -42,7 +42,7 @@
    -compile({parse_transform, leptus_pt}).
    #+END_SRC
 
-   #+BEGIN_SRC erlang
+   #+BEGIN_SRC
    $ erl -pa ebin deps/*/ebin
    #+END_SRC
 
@@ -52,7 +52,7 @@
    Leptus started on http://127.0.0.1:8080
    #+END_SRC
 
-   #+BEGIN_SRC erlang
+   #+BEGIN_SRC
    $ curl localhost:8080/hi/Leptus
    {"say":"Hi","to":"Leptus"}
    #+END_SRC
