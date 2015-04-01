@@ -123,7 +123,7 @@ start_listener(Listener, Handlers, Opts, UserCowboyProtoOpts) ->
             Opts2 = lists:keydelete(port, 1, Opts1),
             Opts3 = [{ip, IP}, {port, Port}|Opts2],
             update_listener_bucket({Listener, {Handlers, Opts3}}),
-            print_info(IP, Port);
+            print_info(Listener, IP, Port);
         _ ->
             ok
     end,
@@ -267,11 +267,16 @@ opt(_, [], Default) ->
 %% -----------------------------------------------------------------------------
 %% print the version number and what ip/port it's started on
 %% -----------------------------------------------------------------------------
--spec print_info(inet:ip_address(), inet:portn_number()) -> ok.
-print_info(IP, Port) ->
+-spec print_info(listener(), inet:ip_address(), inet:portn_number()) -> ok.
+print_info(Listener, IP, Port) ->
     {ok, Vsn} = application:get_key(leptus, vsn),
-    io:format("Leptus ~s started on http://~s:~p~n",
-              [Vsn, inet_parse:ntoa(IP), Port]).
+    Listener1 = case Listener of
+                    http -> "http";
+                    https -> "https";
+                    spdy -> "https"
+                end,
+    io:format("Leptus ~s started on ~s://~s:~p~n",
+              [Vsn, Listener1, inet_parse:ntoa(IP), Port]).
 
 %% -----------------------------------------------------------------------------
 %% update leptus_config ETS table
