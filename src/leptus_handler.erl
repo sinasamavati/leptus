@@ -172,7 +172,7 @@ handle_request(Func, Req,
 
 check_cors_preflight(Req, #state{
 			     resrc=#resrc{
-				      handler=Handler, 
+				      handler=Handler,
 				      route=Route}}) ->
     Method = leptus_req:header(Req, <<"access-control-request-method">>),
     is_allowed(Handler, http_method(Method), Route, Method).
@@ -313,10 +313,7 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
                     F = cross_domains,
                     try Handler:F(Route, Req, HandlerState) of
                         {HostMatches, HandlerState1} ->
-                            Host = case http_uri:parse(binary_to_list(Origin)) of
-                                       {ok, {_, _, Host1, _, _, _}} -> Host1;
-                                       _ -> Origin
-                                   end,
+                            Host = leptus_utils:get_uri_authority(Origin),
                             case origin_matches(Host, HostMatches) of
                                 false ->
                                     {[], HandlerState1};

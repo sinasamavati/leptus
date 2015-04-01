@@ -1,5 +1,10 @@
 2015-04-01  Sina Samavati  <sina.samv@gmail.com>
 
+	* src/leptus_handler.erl (handler_cross_domains): use leptus_utils:get_uri_authority/1
+	  to parse 'Origin' header value
+
+	* src/leptus_utils.erl: add get_uri_authority/1
+
 	* src/leptus.erl (print_info/2): fix started listener information
 
 2014-08-30  Sina Samavati  <sina.samv@gmail.com>

@@ -29,6 +29,7 @@
 -export([listener_bucket/1]).
 -export([listener_handlers/1]).
 -export([print_listener_info/1]).
+-export([get_uri_authority/1]).
 
 -include("leptus_stats.hrl").
 
@@ -109,6 +110,9 @@ print_listener_info(Listener) ->
     io:fwrite("~.98c~n~n", [$=]),
     lists:foreach(F, Modules).
 
+get_uri_authority(URI) ->
+    get_uri_authority(URI, <<>>).
+
 %% -----------------------------------------------------------------------------
 %% internal
 %% -----------------------------------------------------------------------------
@@ -126,3 +130,14 @@ get_value(Key, Opts, Default) ->
         {_, Value} -> Value;
         _ -> Default
     end.
+
+get_uri_authority(<<>>, Acc) ->
+    Acc;
+get_uri_authority(<<$/, _/binary>>, Acc) ->
+    %% skip the rest
+    Acc;
+get_uri_authority(<<"://", Rest/binary>>, _) ->
+    %% skip scheme
+    get_uri_authority(Rest, <<>>);
+get_uri_authority(<<Char:1/binary, Rest/binary>>, Acc) ->
+    get_uri_authority(Rest, <<Acc/binary, Char/binary>>).
