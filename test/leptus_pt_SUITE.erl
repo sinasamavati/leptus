@@ -38,7 +38,8 @@ all() ->
 routes(_) ->
     ["/", "/hello", "/hello/:name"] = pt1:routes(),
     ["/1", "/2", "/3", "/4"] = pt2:routes(),
-    ["/", "/new", "/old"] = pt3:routes().
+    ["/", "/new", "/old"] = pt3:routes(),
+    ok.
 
 allowed_methods(_) ->
     [<<"GET">>] = pt1:allowed_methods("/"),
@@ -47,7 +48,8 @@ allowed_methods(_) ->
     [<<"GET">>, <<"POST">>] = pt2:allowed_methods("/1"),
     [<<"GET">>] = pt3:allowed_methods("/"),
     [<<"POST">>] = pt3:allowed_methods("/new"),
-    [<<"PUT">>, <<"DELETE">>] = pt3:allowed_methods("/old").
+    [<<"PUT">>, <<"DELETE">>] = pt3:allowed_methods("/old"),
+    ok.
 
 rq_pt(_) ->
     {ok, _} = pt3:start(),

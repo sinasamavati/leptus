@@ -57,11 +57,15 @@ end_per_suite(_Config) ->
     ok = leptus:stop_listener(http).
 
 groups() ->
-    [{main, [parallel], [
-                         http_get, http_post, http_put, http_delete, http_404,
-                         http_405, http_is_authenticated, http_has_permission,
-                         http_msgpack
-                        ]}].
+    [{main, [parallel], [http_get,
+                         http_post,
+                         http_put,
+                         http_delete,
+                         http_404,
+                         http_405,
+                         http_is_authenticated,
+                         http_has_permission,
+                         http_msgpack]}].
 
 all() ->
     [{group, main}].

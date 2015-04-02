@@ -31,7 +31,8 @@ all() ->
 
 datetime(_) ->
     Datetime = erlang:localtime(),
-    true = is_list(leptus_logger:datetime(Datetime)).
+    true = is_list(leptus_logger:datetime(Datetime)),
+    ok.
 
 format(_) ->
     Fmt1 = "\"~r\" ~s ~B \"~{asdf}\" ok \"~{user-agent}\"!",
@@ -43,4 +44,5 @@ format(_) ->
     LD2 = #log_data{ip = {127, 0, 0, 1}, uri = <<"/resource/a">>,
                     method = <<"DELETE">>, status = 204},
     "127.0.0.1 - - - \"DELETE /resource/a HTTP/1.1\" 204 -" =
-        leptus_logger:format(Fmt2, LD2).
+        leptus_logger:format(Fmt2, LD2),
+    ok.

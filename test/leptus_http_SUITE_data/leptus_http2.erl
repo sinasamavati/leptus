@@ -19,27 +19,19 @@
 %% THE SOFTWARE.
 
 -module(leptus_http2).
+-compile({parse_transform, leptus_pt}).
 
 %% leptus callbacks
--export([routes/0]).
 -export([init/3]).
 -export([is_authenticated/3]).
--export([allowed_methods/1]).
 -export([get/3]).
 -export([put/3]).
 -export([post/3]).
 -export([terminate/4]).
 
 
-routes() ->
-    ["/users/:id", "/users/:id/interests", "/users/:id/profile"].
-
 init(_Route, _Req, _State) ->
     {ok, blah}.
-
-allowed_methods("/users/:id") -> [<<"GET">>, <<"PUT">>, <<"POST">>];
-allowed_methods("/users/:id/interests") -> [<<"GET">>];
-allowed_methods("/users/:id/profile") -> [<<"GET">>].
 
 is_authenticated("/users/:id", Req, State) ->
     case leptus_req:method(Req) of

@@ -19,15 +19,12 @@
 %% THE SOFTWARE.
 
 -module(leptus_http4).
+-compile({parse_transform, leptus_pt}).
 
--export([routes/0]).
--export([allowed_methods/1]).
 -export([init/3]).
 -export([get/3]).
 -export([terminate/4]).
 
-routes() -> ["/msgpack/:msg"].
-allowed_methods("/msgpack/:msg") -> [<<"GET">>].
 init(_Route, _Req, State) -> {ok, State}.
 
 get("/msgpack/:msg", Req, State) ->

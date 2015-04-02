@@ -32,13 +32,15 @@ join_methods(_) ->
     <<"GET, PUT">> = leptus_handler:join_http_methods([<<"GET">>, <<"PUT">>]),
     <<"GET, PUT, POST, DELETE">> =
         leptus_handler:join_http_methods([<<"GET">>, <<"PUT">>, <<"POST">>,
-                                          <<"DELETE">>]).
+                                          <<"DELETE">>]),
+    ok.
 
 compile_host(_) ->
     ['_'] = leptus_handler:compile_host('_'),
     [[<<"org">>, <<"example">>]] = leptus_handler:compile_host("example.org"),
     [[<<"org">>, <<"example">>], [<<"org">>, <<"example">>, <<"www">>]] =
-        leptus_handler:compile_host(<<"[www.]example.org">>).
+        leptus_handler:compile_host(<<"[www.]example.org">>),
+    ok.
 
 origin_matches(_) ->
     O1 = <<"example.org">>,
@@ -61,4 +63,5 @@ origin_matches(_) ->
     false = leptus_handler:origin_matches(O2, [<<"subdomain.:[...]">>]),
 
     true = leptus_handler:origin_matches(O1, ["[sub.]example.org"]),
-    true = leptus_handler:origin_matches(O2, ["[sub.]example.org"]).
+    true = leptus_handler:origin_matches(O2, ["[sub.]example.org"]),
+    ok.

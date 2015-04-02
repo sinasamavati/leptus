@@ -69,7 +69,8 @@ paths(_) ->
      }] = leptus_router:paths([{'_', [{leptus_routes1, []},
                                       {leptus_routes2, aha},
                                       {leptus_routes3, i_see},
-                                      {leptus_routes4, undefined}]}]).
+                                      {leptus_routes4, undefined}]}]),
+    ok.
 
 sort_dispatch(_) ->
     Routes = [
@@ -112,7 +113,8 @@ sort_dispatch(_) ->
        {[a, b, c], [], handler, undefined},
        {[a, b, <<"x">>, d], [], handler, undefined},
        {[a, <<"x">>, c, d], [], handler, undefined}
-      ]}] = leptus_router:sort_dispatch(Dispatch1).
+      ]}] = leptus_router:sort_dispatch(Dispatch1),
+    ok.
 
 static_file_routes(Conf) ->
     Dir = filename:join(?config(data_dir, Conf), "www"),
@@ -122,4 +124,5 @@ static_file_routes(Conf) ->
             {"/", cowboy_static, {file, Index}},
             {"/index.html", cowboy_static, {file, Index}},
             {"/static/css/style.css", cowboy_static, {file, Style}}
-           ]}] = leptus_router:static_file_routes({'_', Dir}).
+           ]}] = leptus_router:static_file_routes({'_', Dir}),
+    ok.

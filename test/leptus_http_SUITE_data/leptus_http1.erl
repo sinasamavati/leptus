@@ -19,20 +19,12 @@
 %% THE SOFTWARE.
 
 -module(leptus_http1).
+-compile({parse_transform, leptus_pt}).
 
 %% leptus callbacks
--export([routes/0]).
--export([allowed_methods/1]).
 -export([init/3]).
 -export([get/3]).
 -export([terminate/4]).
-
-routes() ->
-    ["/", "/hello", "/hello/:name"].
-
-allowed_methods("/") -> [<<"GET">>];
-allowed_methods("/hello") -> [<<"GET">>];
-allowed_methods("/hello/:name") -> [<<"GET">>].
 
 init(_Route, _Req, State) ->
     {ok, State}.

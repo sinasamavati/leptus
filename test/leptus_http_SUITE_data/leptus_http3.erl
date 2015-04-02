@@ -19,26 +19,18 @@
 %% THE SOFTWARE.
 
 -module(leptus_http3).
+-compile({parse_transform, leptus_pt}).
 
 %% leptus callbacks
--export([routes/0]).
 -export([init/3]).
--export([allowed_methods/1]).
 -export([post/3]).
 -export([put/3]).
 -export([delete/3]).
 -export([terminate/4]).
 
 
-routes() ->
-    ["/user/register", "/settings/change-password", "/users/:username/posts/:id"].
-
 init(_Route, _Req, _State) ->
     {ok, my_state}.
-
-allowed_methods("/user/register") -> [<<"POST">>];
-allowed_methods("/settings/change-password") -> [<<"PUT">>];
-allowed_methods(_) -> [<<"DELETE">>].
 
 post("/user/register", Req, State) ->
     Body = leptus_req:body_qs(Req),

@@ -50,4 +50,5 @@ lookup(_) ->
     <<"1,2,3">> = leptus_config:lookup(t2),
     {port_num, 8080} = leptus_config:lookup(http1),
     {ip_addr, "127.0.0.1"} = leptus_config:lookup(http2),
-    [{port_num, 8080}, {ip_addr, "127.0.0.1"}] = leptus_config:lookup(http).
+    [{port_num, 8080}, {ip_addr, "127.0.0.1"}] = leptus_config:lookup(http),
+    ok.

@@ -19,18 +19,13 @@
 %% THE SOFTWARE.
 
 -module(leptus_http5).
+-compile({parse_transform, leptus_pt}).
 
--export([routes/0]).
--export([allowed_methods/1]).
 -export([init/3]).
 -export([is_authenticated/3]).
 -export([has_permission/3]).
 -export([get/3]).
 -export([terminate/4]).
-
-routes() -> ["/needs-perm"].
-
-allowed_methods(_) -> [<<"GET">>].
 
 init(_Route, _Req, State) ->
     {ok, State}.

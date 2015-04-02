@@ -64,11 +64,21 @@ end_per_testcase(_, Config) ->
     Config.
 
 groups() ->
-    [{main, [parallel], [
-                         param, params, qs, qs_val, uri, version, body, body_raw,
-                         body_qs, header, parse_header, auth, method, get_req,
-                         set_req
-                        ]}].
+    [{main, [parallel], [param,
+                         params,
+                         qs,
+                         qs_val,
+                         uri,
+                         version,
+                         body,
+                         body_raw,
+                         body_qs,
+                         header,
+                         parse_header,
+                         auth,
+                         method,
+                         get_req,
+                         set_req]}].
 
 all() ->
     [{group, main}].
@@ -80,19 +90,22 @@ param(Config) ->
     <<"leptus">> = leptus_req:param(Req1, name),
     true = undefined =:= leptus_req:param(Req1, idz),
     <<"97dba1">> = leptus_req:param(Req1, id),
-    undefined = leptus_req:param(Req2, id).
+    undefined = leptus_req:param(Req2, id),
+    ok.
 
 params(Config) ->
     Req1 = ?config(req1, Config),
     Req2 = ?config(req2, Config),
     [{name, <<"leptus">>}, {id, <<"97dba1">>}] = leptus_req:params(Req1),
-    [] = leptus_req:params(Req2).
+    [] = leptus_req:params(Req2),
+    ok.
 
 qs(Config) ->
     Req1 = ?config(req1, Config),
     Req2 = ?config(req2, Config),
     <<>> = leptus_req:qs(Req1),
-    <<"q=123&b=456">> = leptus_req:qs(Req2).
+    <<"q=123&b=456">> = leptus_req:qs(Req2),
+    ok.
 
 qs_val(Config) ->
     Req1 = ?config(req1, Config),
@@ -100,19 +113,22 @@ qs_val(Config) ->
     undefined = leptus_req:qs_val(Req1, <<"p">>),
     undefined = leptus_req:qs_val(Req2, <<"p">>),
     <<"123">> = leptus_req:qs_val(Req2, <<"q">>),
-    <<"456">> = leptus_req:qs_val(Req2, <<"b">>).
+    <<"456">> = leptus_req:qs_val(Req2, <<"b">>),
+    ok.
 
 uri(Config) ->
     Req1 = ?config(req1, Config),
     Req2 = ?config(req2, Config),
     <<"/hello/leptus/97dba1">> = leptus_req:uri(Req1),
-    <<"/hello/leptus/97dba1?q=123&b=456">> = leptus_req:uri(Req2).
+    <<"/hello/leptus/97dba1?q=123&b=456">> = leptus_req:uri(Req2),
+    ok.
 
 version(Config) ->
     Req1 = ?config(req1, Config),
     Req2 = ?config(req2, Config),
     'HTTP/1.1' = leptus_req:version(Req1),
-    'HTTP/1.1' = leptus_req:version(Req2).
+    'HTTP/1.1' = leptus_req:version(Req2),
+    ok.
 
 body(Config) ->
     Req1 = ?config(req1, Config),
@@ -133,7 +149,8 @@ body(Config) ->
     [
      {<<"abc">>, 123},
      {456, <<"def">>}
-    ] = leptus_req:body(Req7).
+    ] = leptus_req:body(Req7),
+    ok.
 
 body_raw(Config) ->
     Req1 = ?config(req1, Config),
@@ -142,7 +159,8 @@ body_raw(Config) ->
     <<>> = leptus_req:body_raw(Req1),
     <<"AAAAAAAAAAA">> = leptus_req:body_raw(Req3),
     <<"{\"firstname\": \"Sina\","
-      " \"lastname\": \"Samavati\"}">> = leptus_req:body_raw(Req5).
+      " \"lastname\": \"Samavati\"}">> = leptus_req:body_raw(Req5),
+    ok.
 
 body_qs(Config) ->
     Req1 = ?config(req1, Config),
@@ -153,7 +171,8 @@ body_qs(Config) ->
     [
      {<<"firstname">>, <<"Sina">>},
      {<<"lastname">>, <<"Samavati">>}
-    ] = leptus_req:body_qs(Req4).
+    ] = leptus_req:body_qs(Req4),
+    ok.
 
 header(Config) ->
     Req1 = ?config(req1, Config),
@@ -162,7 +181,8 @@ header(Config) ->
     undefined = leptus_req:header(Req1, <<"content-type">>),
     <<"localhost:8080">> = leptus_req:header(Req2, <<"host">>),
     <<"application/x-www-form-urlencoded">> =
-        leptus_req:header(Req3, <<"content-type">>).
+        leptus_req:header(Req3, <<"content-type">>),
+    ok.
 
 parse_header(Config) ->
     Req1 = ?config(req1, Config),
@@ -176,7 +196,8 @@ parse_header(Config) ->
     } = leptus_req:parse_header(Req3, <<"content-type">>),
     {
       <<"application">>, <<"json">>, []
-    } = leptus_req:parse_header(Req5, <<"content-type">>).
+    } = leptus_req:parse_header(Req5, <<"content-type">>),
+    ok.
 
 auth(Config) ->
     Req1 = ?config(req1, Config),
@@ -186,7 +207,8 @@ auth(Config) ->
     undefined = leptus_req:auth(Req1, basic),
     undefined = leptus_req:auth(Req3, basic),
     {<<"123">>, <<"456">>} = leptus_req:auth(Req5, basic),
-    {error, badarg} = leptus_req:auth(Req6, basic).
+    {error, badarg} = leptus_req:auth(Req6, basic),
+    ok.
 
 method(Config) ->
     Req1 = ?config(req1, Config),
@@ -196,16 +218,19 @@ method(Config) ->
     <<"GET">> = leptus_req:method(Req1),
     <<"GET">> = leptus_req:method(Req2),
     <<"POST">> = leptus_req:method(Req3),
-    <<"POST">> = leptus_req:method(Req4).
+    <<"POST">> = leptus_req:method(Req4),
+    ok.
 
 get_req(Config) ->
     Req1 = ?config(req1, Config),
-    true = (req1() =:= leptus_req:get_req(Req1)).
+    true = (req1() =:= leptus_req:get_req(Req1)),
+    ok.
 
 set_req(Config) ->
     Req1 = ?config(req1, Config),
     ok = leptus_req:set_req(Req1, empty),
-    empty = leptus_req:get_req(Req1).
+    empty = leptus_req:get_req(Req1),
+    ok.
 
 
 req1() ->
