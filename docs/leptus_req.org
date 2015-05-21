@@ -233,7 +233,7 @@
     auth(Req, basic) -> {<<"username">>, <<"p4ssw0rd">>}
     #+END_SRC
 
-*** auth/2
+*** peer/1
     :PROPERTIES:
     :CUSTOM_ID: peer-1
     :END:
