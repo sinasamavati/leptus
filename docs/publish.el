@@ -1,8 +1,8 @@
 (add-to-list 'load-path "elisp")
 (add-to-list 'load-path "elisp/org-mode/lisp")
+(add-to-list 'load-path "elisp/org-mode/contrib/lisp")
 
 (require 'htmlize)
-(require 'org-publish)
 (require 'ox-html)
 
 (setq org-publish-project-alist

@@ -5,12 +5,10 @@ INDEX_FILE = $(TMP_DIR)/index.org
 PUBLISH_SCRIPT = $(CURDIR)/publish.el
 
 DEPS_DIR = $(CURDIR)/elisp
-ORG_MODE_URL = http://orgmode.org/org-latest.tar.gz
-ORG_MODE = $(DEPS_DIR)/org-latest.tar.gz
-HTMLIZE_URL = http://fly.srk.fer.hr/~hniksic/emacs/htmlize.el.cgi
-HTMLIZE = $(DEPS_DIR)/htmlize.el
-DEPS = $(ORG_MODE) \
-       $(HTMLIZE)
+
+ORG_MODE_DIR = $(DEPS_DIR)/org-mode
+ORG_MODE_URL = http://orgmode.org/org-8.2.10.tar.gz
+ORG_MODE = $(DEPS_DIR)/org-8.2.10.tar.gz
 
 all: deps $(TMP_DIR)
 	cp -r *.org $(TMP_DIR)
@@ -18,15 +16,12 @@ all: deps $(TMP_DIR)
 		-i $(INDEX_FILE)
 	emacs -Q --script $(PUBLISH_SCRIPT)
 
-deps: $(DEPS_DIR) $(DEPS)
+deps: $(ORG_MODE_DIR) $(ORG_MODE)
 
 $(ORG_MODE):
-	wget $(ORG_MODE_URL) -O $(ORG_MODE)
-	cd $(DEPS_DIR); tar xzf $(ORG_MODE)
-	-cd $(DEPS_DIR)/org-mode; $(MAKE)
-
-$(HTMLIZE):
-	wget $(HTMLIZE_URL) -O $(HTMLIZE)
+	curl -L $(ORG_MODE_URL) -o $(ORG_MODE)
+	cd $(ORG_MODE_DIR); tar xzf $(ORG_MODE) --strip-components=1
+	-cd $(ORG_MODE_DIR); $(MAKE)
 
 $(CURDIR)/%:
 	mkdir -p $@

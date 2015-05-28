@@ -42,13 +42,15 @@
    -compile({parse_transform, leptus_pt}).
    #+END_SRC
 
+   Let's compile and run the example above.
+
    #+BEGIN_SRC
    $ erl -pa ebin deps/*/ebin
    #+END_SRC
 
-   #+BEGIN_SRC erlang
-   1> c(hello).
-   2> leptus:start_listener(http, [{'_', [{hello, undefined_state}]}]).
+   #+BEGIN_SRC
+   > c(hello).
+   > leptus:start_listener(http, [{'_', [{hello, undefined_state}]}]).
    Leptus started on http://127.0.0.1:8080
    #+END_SRC
 
