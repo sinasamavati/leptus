@@ -8,6 +8,8 @@
   :CUSTOM_ID: leptus
   :END:
 
+  Leptus high-level API for working with listeners.
+
 ** Types
    :PROPERTIES:
    :CUSTOM_ID:       types

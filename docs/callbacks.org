@@ -172,7 +172,7 @@
          {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}
      #+END_SRC
 
-     In this case, ~Route~ must be a pattern matching.
+     In this case, ~Route~ must be a pattern that would match only a single string.
 
      Examples:
 
