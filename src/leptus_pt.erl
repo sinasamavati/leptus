@@ -85,14 +85,12 @@ walk_ast([Form|Rest], Acc, Routes) ->
 %% check functions' head
 %% -----------------------------------------------------------------------------
 check_clauses({function, _, Method, 3, Clauses}) ->
-    %% collect routes
-    F = fun({clause, _, E, _, _}) ->
-                %% e.g. get("/", _Req, _State)
-                {string, _, Route} = hd(E),
-                %% e.g. {"/", <<"GET">>}
-                {Route, http_method(Method)}
-        end,
-    [F(Clause) || Clause <- Clauses].
+    M = http_method(Method),
+    lists:map(fun(R) -> {R, M} end,
+              lists:map(fun({clause, _, [{string, _, Route}|_], _, _}) -> Route;
+                           ({clause, _, [{match, _, {string, _, Route}, _}|_], _, _}) -> Route;
+                           ({clause, _, [{match, _, _, {string, _, Route}}|_], _, _}) -> Route
+                        end, Clauses)).
 
 http_method(get) -> <<"GET">>;
 http_method(put) -> <<"PUT">>;
