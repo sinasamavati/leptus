@@ -32,6 +32,7 @@
 -export([params/1]).
 -export([qs/1]).
 -export([qs_val/2]).
+-export([qs_vals/1]).
 -export([uri/1]).
 -export([version/1]).
 -export([method/1]).
@@ -87,6 +88,10 @@ qs(Pid) ->
 -spec qs_val(pid(), binary()) -> binary() | undefined.
 qs_val(Pid, Key) ->
     invoke(Pid, qs_val, [Key]).
+
+-spec qs_vals(pid()) -> [{binary(), binary() | true}].
+qs_vals(Pid) ->
+    invoke(Pid, qs_vals, []).
 
 -spec uri(pid()) -> binary().
 uri(Pid) ->
