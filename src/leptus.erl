@@ -286,7 +286,7 @@ print_info(Listener, IP, Port) ->
 update_listener_bucket({Listener, {Handlers, Opts}}) ->
     %% [{Listener, Bucket}]
     Bucket = #listener_bucket{handlers = Handlers, options = Opts,
-                              started_timestamp = now()},
+                              started_timestamp = os:timestamp()},
     Listeners = leptus_config:lookup(listeners, []),
     Listeners1 = lists:keystore(Listener, 1, Listeners, {Listener, Bucket}),
     leptus_config:set(listeners, Listeners1).
