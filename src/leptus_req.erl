@@ -131,11 +131,11 @@ body(Pid) ->
 
 -spec body_raw(pid()) -> binary().
 body_raw(Pid) ->
-    invoke(Pid, body, [infinity]).
+    invoke(Pid, body, []).
 
 -spec body_qs(pid()) -> [{binary(), binary() | true}].
 body_qs(Pid) ->
-    invoke(Pid, body_qs, [infinity]).
+    invoke(Pid, body_qs, []).
 
 -spec header(pid(), binary()) -> binary() | undefined.
 header(Pid, Name) ->
