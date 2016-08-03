@@ -35,7 +35,7 @@
 -type req() :: pid().
 -type status() :: non_neg_integer() | binary() | atom().
 -type headers() :: cowboy:http_headers().
--type body() :: binary() | string() | {json | msgpack, leptus_json:json_term()}
+-type body() :: binary() | string() | {json | msgpack, jsx:json_term()}
               | {html, binary()}.
 -type method() :: get | put | post | delete.
 -type response() :: {body(), handler_state()}
@@ -408,9 +408,9 @@ reply(Status, Headers, Body, Req) ->
 
 -spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
 prepare_headers_body(Headers, {json, Body}) ->
-    {maybe_set_content_type(json, Headers), leptus_json:encode(Body)};
+    {maybe_set_content_type(json, Headers), jsx:encode(Body)};
 prepare_headers_body(Headers, {msgpack, Body}) ->
-    {maybe_set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
+    {maybe_set_content_type(msgpack, Headers), msgpack:pack(Body, [jsx])};
 prepare_headers_body(Headers, {html, Body}) ->
     {maybe_set_content_type(html, Headers), Body};
 prepare_headers_body(Headers, Body) ->

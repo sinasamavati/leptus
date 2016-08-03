@@ -112,13 +112,13 @@ version(Pid) ->
 method(Pid) ->
     invoke(Pid, method, []).
 
--spec body(pid()) -> binary() | leptus_json:json_term().
+-spec body(pid()) -> binary() | jsx:json_term().
 body(Pid) ->
     Body = body_raw(Pid),
     case header(Pid, <<"content-type">>) of
         %% decode body if content-type is json or msgpack
         <<"application/json">> ->
-            try leptus_json:decode(Body) of
+            try jsx:decode(Body) of
                 {_, _} -> Body;
                 Term -> Term
             catch _:_ -> Body
