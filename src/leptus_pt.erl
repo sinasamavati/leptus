@@ -68,16 +68,24 @@ walk_ast([{eof, L}=Form|Rest], Acc, Routes) ->
     Routes1 = [Route || {Route, _} <- RoutesNMethods],
 
     %% routes() -> [Route]
+    Routes0Spec = {attribute, L, spec,
+                   {{routes, 0},
+                    [{type, L, 'fun', [{type, L, product, []}, {type, L, list, [{type, L, string, []}]}]}]}},
     Routes0Fun = {function, L, routes, 0,
                   [{clause, L, [], [],
                     [erl_parse:abstract(Routes1, [{line, L}])]}]},
 
     %% allowed_methods(Route) -> [binary()]
+    AllowedMethods1Spec = {attribute, L, spec,
+                           {{allowed_methods, 1},
+                            [{type, L, 'fun',
+                              [{type, L, product, [{ann_type, L, [{var, L, 'Route'}, {type, L, string, []}]}]},
+                               {type, L, list, [{type, L, binary, []}]}]}]}},
     AllowedMethods1Fun = {function, L, allowed_methods, 1,
                           [{clause, L, [{string, L, Route}], [],
                             [erl_parse:abstract(Methods, [{line, L}])]}
                            || {Route, Methods} <- RoutesNMethods]},
-    walk_ast(Rest, Acc ++ [Routes0Fun|[AllowedMethods1Fun]] ++ [Form], Routes);
+    walk_ast(Rest, Acc ++ [Routes0Spec, Routes0Fun, AllowedMethods1Spec, AllowedMethods1Fun, Form], Routes);
 walk_ast([Form|Rest], Acc, Routes) ->
     walk_ast(Rest, Acc ++ [Form], Routes).
 
