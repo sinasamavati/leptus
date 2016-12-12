@@ -251,10 +251,7 @@ ensure_started(App) ->
 %% -----------------------------------------------------------------------------
 -spec ensure_deps_started() -> ok.
 ensure_deps_started() ->
-    ensure_started(crypto),
-    ensure_started(ranch),
-    ensure_started(cowlib),
-    ensure_started(cowboy).
+    lists:foreach(fun(A) -> ok = ensure_started(A) end, [crypto, asn1, public_key, ssl, ranch, cowlib, cowboy]).
 
 -spec opt(atom(), options(), Default) -> any() | Default when Default :: any().
 opt(Key, [{Key, Value}|_], _) ->
