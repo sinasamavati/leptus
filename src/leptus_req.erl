@@ -117,21 +117,16 @@ body(Pid) ->
     Body = body_raw(Pid),
     case header(Pid, <<"content-type">>) of
         %% decode body if content-type is json or msgpack
-        <<"application/json">> ->
-            try jsx:decode(Body) of
-                {_, _} -> Body;
-                Term -> Term
-            catch _:_ -> Body
-            end;
-        <<"application/x-msgpack">> ->
-            case msgpack:unpack(Body) of
-                {ok, {UnpackedBody}} ->
-                    UnpackedBody;
-                _ ->
-                    Body
-            end;
-        _ ->
-            Body
+        <<"application/json">> -> try
+                                      jsx:decode(Body)
+                                  catch
+                                      _:_ -> Body
+                                  end;
+        <<"application/x-msgpack">> -> case msgpack:unpack(Body) of
+                                           {ok, UnpackedBody} -> UnpackedBody;
+                                           _ -> Body
+                                       end;
+        _ -> Body
     end.
 
 -spec body_raw(pid()) -> binary().
