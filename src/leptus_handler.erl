@@ -288,7 +288,7 @@ method_not_allowed(Handler, Route, HandlerState) ->
 
 -spec allowed_methods(handler(), route()) -> binary().
 allowed_methods(Handler, Route) ->
-    join_http_methods(Handler:allowed_methods(Route)).
+    join_with_comma(Handler:allowed_methods(Route)).
 
 %% -----------------------------------------------------------------------------
 %% Handler:cross_domains/3
@@ -344,10 +344,21 @@ is_preflight(Req) ->
 -spec cors_headers(handler(), route(), binary(), req()) -> headers().
 cors_headers(Handler, Route, Origin, Req) ->
     AccessControlAllowOrigin = {<<"access-control-allow-origin">>, Origin},
+    AccessControlAllowHeaders =
+        case erlang:function_exported(Handler, allowed_headers, 2) of
+            true ->
+                Method = http_method(leptus_req:header(Req,
+                    <<"access-control-request-method">>)),
+                AllowedHeaders = Handler:allowed_headers(Method, Route),
+                [{<<"access-control-allow-headers">>,
+                  join_with_comma(AllowedHeaders)}];
+            false -> []
+        end,
     case is_preflight(Req) of
         true ->
             [AccessControlAllowOrigin|[{<<"access-control-allow-methods">>,
-                                        allowed_methods(Handler, Route)}]];
+                                        allowed_methods(Handler, Route)}]]
+                ++ AccessControlAllowHeaders;
         false ->
             [AccessControlAllowOrigin]
     end.
@@ -485,10 +496,10 @@ status(gateway_timeout) -> 504;
 status(http_version_not_supported) -> 505;
 status(A) -> A.
 
--spec join_http_methods([binary()]) -> binary().
-join_http_methods(Methods) ->
-    <<", ", Allow/binary>> = << <<", ", M/binary>> || M <- Methods >>,
-    Allow.
+-spec join_with_comma([binary()]) -> binary().
+join_with_comma(List) ->
+    <<", ", Res/binary>> = << <<", ", E/binary>> || E <- List >>,
+    Res.
 
 -spec compile_host(string() | binary()) -> [[binary() | atom()]] | [atom()].
 compile_host(HostMatch) ->
