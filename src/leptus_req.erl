@@ -112,7 +112,8 @@ body(Pid) ->
     Body = body_raw(Pid),
     case header(Pid, <<"content-type">>) of
         %% decode body if content-type is json or msgpack
-        <<"application/json">> ->
+        T when T == <<"application/json">>;
+               T == <<"application/json; charset=utf-8">> ->
             try leptus_json:decode(Body) of
                 {_, _} -> Body;
                 Term -> Term
