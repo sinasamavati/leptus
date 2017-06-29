@@ -112,20 +112,20 @@ version(Pid) ->
 method(Pid) ->
     invoke(Pid, method, []).
 
--spec body(pid()) -> binary() | jsx:json_term().
+-spec body(pid()) -> binary() | [{binary(), binary() | true}] | jsx:json_term().
 body(Pid) ->
     Body = body_raw(Pid),
-    case header(Pid, <<"content-type">>) of
-        %% decode body if content-type is json or msgpack
-        <<"application/json">> -> try
-                                      jsx:decode(Body)
-                                  catch
-                                      _:_ -> Body
-                                  end;
-        <<"application/x-msgpack">> -> case msgpack:unpack(Body) of
-                                           {ok, UnpackedBody} -> UnpackedBody;
-                                           _ -> Body
-                                       end;
+    case parse_header(Pid, <<"content-type">>) of
+        {<<"application">>, <<"json">>, _} -> try
+                                                  jsx:decode(Body)
+                                              catch
+                                                  _:_ -> Body
+                                              end;
+        {<<"application">>, <<"msgpack">>, _} -> case msgpack:unpack(Body) of
+                                                     {ok, UnpackedBody} -> UnpackedBody;
+                                                     _ -> Body
+                                                 end;
+        {<<"application">>, <<"x-www-form-urlencoded">>, _} -> cow_qs:parse_qs(Body);
         _ -> Body
     end.
 
