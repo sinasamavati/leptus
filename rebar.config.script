@@ -1,0 +1,9 @@
+case erlang:system_info(otp_release) of
+    [$R|_] ->lists:map(fun({deps, D}) ->
+                           lists:map(fun({msgpack, M, {T, U, C}}) ->
+                                         {msgpack, M, {T, U, {branch, "master"}}};
+                                        (P) -> P end,
+                                     D);
+                          (I) -> I end, CONFIG);
+    _ -> CONFIG
+end.
