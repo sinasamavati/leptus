@@ -431,7 +431,7 @@ maybe_set_content_type(Type, Headers) ->
 content_type(text) -> <<"text/plain">>;
 content_type(html) -> <<"text/html">>;
 content_type(json) -> <<"application/json">>;
-content_type(msgpack) -> <<"application/x-msgpack">>.
+content_type(msgpack) -> <<"application/msgpack">>.
 
 %% -----------------------------------------------------------------------------
 %% HTTP status code bindings
