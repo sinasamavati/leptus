@@ -1,4 +1,4 @@
-* Leptus [[https://travis-ci.org/s1n4/leptus][https://travis-ci.org/s1n4/leptus.png?branch=master]]
+* Leptus [[https://travis-ci.org/Ledest/leptus][https://travis-ci.org/Ledest/leptus.png]]
 
   Leptus is an Erlang REST framework that runs on top of cowboy.
 
