@@ -112,10 +112,15 @@ version(Pid) ->
 method(Pid) ->
     invoke(Pid, method, []).
 
--spec body(pid()) -> binary() | [{binary(), binary() | true}] | jsx:json_term().
+-spec body(pid()) -> binary() | [{binary(), binary() | true}] | jsx:json_term() | term().
 body(Pid) ->
     Body = body_raw(Pid),
     case parse_header(Pid, <<"content-type">>) of
+        {<<"application">>, <<"erlang">>, _} -> try
+                                                    binary_to_term(Body, [safe])
+                                                catch
+                                                    _:_ -> Body
+                                                end;
         {<<"application">>, <<"json">>, _} -> try
                                                   jsx:decode(Body)
                                               catch
