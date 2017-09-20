@@ -145,7 +145,7 @@ body(Config) ->
      {<<"lastname">>, <<"Samavati">>}
     ] = leptus_req:body(Req5),
 
-    %% when content-type is application/x-msgpack
+    %% when content-type is application/msgpack
     [
      {<<"abc">>, 123},
      {456, <<"def">>}
@@ -336,7 +336,7 @@ req7() ->
      [{<<"content-length">>,<<"13">>},
       {<<"host">>,<<"localhost:8080">>},
       {<<"user-agent">>,<<"Cow">>},
-      {<<"content-type">>,<<"application/x-msgpack">>}],
+      {<<"content-type">>,<<"application/msgpack">>}],
      [],undefined,[],waiting,undefined,
      <<130,163,97,98,99,123,205,1,200,163,100,101,102>>,
      false,waiting,[],<<>>,console_log}.

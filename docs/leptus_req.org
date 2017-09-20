@@ -142,7 +142,7 @@
     %% e.g.
     body(Req) -> <<"foo=bar">>
 
-    %% when content-type is set to applicaation/json or application/x-msgpack
+    %% when content-type is set to applicaation/json or application/msgpack
     body(Req) -> [{<<"function">>, <<"body/1">>}]
     #+END_SRC
 
