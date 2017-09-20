@@ -412,7 +412,7 @@ prepare_headers_body(Headers, {erlang, Body}) ->
 prepare_headers_body(Headers, {json, Body}) ->
     {maybe_set_content_type(json, Headers), jsx:encode(Body)};
 prepare_headers_body(Headers, {msgpack, Body}) ->
-    {maybe_set_content_type(msgpack, Headers), msgpack:pack(Body, [jsx])};
+    {maybe_set_content_type(msgpack, Headers), msgpack:pack(Body, [{map_format, jsx}])};
 prepare_headers_body(Headers, {html, Body}) ->
     {maybe_set_content_type(html, Headers), Body};
 prepare_headers_body(Headers, Body) ->
