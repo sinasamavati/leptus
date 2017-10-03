@@ -7,7 +7,7 @@
 ** Requirements
 
    - Erlang/OTP 18 or newer
-   - [[https://github.com/extend/cowboy][cowboy]]
+   - [[https://github.com/ninenines/cowboy][cowboy]]
    - [[https://github.com/talentdeficit/jsx][jsx]]
    - [[https://github.com/msgpack/msgpack-erlang][msgpack]]
 
