@@ -132,12 +132,19 @@ get_value(Key, Opts, Default) ->
     end.
 
 get_uri_authority(<<>>, Acc) ->
-    Acc;
+    remove_uri_port(Acc, <<>>);
 get_uri_authority(<<$/, _/binary>>, Acc) ->
     %% skip the rest
-    Acc;
+    remove_uri_port(Acc, <<>>);
 get_uri_authority(<<"://", Rest/binary>>, _) ->
     %% skip scheme
     get_uri_authority(Rest, <<>>);
 get_uri_authority(<<Char:1/binary, Rest/binary>>, Acc) ->
     get_uri_authority(Rest, <<Acc/binary, Char/binary>>).
+
+remove_uri_port(<<>>, Acc) ->
+    Acc;
+remove_uri_port(<<":", Rest/binary>>, Acc) ->
+    Acc;
+remove_uri_port(<<Char:1/binary, Rest/binary>>, Acc) ->
+    remove_uri_port(Rest, <<Acc/binary, Char/binary>>).

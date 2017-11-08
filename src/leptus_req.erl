@@ -32,6 +32,7 @@
 -export([params/1]).
 -export([qs/1]).
 -export([qs_val/2]).
+-export([qs_vals/1]).
 -export([uri/1]).
 -export([version/1]).
 -export([method/1]).
@@ -88,6 +89,10 @@ qs(Pid) ->
 qs_val(Pid, Key) ->
     invoke(Pid, qs_val, [Key]).
 
+-spec qs_vals(pid()) -> [{binary(), binary() | true}].
+qs_vals(Pid) ->
+    invoke(Pid, qs_vals, []).
+
 -spec uri(pid()) -> binary().
 uri(Pid) ->
     Path = invoke(Pid, path, []),
@@ -107,35 +112,35 @@ version(Pid) ->
 method(Pid) ->
     invoke(Pid, method, []).
 
--spec body(pid()) -> binary() | leptus_json:json_term().
+-spec body(pid()) -> binary() | [{binary(), binary() | true}] | jsx:json_term() | term().
 body(Pid) ->
     Body = body_raw(Pid),
-    case header(Pid, <<"content-type">>) of
-        %% decode body if content-type is json or msgpack
-        <<"application/json">> ->
-            try leptus_json:decode(Body) of
-                {_, _} -> Body;
-                Term -> Term
-            catch _:_ -> Body
-            end;
-        <<"application/x-msgpack">> ->
-            case msgpack:unpack(Body) of
-                {ok, {UnpackedBody}} ->
-                    UnpackedBody;
-                _ ->
-                    Body
-            end;
-        _ ->
-            Body
+    case parse_header(Pid, <<"content-type">>) of
+        {<<"application">>, <<"erlang">>, _} -> try
+                                                    binary_to_term(Body, [safe])
+                                                catch
+                                                    _:_ -> Body
+                                                end;
+        {<<"application">>, <<"json">>, _} -> try
+                                                  jsx:decode(Body)
+                                              catch
+                                                  _:_ -> Body
+                                              end;
+        {<<"application">>, <<"msgpack">>, _} -> case msgpack:unpack(Body) of
+                                                     {ok, UnpackedBody} -> UnpackedBody;
+                                                     _ -> Body
+                                                 end;
+        {<<"application">>, <<"x-www-form-urlencoded">>, _} -> cow_qs:parse_qs(Body);
+        _ -> Body
     end.
 
 -spec body_raw(pid()) -> binary().
 body_raw(Pid) ->
-    invoke(Pid, body, [infinity]).
+    invoke(Pid, body, []).
 
 -spec body_qs(pid()) -> [{binary(), binary() | true}].
 body_qs(Pid) ->
-    invoke(Pid, body_qs, [infinity]).
+    invoke(Pid, body_qs, []).
 
 -spec header(pid(), binary()) -> binary() | undefined.
 header(Pid, Name) ->
