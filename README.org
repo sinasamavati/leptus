@@ -1,4 +1,4 @@
-* Leptus [[https://travis-ci.org/s1n4/leptus][https://travis-ci.org/s1n4/leptus.png?branch=master]]
+* Leptus [[https://travis-ci.org/Ledest/leptus][https://travis-ci.org/Ledest/leptus.png]]
 
   Leptus is an Erlang REST framework that runs on top of cowboy.
 
@@ -6,9 +6,9 @@
 
 ** Requirements
 
-   - Erlang/OTP R15B or newer
-   - [[https://github.com/extend/cowboy][cowboy]]
-   - [[https://github.com/davisp/jiffy][jiffy]] or [[https://github.com/talentdeficit/jsx][jsx]]
+   - Erlang/OTP 18 or newer
+   - [[https://github.com/ninenines/cowboy][cowboy]]
+   - [[https://github.com/talentdeficit/jsx][jsx]]
    - [[https://github.com/msgpack/msgpack-erlang][msgpack]]
 
 ** Installation
@@ -25,17 +25,6 @@
            ...
            {leptus, ".*", {git, "git://github.com/s1n4/leptus.git", {branch, "master"}}}
           ]}.
-   #+END_SRC
-
-   NOTE: if you prefer [[https://github.com/talentdeficit/jsx][jsx]] rather than [[https://github.com/davisp/jiffy][jiffy]]
-   the environment variable ~USE_JSX~ must be set to ~true~ when getting
-   dependencies and/or compiling.
-
-   i.e.
-   #+BEGIN_SRC
-   USE_JSX=true make
-   # OR
-   USE_JSX=true rebar get-deps compile
    #+END_SRC
 
 ** Quick example

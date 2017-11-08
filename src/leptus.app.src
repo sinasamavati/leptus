@@ -19,23 +19,10 @@
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 %% THE SOFTWARE.
 
-{application, leptus,
- [
-  {description, "REST framework that runs on top of cowboy"},
-  {vsn, "0.4.2"},
-  {registered, []},
-  {applications, [
-                  kernel,
-                  stdlib,
-                  cowboy
-                 ]},
-  {mod, {leptus_app, []}},
-  {env, []},
-  {modules, [
-             leptus, leptus_app, leptus_sup,
-             leptus_handler, leptus_router, leptus_pt,
-             leptus_config, leptus_req_sup, leptus_req,
-             leptus_json, leptus_utils, leptus_logger,
-             leptus_access_log
-            ]}
- ]}.
+{application, leptus, [{description, "REST framework that runs on top of cowboy"},
+                       {vsn, "1.0.0"},
+                       {registered, []},
+                       {applications, [kernel, stdlib, cowboy]},
+                       {mod, {leptus_app, []}},
+                       {env, []},
+                       {modules, []}]}.

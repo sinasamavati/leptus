@@ -60,6 +60,16 @@
 -export_type([listener/0]).
 -export_type([options/0]).
 
+-callback init(Route::string(), Req::pid(), State::any()) -> {ok, any()} | {error, any()}.
+-callback terminate(Reason::any(), Route::string(), Req::pid(), State::any()) -> ok.
+-callback routes() -> [string()].
+-callback allowed_methods(Route::string()) -> [binary()].
+-callback get(Route::string(), Req::pid(), State::any()) -> {ok, any(), any()} | {error, any()}.
+-callback put(Route::string(), Req::pid(), State::any()) -> {ok, any(), any()} | {error, any()}.
+-callback post(Route::string(), Req::pid(), State::any()) -> {ok, any(), any()} | {error, any()}.
+-callback delete(Route::string(), Req::pid(), State::any()) -> {ok, any(), any()} | {error, any()}.
+-callback options(Route::string(), Req::pid(), State::any()) -> {ok, any(), any()} | {error, any()}.
+-optional_callbacks([get/3, put/3, post/3, delete/3, options/3]).
 
 %% -----------------------------------------------------------------------------
 %% start a listener
@@ -251,10 +261,7 @@ ensure_started(App) ->
 %% -----------------------------------------------------------------------------
 -spec ensure_deps_started() -> ok.
 ensure_deps_started() ->
-    ensure_started(crypto),
-    ensure_started(ranch),
-    ensure_started(cowlib),
-    ensure_started(cowboy).
+    lists:foreach(fun(A) -> ok = ensure_started(A) end, [crypto, asn1, public_key, ssl, ranch, cowlib, cowboy]).
 
 -spec opt(atom(), options(), Default) -> any() | Default when Default :: any().
 opt(Key, [{Key, Value}|_], _) ->
@@ -286,7 +293,7 @@ print_info(Listener, IP, Port) ->
 update_listener_bucket({Listener, {Handlers, Opts}}) ->
     %% [{Listener, Bucket}]
     Bucket = #listener_bucket{handlers = Handlers, options = Opts,
-                              started_timestamp = now()},
+                              started_timestamp = os:timestamp()},
     Listeners = leptus_config:lookup(listeners, []),
     Listeners1 = lists:keystore(Listener, 1, Listeners, {Listener, Bucket}),
     leptus_config:set(listeners, Listeners1).
