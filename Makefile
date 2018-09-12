@@ -1,6 +1,6 @@
 # The MIT License
 #
-# Copyright (c) 2013-2014 Sina Samavati <sina.samv@gmail.com>
+# Copyright (c) 2013-2018 Sina Samavati <sina.samv@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,17 +21,18 @@
 # THE SOFTWARE.
 
 PROJECT = leptus
-CT_SUITES = leptus_pt leptus_router leptus_handler leptus_logger leptus_http \
-	leptus_config leptus_utils
+CT_SUITES = \
+	leptus_pt \
+	leptus_router \
+	leptus_handler \
+	leptus_logger \
+	leptus_config \
+	leptus_utils \
+	leptus_http
 
-dep_cowboy = https://github.com/extend/cowboy/archive/0.9.0.tar.gz
-dep_msgpack = https://github.com/msgpack/msgpack-erlang/archive/0.2.8.tar.gz
-ifdef USE_JSX
-    dep_jsx = https://github.com/talentdeficit/jsx/archive/v1.4.5.tar.gz
-    ERLC_OPTS += -DUSE_JSX
-else
-    dep_jiffy = https://github.com/davisp/jiffy/archive/0.8.5.tar.gz
-endif
+dep_cowboy = https://github.com/ninenines/cowboy/archive/2.4.0.tar.gz
+dep_jiffy = https://github.com/davisp/jiffy/archive/0.15.2.tar.gz
+deps = cowboy jiffy
 
 DEPS_DIR ?= $(CURDIR)/deps
 export DEPS_DIR
@@ -41,7 +42,7 @@ DOCS_DIR = $(CURDIR)/docs
 TEST_DIR = $(CURDIR)/test
 PLT_FILE = $(CURDIR)/.$(PROJECT).plt
 
-ERLC_OPTS += -I include -Werror +debug_info +warn_export_all +warn_export_vars \
+ERLC_OPTS += -I include +debug_info +warn_export_all +warn_export_vars \
 	+warn_shadow_vars +warn_obsolete_guard
 
 V ?= 0

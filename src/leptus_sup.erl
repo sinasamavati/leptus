@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2018 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -40,8 +40,6 @@ init([]) ->
           [
            {leptus_config, {leptus_config, start_link, []},
             permanent, 5000, worker, [leptus_config]},
-           {leptus_req_sup, {leptus_req_sup, start_link, []},
-            permanent, 5000, supervisor, [leptus_req_sup]},
            {leptus_logger, {gen_event, start_link, [{local, ?LOGGER}]},
             permanent, 5000, worker, []}
           ]

@@ -1,5 +1,5 @@
 %%-*- mode: erlang -*-
-%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2018 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -21,21 +21,29 @@
 
 {application, leptus,
  [
-  {description, "REST framework that runs on top of cowboy"},
+  {description, "The Erlang REST framework"},
   {vsn, "0.4.2"},
   {registered, []},
   {applications, [
                   kernel,
                   stdlib,
+                  jiffy,
                   cowboy
                  ]},
   {mod, {leptus_app, []}},
   {env, []},
   {modules, [
-             leptus, leptus_app, leptus_sup,
-             leptus_handler, leptus_router, leptus_pt,
-             leptus_config, leptus_req_sup, leptus_req,
-             leptus_json, leptus_utils, leptus_logger,
-             leptus_access_log
+             leptus,
+             leptus_app,
+             leptus_sup,
+             leptus_handler,
+             leptus_router,
+             leptus_pt,
+             leptus_config,
+             leptus_json,
+             leptus_utils,
+             leptus_logger,
+             leptus_access_log,
+             leptus_debug_log
             ]}
  ]}.

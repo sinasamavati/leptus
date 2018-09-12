@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2018 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,7 @@
 %% -----------------------------------------------------------------------------
 %% cowboy callbacks
 %% -----------------------------------------------------------------------------
--export([init/3]).
--export([upgrade/4]).
+-export([init/2]).
 
 -include("leptus.hrl").
 -include("leptus_logger.hrl").
@@ -33,18 +32,23 @@
 %% types
 %% -----------------------------------------------------------------------------
 -type req() :: pid().
--type status() :: non_neg_integer() | binary() | atom().
+-type status() :: non_neg_integer() | atom() | binary().
 -type headers() :: cowboy:http_headers().
--type body() :: binary() | string() | {json | msgpack, leptus_json:json_term()}
-              | {html, binary()}.
+-type body() :: iodata() | map().
 -type method() :: get | put | post | delete.
 -type response() :: {body(), handler_state()}
                   | {status(), body(), handler_state()}
                   | {status(), headers(), body(), handler_state()}.
--type terminate_reason() :: normal | not_allowed | unauthenticated
-                          | no_permission | {error, any()}.
--type data_format() :: text | json | msgpack | html.
--type status_code() :: 100..101 | 200..206 | 300..307 | 400..417 | 500..505.
+-type terminate_reason() :: normal
+                          | not_allowed
+                          | unauthenticated
+                          | no_permission
+                          | {error, any()}.
+-type status_code() :: 100..101
+                     | 200..206
+                     | 300..307
+                     | 400..417
+                     | 500..505.
 
 -export_type([status/0]).
 
@@ -60,60 +64,64 @@
 -type state() :: #state{}.
 
 %% -----------------------------------------------------------------------------
-%% cowboy callbacks
+%% cowboy callback
 %% -----------------------------------------------------------------------------
-init(_, Req, Resrc) ->
-    LogData = #log_data{},
-    Headers = cowboy_req:get(headers, Req),
-    {ok, ReqPid} = leptus_req_sup:start_child(Req),
-    Method = leptus_req:method(ReqPid),
-    LogData1 = LogData#log_data{method = Method, headers = Headers},
-    State = #state{resrc = Resrc, method = Method, log_data = LogData1},
-    {upgrade, protocol, ?MODULE, ReqPid, State}.
-
-upgrade(Req, Env, _Handler,
-        State=#state{resrc=#resrc{handler=Handler, route=Route,
-                                  handler_state=HState}=Resrc,
-                     method=Method, log_data=LogData}) ->
-    {ok, State2} =
-        try Handler:init(Route, Req, HState) of
-            {ok, HState1} ->
-                State1 = State#state{resrc=Resrc#resrc{handler_state=HState1}},
-                handle_request(http_method(Method), Req, State1);
-            Else ->
-                reply(500, [], <<>>, Req),
-                badmatch_error_info(Else, {Handler, init, 3}, Route, Req, State),
-                {ok, State#state{terminate_reason={error, badmatch}}}
-
-        catch Class:Reason ->
-                reply(500, [], <<>>, Req),
-                error_info(Class, Reason, Route, Req, HState),
-                {ok, State#state{terminate_reason={error, Reason}}}
-        end,
-
-    LogData1 = LogData#log_data{response_time = erlang:localtime()},
-    receive
-        {Status, ContentLength} ->
-            {IP, _} = leptus_req:peer(Req),
-            Version = leptus_req:version(Req),
-            URI = leptus_req:uri(Req),
-            LogData2 = LogData1#log_data{ip = IP, version = Version,
-                                         uri = URI, status = Status,
-                                         content_length = ContentLength},
-            spawn(leptus_logger, send_event, [access_log, LogData2]),
-            spawn(leptus_logger, send_event, [debug_log, LogData2])
-    end,
-
-    TerminateReason = State2#state.terminate_reason,
-    HState2 = State2#state.resrc#resrc.handler_state,
-    handler_terminate(TerminateReason, Handler, Route, Req, HState2),
-    Req1 = leptus_req:get_req(Req),
-    leptus_req:stop(Req),
-    {ok, Req1, Env}.
+init(Req, Resrc) ->
+    Headers = cowboy_req:headers(Req),
+    Method = cowboy_req:method(Req),
+    LogData = #log_data{method = Method, headers = Headers},
+    State = #state{resrc = Resrc, method = Method, log_data = LogData},
+    handler_init(Req, State).
 
 %% -----------------------------------------------------------------------------
 %% internal
 %% -----------------------------------------------------------------------------
+handler_init(Req0, #state{
+                    method=Method,
+                    log_data=LogData0,
+                    resrc=#resrc{handler=Handler,
+                                 route=Route,
+                                 handler_state=HState0}=Resrc}=State0) ->
+    {ok, Req2, State2} =
+        try Handler:init(Route, Req0, HState0) of
+            {ok, HState1} ->
+                State1 = State0#state{resrc=Resrc#resrc{handler_state=HState1}},
+                handle_request(http_method(Method), Req0, State1);
+            Else ->
+                Req1 = reply(500, #{}, <<>>, Req0),
+                badmatch_error_info(Else, {Handler, init, 3}, Route, Req0, State0),
+                {ok, Req1, State0#state{terminate_reason={error, badmatch}}}
+
+        catch Class:Reason ->
+                Req1 = reply(500, #{}, <<>>, Req0),
+                error_info(Class, Reason, Route, Req0, HState0),
+                {ok, Req1, State0#state{terminate_reason={error, Reason}}}
+        end,
+
+    LogData1 = LogData0#log_data{response_time = erlang:localtime()},
+    receive
+        {Status, ContentLength} ->
+            {IP, _} = cowboy_req:peer(Req2),
+            Version = cowboy_req:version(Req2),
+            URI = iolist_to_binary(cowboy_req:uri(Req2)),
+            LogData2 = LogData1#log_data{
+                         ip = IP,
+                         version = Version,
+                         uri = URI,
+                         status = Status,
+                         content_length = ContentLength
+                        },
+            spawn(leptus_logger, send_event, [access_log, LogData2]),
+            spawn(leptus_logger, send_event, [debug_log, LogData2])
+    after 10 ->
+            ok
+    end,
+
+    TerminateReason = State2#state.terminate_reason,
+    HState2 = State2#state.resrc#resrc.handler_state,
+    handler_terminate(TerminateReason, Handler, Route, Req2, HState2),
+    {ok, Req2, State2}.
+
 -spec is_defined(module(), atom()) -> boolean().
 is_defined(Handler, Func) ->
     erlang:function_exported(Handler, Func, 3).
@@ -136,45 +144,43 @@ handle_request(not_allowed, Req,
                State=#state{resrc=#resrc{handler_state=HandlerState,
                                          handler=Handler, route=Route}}) ->
     Response = method_not_allowed(Handler, Route, HandlerState),
-    handle_response(Response, Req, State#state{terminate_reason=not_allowed});
-handle_request(options, Req, State=#state{
-				      resrc=#resrc{
-					       handler_state=HandlerState}}) ->
+    handle_response(Response, Req, State#state{terminate_reason = not_allowed});
+handle_request(options, Req,
+               #state{resrc=#resrc{handler_state=HandlerState}}=State) ->
     %% deal with CORS preflight request
-    handle_options_request(Req, State, HandlerState, check_cors_preflight(Req, State));
+    handle_options_request(
+      Req, State, HandlerState, check_cors_preflight(Req, State)
+     );
 handle_request(Func, Req,
-               State=#state{resrc=#resrc{handler=Handler, route=Route,
-                                         handler_state=HandlerState},
-                            method=Method}) ->
+               #state{method=Method,
+                      resrc=#resrc{handler=Handler,
+                                   route=Route,
+                                   handler_state=HandlerState}}=State) ->
     %% reasponse and terminate reason
-    {Response,
-     TReason} = case is_allowed(Handler, Func, Route, Method) of
-                    true ->
-                        case authorization(Handler, Route, Req, HandlerState) of
-                            {true, HandlerState1} ->
-                                try Handler:Func(Route, Req, HandlerState1) of
-                                    Resp ->
-                                        {Resp, normal}
-                                catch Class:Reason ->
-                                        error_info(Class, Reason, Route, Req,
-                                                   HandlerState1),
-                                        {{500, <<>>, HandlerState1},
-                                         {error, Reason}}
-                                end;
-                            {false, Resp, TR} ->
-                                {Resp, TR}
+    {Response, TReason} =
+        case is_allowed(Handler, Func, Route, Method) of
+            true ->
+                case authorization(Handler, Route, Req, HandlerState) of
+                    {true, HandlerState1} ->
+                        try Handler:Func(Route, Req, HandlerState1) of
+                            Resp when is_tuple(Resp) ->
+                                {Resp, normal}
+                        catch Class:Reason ->
+                                error_info(
+                                  Class, Reason, Route, Req, HandlerState1
+                                 ),
+                                {{500, <<>>, HandlerState1}, {error, Reason}}
                         end;
-                    false ->
-                        {method_not_allowed(Handler, Route, HandlerState),
-                         not_allowed}
-                end,
-    handle_response(Response, Req, State#state{terminate_reason=TReason}).
+                    {false, Resp, TR} ->
+                        {Resp, TR}
+                end;
+            false ->
+                {method_not_allowed(Handler, Route, HandlerState), not_allowed}
+        end,
+    handle_response(Response, Req, State#state{terminate_reason = TReason}).
 
-check_cors_preflight(Req, #state{
-			     resrc=#resrc{
-				      handler=Handler,
-				      route=Route}}) ->
-    Method = leptus_req:header(Req, <<"access-control-request-method">>),
+check_cors_preflight(Req, #state{resrc=#resrc{handler=Handler, route=Route}}) ->
+    Method = cowboy_req:header(Req, <<"access-control-request-method">>),
     is_allowed(Handler, http_method(Method), Route, Method).
 
 handle_options_request(Req, State, HandlerState, true) ->
@@ -192,7 +198,9 @@ authorization(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
     %%   is_authenticated(Route, Req, State) ->
-    %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
+    %%     {true, State}
+    %%   | {false, Body, State}
+    %%   | {false, Headers, Body, State}.
     %%
     F1 = is_authenticated,
     TR1 = unauthenticated, %% terminate reason
@@ -206,8 +214,9 @@ authorization(Handler, Route, Req, HandlerState) ->
                       {false, Headers, Body, HandlerState1} ->
                           {false, {401, Headers, Body, HandlerState1}, TR1};
                       Else ->
-                          badmatch_error_info(Else, {Handler, F1, 3}, Route,
-                                              Req, HandlerState),
+                          badmatch_error_info(
+                            Else, {Handler, F1, 3}, Route, Req, HandlerState
+                           ),
                           {false, {500, <<>>, HandlerState}, badmatch}
 
                   catch Class:Reason ->
@@ -221,7 +230,9 @@ authorization(Handler, Route, Req, HandlerState) ->
     %%
     %% spec:
     %%   has_permission(Route, Req, State) ->
-    %%     {true, State} | {false, Body, State} | {false, Headers, Body, State}.
+    %%     {true, State}
+    %%   | {false, Body, State}
+    %%   | {false, Headers, Body, State}.
     %%
     F2 = has_permission,
     TR2 = no_permission, %% terminate reason
@@ -284,7 +295,12 @@ method_not_allowed(Handler, Route, HandlerState) ->
     %% e.g.
     %%   allowed_methods("/") -> [<<"GET">>, <<"POST">>]
     %%
-    {405, [{<<"allow">>, allowed_methods(Handler, Route)}], <<>>, HandlerState}.
+    {
+      405,
+      #{<<"allow">> => allowed_methods(Handler, Route)},
+      <<>>,
+      HandlerState
+    }.
 
 -spec allowed_methods(handler(), route()) -> binary().
 allowed_methods(Handler, Route) ->
@@ -300,14 +316,14 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
     %% spec:
     %%   Handler:cross_domains(Route, Req, State) -> {[string()], State}
     %%
-    case leptus_req:header(Req, <<"origin">>) of
+    case cowboy_req:header(<<"origin">>, Req) of
         undefined ->
-            {[], HandlerState};
+            {#{}, HandlerState};
         Origin ->
             %% go on if the Origin header is present
             case is_defined(Handler, cross_domains) of
                 false ->
-                    {[], HandlerState};
+                    {#{}, HandlerState};
                 true ->
                     %% go on if Handler:cross_domains/3 is exported
                     F = cross_domains,
@@ -316,7 +332,7 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
                             Host = leptus_utils:get_uri_authority(Origin),
                             case origin_matches(Host, HostMatches) of
                                 false ->
-                                    {[], HandlerState1};
+                                    {#{}, HandlerState1};
                                 %% go on if Origin is allowed
                                 true ->
                                     {cors_headers(Handler, Route, Origin, Req),
@@ -336,20 +352,20 @@ handler_cross_domains(Handler, Route, Req, HandlerState) ->
 
 -spec is_preflight(req()) -> boolean().
 is_preflight(Req) ->
-    case leptus_req:header(Req, <<"access-control-request-method">>) of
-        undefined -> false;
-        _ -> true
-    end.
+    cowboy_req:header(Req, <<"access-control-request-method">>) =/= undefined.
 
 -spec cors_headers(handler(), route(), binary(), req()) -> headers().
 cors_headers(Handler, Route, Origin, Req) ->
-    AccessControlAllowOrigin = {<<"access-control-allow-origin">>, Origin},
+    AccessControlAllowOrigin = #{<<"access-control-allow-origin">> => Origin},
     case is_preflight(Req) of
         true ->
-            [AccessControlAllowOrigin|[{<<"access-control-allow-methods">>,
-                                        allowed_methods(Handler, Route)}]];
+            maps:put(
+              <<"access-control-allow-methods">>,
+              allowed_methods(Handler, Route),
+              AccessControlAllowOrigin
+             );
         false ->
-            [AccessControlAllowOrigin]
+            AccessControlAllowOrigin
     end.
 
 %% -----------------------------------------------------------------------------
@@ -365,73 +381,74 @@ handler_terminate(Reason, Handler, Route, Req, HandlerState) ->
 %% -----------------------------------------------------------------------------
 -spec handle_response(response(), req(), State) ->
                              {ok, State} when State :: state().
-handle_response({Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
-    handle_response(200, [], Body, Req,
-                    St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
-handle_response({Status, Body, HandlerState}, Req, St=#state{resrc=Resrc}) ->
-    handle_response(Status, [], Body, Req,
-                    St#state{resrc=Resrc#resrc{handler_state = HandlerState}});
-handle_response({Status, Headers, Body, HandlerState}, Req,
-                St=#state{resrc=Resrc}) ->
-    handle_response(Status, Headers, Body, Req,
-                    St#state{resrc=Resrc#resrc{handler_state = HandlerState}}).
+handle_response({Body, HandlerState}, Req, #state{resrc=Resrc}=St) ->
+    handle_response(
+      200,
+      #{},
+      Body,
+      Req,
+      St#state{resrc=Resrc#resrc{handler_state = HandlerState}}
+     );
+handle_response({Status, Body, HandlerState}, Req, #state{resrc=Resrc}=St) ->
+    handle_response(
+      Status,
+      #{},
+      Body,
+      Req,
+      St#state{resrc=Resrc#resrc{handler_state = HandlerState}}
+     );
+handle_response({Status, Headers, Body, HandlerState},
+                Req, #state{resrc=Resrc}=St) ->
+    handle_response(
+      Status,
+      Headers,
+      Body,
+      Req,
+      St#state{resrc=Resrc#resrc{handler_state = HandlerState}}
+     ).
 
 -spec handle_response(status(), headers(), body(), req(), St) ->
                              {ok, St} when St :: state().
-handle_response(Status, Headers, Body, Req,
-                State=#state{terminate_reason={error, _}}) ->
-    reply(Status, Headers, Body, Req),
-    {ok, State};
-handle_response(Status, Headers, Body, Req,
-                State=#state{resrc=Resrc=#resrc{handler=Handler,route=Route,
-                                                handler_state=HandlerState}}) ->
-    Status1 = status(Status),
-    %% encode Body and set content-type
-    {Headers1, Body1} = prepare_headers_body(Headers, Body),
+handle_response(Status, Headers, Body, Req0,
+                #state{terminate_reason={error, _}}=State) ->
+    Req1 = reply(Status, Headers, Body, Req0),
+    {ok, Req1, State};
+handle_response(Status, Headers0, Body, Req0,
+                #state{resrc=#resrc{handler=Handler,route=Route,
+                                    handler_state=HandlerState}=Resrc}=State) ->
 
     %% enable or disable cross-domain requests
-    try handler_cross_domains(Handler, Route, Req, HandlerState) of
-        {Headers2, HandlerState1} ->
-            Headers3 = Headers1 ++ Headers2,
-            reply(Status1, Headers3, Body1, Req),
-            {ok, State#state{resrc=Resrc#resrc{handler_state = HandlerState1}}}
+    try handler_cross_domains(Handler, Route, Req0, HandlerState) of
+        {Headers1, HandlerState1} ->
+            Headers2 = maps:merge(Headers0, Headers1),
+            Req1 = reply(Status, Headers2, Body, Req0),
+            {ok, Req1, State#state{resrc=Resrc#resrc{handler_state = HandlerState1}}}
     catch _:Reason ->
-            reply(500, [], <<>>, Req),
-            {ok, State#state{terminate_reason={error, Reason}}}
+            Req1 = reply(500, #{}, <<>>, Req0),
+            {ok, Req1, State#state{terminate_reason={error, Reason}}}
     end.
 
--spec reply(status(), headers(), body(), req()) -> ok.
-reply(Status, Headers, Body, Req) ->
-    %% used in upgrade/4 for logging purposes
-    self() ! {Status, iolist_size(Body)},
-    leptus_req:reply(Req, Status, Headers, Body).
+-spec content_type(headers(), body()) -> headers().
+content_type(Headers, Body) when is_map(Body) ->
+    maps:put(<<"content-type">>, <<"application/json">>, Headers);
+content_type(Headers, _Body) ->
+    Headers.
 
--spec prepare_headers_body(headers(), body()) -> {headers(), body()}.
-prepare_headers_body(Headers, {json, Body}) ->
-    {maybe_set_content_type(json, Headers), leptus_json:encode(Body)};
-prepare_headers_body(Headers, {msgpack, Body}) ->
-    {maybe_set_content_type(msgpack, Headers), msgpack:pack({Body}, [jiffy])};
-prepare_headers_body(Headers, {html, Body}) ->
-    {maybe_set_content_type(html, Headers), Body};
-prepare_headers_body(Headers, Body) ->
-    {maybe_set_content_type(text, Headers), Body}.
+-spec maybe_json(body()) -> iodata().
+maybe_json(Body) when is_map(Body) ->
+    jiffy:encode(Body);
+maybe_json(Body) ->
+    Body.
 
--spec maybe_set_content_type(data_format(), headers()) -> headers().
-maybe_set_content_type(Type, Headers) ->
-    Headers1 = [{cowboy_bstr:to_lower(N), V} || {N, V} <- Headers],
-    %% don't set content-type if it's already been set
-    case lists:keyfind(<<"content-type">>, 1, Headers1) of
-        {_, _} ->
-            Headers;
-        _ ->
-            [{<<"content-type">>, content_type(Type)}|Headers]
-    end.
+-spec reply(status(), headers(), body(), req()) -> req().
+reply(Status0, Headers0, Body0, Req) ->
+    Status1 = status(Status0),
+    Headers1 = content_type(Headers0, Body0),
+    Body1 = maybe_json(Body0),
 
--spec content_type(data_format()) -> binary().
-content_type(text) -> <<"text/plain">>;
-content_type(html) -> <<"text/html">>;
-content_type(json) -> <<"application/json">>;
-content_type(msgpack) -> <<"application/x-msgpack">>.
+    %% used in leptus_init/2 for logging purposes
+    self() ! {Status1, iolist_size(Body1)},
+    cowboy_req:reply(Status1, Headers1, Body1, Req).
 
 %% -----------------------------------------------------------------------------
 %% HTTP status code bindings

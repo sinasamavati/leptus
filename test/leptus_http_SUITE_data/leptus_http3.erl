@@ -33,7 +33,7 @@ init(_Route, _Req, _State) ->
     {ok, my_state}.
 
 post("/user/register", Req, State) ->
-    Body = leptus_req:body_qs(Req),
+    {ok, Body, _} = cowboy_req:read_urlencoded_body(Req),
     Username = proplists:get_value(<<"username">>, Body),
     case Username of
         <<"asdf">> ->
@@ -43,9 +43,9 @@ post("/user/register", Req, State) ->
     end.
 
 put("/settings/change-password", Req, State) ->
-    [
-     {<<"password">>, P1}, {<<"password_confirmation">>, P2}
-    ] = leptus_req:body_qs(Req),
+    {ok, [{<<"password">>, P1},
+          {<<"password_confirmation">>, P2}], _} =
+        cowboy_req:read_urlencoded_body(Req),
 
     if P1 =:= P2 ->
             {<<"Your password has been changed.">>, State};
@@ -55,7 +55,7 @@ put("/settings/change-password", Req, State) ->
 
 delete("/users/:username/posts/:id", Req, State) ->
     my_state = State,
-    IdLen = byte_size(leptus_req:param(Req, id)),
+    IdLen = byte_size(cowboy_req:binding(id, Req)),
     if IdLen >= 4 ->
             {404, <<>>, dammit};
 

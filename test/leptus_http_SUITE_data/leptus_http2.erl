@@ -34,13 +34,13 @@ init(_Route, _Req, _State) ->
     {ok, blah}.
 
 is_authenticated("/users/:id", Req, State) ->
-    case leptus_req:method(Req) of
+    case cowboy_req:method(Req) of
         <<"PUT">> ->
             check_auth(Req, State);
         <<"POST">> ->
             case check_auth(Req, State) of
                 {false, _, _} ->
-                    {false, {json, [{<<"error">>, <<"unauthorized">>}]}, State};
+                    {false, #{<<"error">> => <<"unauthorized">>}, State};
                 Else ->
                     Else
             end;
@@ -51,11 +51,11 @@ is_authenticated(_Route, _Req, State) ->
     {true, State}.
 
 get("/users/:id", Req, State) ->
-    Id = leptus_req:param(Req, id),
+    Id = cowboy_req:binding(id, Req),
     {["aha, this is ", Id], State};
 
 get("/users/:id/interests", Req, State) ->
-    Id = leptus_req:param(Req, id),
+    Id = cowboy_req:binding(id, Req),
     case Id of
         <<"s1n4">> ->
             {200, <<"Erlang and a lotta things else">>, State};
@@ -66,12 +66,12 @@ get("/users/:id/interests", Req, State) ->
     end;
 
 get("/users/:id/profile", Req, State) ->
-    Body = [
-            {<<"id">>, leptus_req:param(Req, id)},
-            {<<"bio">>, <<"Erlanger">>},
-            {<<"github">>, leptus_req:param(Req, id)}
-           ],
-    {200, {json, Body}, State}.
+    Body = #{
+      <<"id">> => cowboy_req:binding(id, Req),
+      <<"bio">> => <<"Erlanger">>,
+      <<"github">> => cowboy_req:binding(id, Req)
+     },
+    {200, Body, State}.
 
 put("/users/:id", _Req, State) ->
     {200, <<"updated">>, State}.
@@ -82,8 +82,8 @@ post("/users/:id", _Req, State) ->
 
 %% internal
 check_auth(Req, State) ->
-    case leptus_req:auth(Req, basic) of
-        {<<"sina">>, <<"wrote_me">>} ->
+    case cowboy_req:parse_header(<<"authorization">>, Req) of
+        {basic, <<"sina">>, <<"wrote_me">>} ->
             {true, State};
         _ ->
             {false, <<"unauthorized.">>, State}

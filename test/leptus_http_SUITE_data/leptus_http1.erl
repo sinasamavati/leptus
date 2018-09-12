@@ -27,6 +27,7 @@
 -export([terminate/4]).
 
 init(_Route, _Req, State) ->
+    ct:log("ding...~n"),
     {ok, State}.
 
 get("/", _Req, State) ->
@@ -34,7 +35,7 @@ get("/", _Req, State) ->
 get("/hello", _Req, State) ->
     {200, <<"hello, world!">>, State};
 get("/hello/:name", Req, State) ->
-    Name = leptus_req:param(Req, name),
+    Name = cowboy_req:binding(name, Req),
     {200, <<"hello, ", Name/binary>>, State}.
 
 terminate(_Reason, _Route, _Req, _State) ->

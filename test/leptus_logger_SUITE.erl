@@ -36,7 +36,7 @@ datetime(_) ->
 
 format(_) ->
     Fmt1 = "\"~r\" ~s ~B \"~{asdf}\" ok \"~{user-agent}\"!",
-    LD1 = #log_data{headers = [{<<"user-agent">>, <<"curl">>}]},
+    LD1 = #log_data{headers = #{<<"user-agent">> => <<"curl">>}},
     "\"GET / HTTP/1.1\" 200 0 \"-\" ok \"curl\"!" =
         leptus_logger:format(Fmt1, LD1),
 

@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2018 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,8 @@
 
 -module(leptus_pt_SUITE).
 
+-export([init_per_suite/1]).
+-export([end_per_suite/1]).
 -export([groups/0]).
 -export([all/0]).
 -export([routes/1]).
@@ -28,6 +30,15 @@
 
 %% helpers
 -import(helpers, [request/2]).
+
+init_per_suite(Config) ->
+    ok = application:ensure_started(inets),
+    {ok, _} = application:ensure_all_started(leptus),
+    {ok, _} = pt3:start(),
+    Config.
+
+end_per_suite(_Config) ->
+    pt3:stop().
 
 groups() ->
     [{main, [parallel], [routes, allowed_methods, rq_pt]}].
@@ -52,9 +63,8 @@ allowed_methods(_) ->
     ok.
 
 rq_pt(_) ->
-    {ok, _} = pt3:start(),
-    {200, _, _} = request(<<"GET">>, "/"),
-    {200, _, _} = request(<<"PUT">>, "/old"),
-    {201, _, _} = request(<<"POST">>, "/new"),
-    {204, _, _} = request(<<"DELETE">>, "/old"),
-    ok = pt3:stop().
+    {200, _, _} = request(get, "/"),
+    {200, _, _} = request(put, "/old"),
+    {201, _, _} = request(post, "/new"),
+    {204, _, _} = request(delete, "/old"),
+    ok.

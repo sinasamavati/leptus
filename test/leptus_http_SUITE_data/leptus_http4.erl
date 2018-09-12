@@ -22,14 +22,31 @@
 -compile({parse_transform, leptus_pt}).
 
 -export([init/3]).
+-export([is_authenticated/3]).
+-export([has_permission/3]).
 -export([get/3]).
 -export([terminate/4]).
 
-init(_Route, _Req, State) -> {ok, State}.
+init(_Route, _Req, State) ->
+    {ok, State}.
 
-get("/msgpack/:msg", Req, State) ->
-    Msg = leptus_req:param(Req, msg),
-    {{msgpack, [{<<"msg">>, Msg}]}, State}.
+is_authenticated(_Route, Req, State) ->
+    case cowboy_req:parse_header(<<"authorization">>, Req) of
+        {basic, <<"123">>, <<"456">>} ->
+            {true, no_perm};
+        {basic, <<"asdf">>, <<"zxcv">>} ->
+            {true, State};
+        _ ->
+            {false, <<"unauthorized">>, State}
+    end.
+
+has_permission(_Route, _Req, State=no_perm) ->
+    {false, <<"you don't have permission to do this shit!">>, State};
+has_permission(_Route, _Req, State) ->
+    {true, State}.
+
+get("/needs-perm", _Req, State) ->
+    {<<"hah, see you got permission">>, State}.
 
 terminate(_Reason, _Route, _Req, _State) ->
     ok.

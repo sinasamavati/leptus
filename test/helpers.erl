@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2018 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -20,27 +20,27 @@
 
 -module(helpers).
 
--export([url/1]).
--export([request/2, request/3, request/4]).
--export([response_body/1]).
-
-
-url(Route) when is_list(Route) ->
-    R1 = list_to_binary(Route),
-    <<"http://localhost:8080", R1/binary>>.
+-export([request/2]).
+-export([request/3]).
+-export([request/4]).
 
 request(Method, Url) ->
-    request(Method, Url, [], <<>>).
+    request(Method, Url, []).
 
 request(Method, Url, Headers) ->
-    request(Method, Url, Headers, <<>>).
+    request(Method, Url, Headers, "").
 
 request(Method, Url, Headers, Body) ->
-    {ok, Client} = cowboy_client:init([]),
-    {ok, Client1} = cowboy_client:request(Method, url(Url), Headers, Body, Client),
-    {ok, Status, Headers1, Client2} = cowboy_client:response(Client1),
-    {Status, Headers1, Client2}.
+    Request = make_request(Method, Url, Headers, Body),
+    {ok, {{_, Status, _}, RespHeaders, RespBody}} =
+        httpc:request(Method, Request, [], [{body_format, binary}]),
+    {Status, RespHeaders, RespBody}.
 
-response_body(Client) ->
-    {ok, Data, _} = cowboy_client:response_body(Client),
-    Data.
+make_request(Method, Url, Headers, _)
+  when Method =:= head; Method =:= get; Method =:= delete ->
+    {url(Url), Headers};
+make_request(_, Url, Headers, Body) ->
+    {url(Url), Headers, "", Body}.
+
+url(Route) ->
+    "http://localhost:8080" ++ Route.

@@ -28,7 +28,7 @@
 
 
 init_per_suite(Config) ->
-    leptus_config:stop(), %% because it might be started in other suites
+    leptus_config:stop(), %% because it might have been started in other suites
     leptus_config:start(),
     Config.
 

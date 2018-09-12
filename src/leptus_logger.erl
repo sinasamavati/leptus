@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2015 Sina Samavati <sina.samv@gmail.com>
+%% Copyright (c) 2013-2018 Sina Samavati <sina.samv@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -89,11 +89,13 @@ get_name([$}|Fmt], Acc) ->
 get_name([H|Fmt], Acc) ->
     get_name(Fmt, [H|Acc]).
 
--spec get_value(binary(), [{binary(), iodata()}]) -> list().
-get_value(K, Props) ->
-    case lists:keyfind(K, 1, Props) of
-        {K, V} -> binary_to_list(V);
-        _ -> "-"
+-spec get_value(binary(), map()) -> list().
+get_value(K, M) ->
+    case maps:find(K, M) of
+        {ok, V} ->
+            binary_to_list(V);
+        _ ->
+            "-"
     end.
 
 -spec month(1..12) -> string().
