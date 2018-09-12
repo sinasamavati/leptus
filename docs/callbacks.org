@@ -19,17 +19,10 @@
 
    #+BEGIN_SRC erlang
    Route = cowboy_router:route_match()
-   Req   = pid()
+   Req   = cowboy_req:req()
    State = any()
 
-   json_term() = [json_term()]
-               | {binary() | atom(), json_term()}
-               | true
-               | false
-               | null
-               | integer()
-               | float()
-               | binary()
+   json_term() = map()
 
    status_binding() = continue
                     | switching_protocols
@@ -75,7 +68,7 @@
 
    Status  = non_neg_integer() | binary() | status_binding()
    Headers = [{binary(), iodata()}]
-   Body    = string() | binary() | {json | msgpack, json_term()} | {html, binary()}
+   Body    = string() | binary() | json_term()
    #+END_SRC
 
 ** Behaviour
@@ -192,7 +185,7 @@
      delete("/:id", Req, State) ->
          ...
          %% Body as a json
-         {204, {json, [{<<"message">>, <<"deleted">>}]}, State}.
+         {204, #{<<"message">> => <<"deleted">>}, State}.
      #+END_SRC
 
 *** terminate/4
@@ -206,7 +199,7 @@
 
     Type:
     #+BEGIN_SRC erlang
-    Reason = normal | not_allowed | unauthenticated | no_permission | {error, any()}
+    Reason = normal | not_allowed | unauthenticated | unauthorized | {error, any()}
     #+END_SRC
 
 ** Example

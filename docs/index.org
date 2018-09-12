@@ -30,8 +30,8 @@
    get("/hi/:name", Req, State) ->
        Status = ok,
        Name = leptus_req:param(Req, name),
-       Body = [{<<"say">>, <<"Hi">>}, {<<"to">>, Name}],
-       {Status, {json, Body}, State}.
+       Body = #{<<"say">> => <<"Hi">>, <<"to">> => Name},
+       {Status, Body, State}.
 
    terminate(_Reason, _Route, _Req, _State) ->
        ok.
@@ -74,21 +74,6 @@
      - [[callbacks.org#has_permission3][has_permission/3]]
      - [[callbacks.org#httpmethod3][HttpMethod/3]]
      - [[callbacks.org#terminate4][terminate/4]]
-
-   - [[leptus_req.org][Request]]
-     - [[leptus_req.org#param2][param/2]]
-     - [[leptus_req.org#params1][params/1]]
-     - [[leptus_req.org#qs1][qs/1]]
-     - [[leptus_req.org#qs_val2][qs_val/2]]
-     - [[leptus_req.org#uri1][uri/1]]
-     - [[leptus_req.org#version1][version/1]]
-     - [[leptus_req.org#method1][method/1]]
-     - [[leptus_req.org#body1][body/1]]
-     - [[leptus_req.org#body_raw1][body_raw/1]]
-     - [[leptus_req.org#body_qs1][body_qs/1]]
-     - [[leptus_req.org#header2][header/2]]
-     - [[leptus_req.org#parse_header2][parse_header/2]]
-     - [[leptus_req.org#auth2][auth/2]]
 
    - [[configuration.org][Configuration]]
      - [[configuration.org#handlers][handlers]]

@@ -42,7 +42,7 @@
     :CUSTOM_ID: start_listener-2
     :END:
 
-    Starts leptus' dependencies and a listener of type ~Listener~.
+    Starts a listener of type ~Listener~.
 
     #+BEGIN_SRC erlang
     leptus:start_listener(Listener, HandlersOrAppName) -> {ok, pid()}
@@ -61,19 +61,8 @@
     :CUSTOM_ID: start_listener-3
     :END:
 
-    Starts leptus' dependencies and a listener of type ~Listener~.
+    Starts a listener of type ~Listener~.
 
     #+BEGIN_SRC erlang
     leptus:start_listener(Listener, Handlers, Options) -> {ok, pid()}
     #+END_SRC
-
-** The OTP way
-
-   The recommended method for starting an OTP application:
-   #+BEGIN_SRC erlang
-   application:start(crypto),
-   application:start(ranch),
-   application:start(cowboy),
-   application:start(leptus).
-   #+END_SRC
-   After that ~start_listener~ function should be called to start a listener.
