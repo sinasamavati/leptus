@@ -12,7 +12,7 @@
    :CUSTOM_ID: toc
    :END:
 
-   - [[quick-overview][Quick Overview]]
+   - [[#quick-overview][Quick Overview]]
    - [[types.org][Types]]
 
    - [[callbacks.org][Callbacks]]
