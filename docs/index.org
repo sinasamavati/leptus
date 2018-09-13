@@ -7,9 +7,37 @@
   :CUSTOM_ID: docs
   :END:
 
-** Overview
+** Table of contents
    :PROPERTIES:
-   :CUSTOM_ID: preface
+   :CUSTOM_ID: toc
+   :END:
+
+   - [[quick-overview][Quick Overview]]
+   - [[types.org][Types]]
+
+   - [[callbacks.org][Callbacks]]
+     - [[callbacks.org#prefix0][prefix/0]]
+     - [[callbacks.org#init3][init/3]]
+     - [[callbacks.org#cross_domains3][cross_domains/3]]
+     - [[callbacks.org#is_authenticated3][is_authenticated/3]]
+     - [[callbacks.org#has_permission3][has_permission/3]]
+     - [[callbacks.org#httpmethod3][HttpMethod/3]]
+     - [[callbacks.org#terminate4][terminate/4]]
+
+   - [[configuration.org][Configuration]]
+     - [[configuration.org#handlers][handlers]]
+     - [[configuration.org#options][options]]
+
+   - Modules
+     - [[leptus.org][leptus]]
+     - [[leptus_config.org][leptus_config]]
+     - [[leptus_logger.org][leptus_logger]]
+     - [[leptus_router.org][leptus_router]]
+     - [[leptus_utils.org][leptus_utils]]
+
+** Quick Overview
+   :PROPERTIES:
+   :CUSTOM_ID: quick-overview
    :END:
 
    #+BEGIN_SRC erlang
@@ -57,30 +85,3 @@
    $ curl localhost:8080/hi/Leptus
    {"say":"Hi","to":"Leptus"}
    #+END_SRC
-
-** Table of contents
-   :PROPERTIES:
-   :CUSTOM_ID: toc
-   :END:
-
-   - [[types.org][Types]]
-
-   - [[callbacks.org][Callbacks]]
-     - [[callbacks.org#prefix0][prefix/0]]
-     - [[callbacks.org#init3][init/3]]
-     - [[callbacks.org#cross_domains3][cross_domains/3]]
-     - [[callbacks.org#is_authenticated3][is_authenticated/3]]
-     - [[callbacks.org#has_permission3][has_permission/3]]
-     - [[callbacks.org#httpmethod3][HttpMethod/3]]
-     - [[callbacks.org#terminate4][terminate/4]]
-
-   - [[configuration.org][Configuration]]
-     - [[configuration.org#handlers][handlers]]
-     - [[configuration.org#options][options]]
-
-   - Modules
-     - [[leptus.org][leptus]]
-     - [[leptus_config.org][leptus_config]]
-     - [[leptus_logger.org][leptus_logger]]
-     - [[leptus_router.org][leptus_router]]
-     - [[leptus_utils.org][leptus_utils]]
