@@ -12,7 +12,7 @@
   ~leptus:start_listener/2~.
 
   Leptus configuration file must be named ~leptus.config~, and it must be put in
-  ~priv~ directory of main application.
+  ~priv~ directory of the ~App~ application.
 
 ** Sections
    :PROPERTIES:
@@ -24,16 +24,18 @@
     :CUSTOM_ID: handlers
     :END:
 
-    Request handlers should be defined as follows:
-    ~{handlers, [{HostMatch, [{module(), State :: any()}]}]}.~ in ~leptus.config~
+    In ~leptus.config~, request handlers should be defined as follows:
+    ~{handlers, [{HostMatch, [{module(), State :: any()}]}]}.~
+
+    Please refer to [[leptus.org#types][Leptus types]] for further details on
+    types.
 
 *** options
     :PROPERTIES:
     :CUSTOM_ID: handlers
     :END:
 
-    By default, Leptus runs on ~127.0.0.1:8080~, but you can override them as
-    follows:
+    By default, Leptus runs on ~127.0.0.1:8080~, but you can override them:
 
     #+BEGIN_SRC erlang
     {options,
@@ -55,6 +57,9 @@
      ]
     }.
     #+END_SRC
+
+    Please refer to [[leptus.org#types][Leptus types]] for further details on
+    types.
 
 ** Example
    :PROPERTIES:

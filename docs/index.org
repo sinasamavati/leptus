@@ -42,7 +42,7 @@
    -compile({parse_transform, leptus_pt}).
    #+END_SRC
 
-   Let's compile and run the example above.
+   Let's compile, and run the example above.
 
    #+BEGIN_SRC
    $ erl -pa ebin deps/*/ebin
@@ -79,16 +79,9 @@
      - [[configuration.org#handlers][handlers]]
      - [[configuration.org#options][options]]
 
-   - [[start.org][Start]]
-     - [[start.org#start_listener2][leptus:start_listener/2]]
-     - [[start.org#start_listener3][leptus:start_listener/3]]
-     - [[start.org#the-otp-way][The OTP way]]
-
    - Modules
      - [[leptus.org][leptus]]
      - [[leptus_config.org][leptus_config]]
-     - [[leptus_json.org][leptus_json]]
      - [[leptus_logger.org][leptus_logger]]
-     - [[leptus_req.org][leptus_req]]
      - [[leptus_router.org][leptus_router]]
      - [[leptus_utils.org][leptus_utils]]

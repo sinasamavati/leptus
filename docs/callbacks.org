@@ -67,8 +67,8 @@
                     | http_version_not_supported
 
    Status  = non_neg_integer() | binary() | status_binding()
-   Headers = [{binary(), iodata()}]
-   Body    = string() | binary() | json_term()
+   Headers = map()
+   Body    = iodata() | json_term()
    #+END_SRC
 
 ** Behaviour

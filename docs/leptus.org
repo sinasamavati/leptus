@@ -1,152 +1,158 @@
-#+TITLE:    leptus module
+#+TITLE:    Start
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
 #+OPTIONS:  ^:nil num:nil
 
 * leptus module
-  :PROPERTIES:
-  :CUSTOM_ID: leptus
-  :END:
-
-  Leptus high-level API for working with listeners.
+   :PROPERTIES:
+   :CUSTOM_ID: leptus-module
+   :END:
 
 ** Types
    :PROPERTIES:
-   :CUSTOM_ID:       types
+   :CUSTOM_ID: types
    :END:
 
    #+BEGIN_SRC erlang
-   Listener          = http | https | spdy
-   Handlers          = [{HostMatch, [{module(), any()}]}]
-   AppName           = atom()
-   HandlersOrAppName = Handlers | AppName
+   Listener  = http | https
+   Handlers  = [{HostMatch, [{module(), State :: any()}]}]
 
-   Option = {nb_acceptors, non_neg_integer()}
-          | {ip, inet:ip_address()}
+   HostMatch = term()
+   StaticDir = file:name() | {priv_dir, App :: atom(), Dir :: file:name()}
+
+   Option = {ip, inet:ip_address()}
           | {port, inet:port_number()}
+          | {num_acceptors, non_neg_integer()}
           | {cacertfile, file:name_all()}
           | {certfile, file:name_all()}
           | {keyfile, file:name_all()}
-          | {static_dir, Dir :: file:name() | {priv_dir, App :: atom(), Dir :: file:name()}}
+          | {static_dir, {HostMatch, StaticDir}}
+          | {log_handlers, [{module(), any()}]}
    Options = [Option]
-
    #+END_SRC
 
 ** Functions
    :PROPERTIES:
-   :CUSTOM_ID:       functions
+   :CUSTOM_ID: functions
    :END:
 
 *** start_listener/2
     :PROPERTIES:
-    :CUSTOM_ID:       start_listener-2
+    :CUSTOM_ID: start_listener-2
     :END:
 
-     Starts leptus' dependencies and a listener of type ~Listener~.
+    Starts a listener of type ~Listener~.
 
-     #+BEGIN_SRC erlang
-     leptus:start_listener(Listener, HandlersOrAppName) -> {ok, pid()}
-     #+END_SRC
+    #+BEGIN_SRC erlang
+    leptus:start_listener(Listener, HandlersOrApp) -> {ok, pid()}
 
-     Note that if you use ~AppName~, Leptus will try to read
-     ~AppName/priv/leptus.config~ file
-     which should contain
-     #+BEGIN_SRC erlang
-     {handlers, Handlers}.
-     {options, Options}.
-     #+END_SRC
+    App = atom()
+    HandlersOrApp = Handlers | App
+    #+END_SRC
+
+    Note that if you specify ~App~, Leptus will try to evaluate
+    ~App/priv/leptus.config~ file which should contain:
+    #+BEGIN_SRC erlang
+    {handlers, Handlers}.
+    {options, Options}.
+    #+END_SRC
 
 *** start_listener/3
     :PROPERTIES:
-    :CUSTOM_ID:       start_listener-3
+    :CUSTOM_ID: start_listener-3
     :END:
 
-     Starts leptus' dependencies and a listener of type ~Listener~.
+    #+BEGIN_SRC erlang
+    leptus:start_listener(Listener, Handlers, Options) ->
+        leptus:start_listener(Listener, Handlers, Options, #{})
+    #+END_SRC
 
-     #+BEGIN_SRC erlang
-     leptus:start_listener(Listener, Handlers, Options) -> {ok, pid()}
-     #+END_SRC
+*** start_listener/4
+    :PROPERTIES:
+    :CUSTOM_ID: start_listener-4
+    :END:
+
+    Starts a listener of type ~Listener~.
+
+    #+BEGIN_SRC erlang
+    leptus:start_listener(Listener, Handlers, Options, CowboyProtoOpts) ->
+        {ok, pid()}
+
+    CowboyProtoOpts = cowboy:opts()
+    #+END_SRC
 
 *** upgrade/0
     :PROPERTIES:
-    :CUSTOM_ID:       upgrade-0
+    :CUSTOM_ID: upgrade-0
     :END:
 
-     Upgrades running listeners.
+    Upgrades running listeners.
 
-     #+BEGIN_SRC erlang
-     leptus:upgrade() -> ok
-     #+END_SRC
-
-     Assume we have the listener ~http~ running and its handlers are A, B and C,
-     this function will gather routes of A, B and C, and update the Cowboy
-     dispatch list.
+    #+BEGIN_SRC erlang
+    upgrade() -> upgrade([Listener])
+    #+END_SRC
 
 *** upgrade/1
     :PROPERTIES:
-    :CUSTOM_ID:       upgrade-1
+    :CUSTOM_ID: upgrade-1
     :END:
 
-     Upgrades a list of running listeners.
+    Upgrades the given listeners.
 
-     #+BEGIN_SRC erlang
-     leptus:upgrade([Listner]) -> ok
-     #+END_SRC
-
-     This works like [[#upgrade0][upgrade/0]] but requires a list of listeners.
+    #+BEGIN_SRC erlang
+    upgrade([Listener]) -> ok
+    #+END_SRC
 
 *** upgrade/2
     :PROPERTIES:
-    :CUSTOM_ID:       upgrade-2
+    :CUSTOM_ID: upgrade-2
     :END:
 
-     Upgrades a running listener.
+    #+BEGIN_SRC erlang
+    upgrade(Listener, Handlers) -> upgrade(Listener, Handlers, Options)
+    #+END_SRC
 
-     #+BEGIN_SRC erlang
-     leptus:upgrade(Listener, Handlers) -> ok | {error, not_found}
-     #+END_SRC
+*** upgrade/3
+    :PROPERTIES:
+    :CUSTOM_ID: upgrade-3
+    :END:
 
-     For example, let's say, we have the listener ~http~ running and its
-     handlers are A, B and C, but we want to append a new handler that is called
-     D, so what we should do is using this function to update the Cowboy
-     dispatch list.
+    Upgrades an running listener to switch to ~Handlers~ and ~Options~.
 
-     #+BEGIN_SRC erlang
-     %% e.g.
-     Handlers = [{'_', [{A, AState}, {B, BState}, {C, CState}, {D, DState}]}],
-     leptus:upgrade(http, Handlers)
-     #+END_SRC
+    #+BEGIN_SRC erlang
+    upgrade(Listener, Handlers, Options) -> ok
+    #+END_SRC
 
 *** stop_listener/1
     :PROPERTIES:
-    :CUSTOM_ID:       stop_listener-1
+    :CUSTOM_ID: stop_listener-1
     :END:
 
-     Stops a listener.
+    Stops a listener.
 
-     #+BEGIN_SRC erlang
-     leptus:stop_listener(Listener) -> ok | {error, not_found}
-     #+END_SRC
+    #+BEGIN_SRC erlang
+    stop_listener(Listener) -> ok | {error, not_found}
+    #+END_SRC
 
-*** running_listener/0
+*** running_listeners/0
     :PROPERTIES:
-    :CUSTOM_ID:       running_listener-0
+    :CUSTOM_ID: running_listeners-0
     :END:
 
-     Returns a list of running listeners.
+    Lists running listeners.
 
-     #+BEGIN_SRC erlang
-     leptus:running_listener() -> [Listener]
-     #+END_SRC
+    #+BEGIN_SRC erlang
+    running_listeners() -> [Listener]
+    #+END_SRC
 
 *** listener_uptime/1
     :PROPERTIES:
-    :CUSTOM_ID:       listener_uptime-1
+    :CUSTOM_ID: listener_uptime-1
     :END:
 
-     Returns uptime of a running listener.
+    Gives the uptime of a listener.
 
-     #+BEGIN_SRC erlang
-     leptus:listener_uptime(Listener) -> {Days :: integer(), calendar:time()} |
-                                         {error, not_found}
-     #+END_SRC
+    #+BEGIN_SRC erlang
+    listener_uptime(Listener) - >
+        {Days :: integer(), calendar:time()} | {error, not_found}
+    #+END_SRC
