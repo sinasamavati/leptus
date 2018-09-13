@@ -2,7 +2,7 @@
 
   Leptus is an Erlang REST framework that runs on top of Cowboy web server.
 
-  Leptus aims at simply creating RESTful APIs.
+  Leptus simplifies creating RESTful APIs in Erlang.
 
 ** Requirements
 
@@ -12,16 +12,10 @@
 
 ** Installation
 
-   Clone it, and just run ~make~
-
-   OR
-
-   If you want to use it as a dependency in your project, add the following to
-   your rebar configuration
+   Clone it, and run ~make~. Or add it to your rebar configuration.
 
    #+BEGIN_SRC
    {deps, [
-           ...
            {leptus, ".*", {git, "git://github.com/sinasamavati/leptus.git", {branch, "master"}}}
           ]}.
    #+END_SRC
@@ -69,7 +63,6 @@
 
 ** Features
 
-   Leptus
    - Supports ~GET~, ~PUT~, ~POST~ and ~DELETE~ HTTP methods
    - Can respond in plain text or JSON
    - Supports basic authentication
