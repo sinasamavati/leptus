@@ -2,18 +2,22 @@
 
 TMP_DIR = $(CURDIR)/tmp
 INDEX_FILE = $(TMP_DIR)/index.org
-PUBLISH_SCRIPT = $(CURDIR)/publish.el
 
-DEPS_DIR = $(CURDIR)/elisp
+ELISP_DIR = $(CURDIR)/elisp
+PUBLISH_SCRIPT = $(ELISP_DIR)/publish.el
 
-ORG_MODE_DIR = $(DEPS_DIR)/org-mode
-ORG_MODE_URL = http://orgmode.org/org-8.2.10.tar.gz
-ORG_MODE = $(DEPS_DIR)/org-8.2.10.tar.gz
+ORG_MODE_DIR = $(ELISP_DIR)/org-mode
+ORG_MODE_URL = http://orgmode.org/org-9.1.14.tar.gz
+ORG_MODE = $(ELISP_DIR)/org-9.1.14.tar.gz
 
 all: deps $(TMP_DIR)
 	cp -r *.org $(TMP_DIR)
-	sed 's/\(.*[^/]\)\([0-9]\)/\1-\2/g;s/.org#/.org::/g;s/\([^\[]*.org\)/file:\1/g' \
-		-i $(INDEX_FILE)
+	find $(TMP_DIR) -name "*.org" -exec \
+		sed -e 's/#+BEGIN_SRC erlang/#+BEGIN_SRC/;' \
+		    -e 's/\(.*[^/]\)\([0-9]\)/\1-\2/;' \
+		    -e 's/.org#/.org::/;' \
+		    -e 's/\([^\[]*.org\)/file:\1/g' -i \
+		{} \;
 	emacs -Q --script $(PUBLISH_SCRIPT)
 
 deps: $(ORG_MODE_DIR) $(ORG_MODE)
@@ -30,4 +34,4 @@ clean:
 	rm -rf $(CURDIR)/public_html $(TMP_DIR)
 
 distclean: clean
-	rm -rf $(DEPS_DIR)
+	rm -rf $(ORG_MODE) $(ORG_MODE_DIR)
