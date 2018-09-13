@@ -1,9 +1,8 @@
-#+TITLE:    leptus_config module
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
 #+OPTIONS:  ^:nil num:nil
 
-* leptus_config module
+* leptus_config Module
   :PROPERTIES:
   :CUSTOM_ID: leptus_config
   :END:

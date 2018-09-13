@@ -1,9 +1,8 @@
-#+TITLE:    leptus_router module
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
 #+OPTIONS:  ^:nil num:nil
 
-* leptus_logger module
+* leptus_logger Module
   :PROPERTIES:
   :CUSTOM_ID: leptus_logger
   :END:

@@ -1,9 +1,8 @@
-#+TITLE:    Start
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
 #+OPTIONS:  ^:nil num:nil
 
-* leptus module
+* leptus Module
    :PROPERTIES:
    :CUSTOM_ID: leptus-module
    :END:

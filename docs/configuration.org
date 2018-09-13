@@ -1,4 +1,3 @@
-#+TITLE:    Configuration
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
 #+OPTIONS:  ^:nil num:nil
