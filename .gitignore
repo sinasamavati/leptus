@@ -4,9 +4,8 @@ deps
 logs
 erl_crash.dump
 .leptus.plt
-docs/elisp/org*
+docs/elisp
 docs/public_html
-docs/tmp
 *~
 \#*
 .\#*

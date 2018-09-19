@@ -1,0 +1,242 @@
+#+AUTHOR:   Sina Samavati
+#+EMAIL:    sina.samv@gmail.com
+#+TITLE:    Callbacks
+
+* Module
+  :PROPERTIES:
+  :CUSTOM_ID: module
+  :END:
+
+  leptus_handler
+
+  /*NOTE*: There are three callbacks which are required for every request
+  handler:/ /~init/3~, ~HttpMethod/3~ and ~terminate/4~./
+
+* Types
+  :PROPERTIES:
+  :CUSTOM_ID: types
+  :END:
+
+  #+BEGIN_SRC
+  Route = cowboy_router:route_match()
+  Req   = cowboy_req:req()
+  State = any()
+
+  json_term() = map()
+
+  status_binding() = continue
+                   | switching_protocols
+                   | ok
+                   | created
+                   | accepted
+                   | non_authoritative_information
+                   | no_content
+                   | reset_content
+                   | partial_content
+                   | multiple_choices
+                   | moved_permanently
+                   | found
+                   | see_other
+                   | not_modified
+                   | use_proxy
+                   | switch_proxy
+                   | temporary_redirect
+                   | bad_request
+                   | unauthorized
+                   | payment_required
+                   | forbidden
+                   | not_found
+                   | not_allowed
+                   | not_acceptable
+                   | proxy_authentication_required
+                   | request_timeout
+                   | conflict
+                   | gone
+                   | length_required
+                   | precondition_failed
+                   | request_entity_too_large
+                   | request_uri_too_long
+                   | unsupported_media_type
+                   | requested_range_not_satisfiable
+                   | expectation_failed
+                   | internal_server_error
+                   | not_implemented
+                   | bad_gateway
+                   | service_unavailable
+                   | gateway_timeout
+                   | http_version_not_supported
+
+  Status  = non_neg_integer() | binary() | status_binding()
+  Headers = map()
+  Body    = iodata() | json_term()
+  #+END_SRC
+
+* Callbacks
+  :PROPERTIES:
+  :CUSTOM_ID: callbacks
+  :END:
+
+** prefix/0
+   :PROPERTIES:
+   :CUSTOM_ID: prefix-0
+   :END:
+
+   This is an optional callback which you can use for prefixing routes.
+
+   #+BEGIN_SRC
+   Module:prefix() -> string()
+   #+END_SRC
+
+   Example:
+   #+BEGIN_SRC
+   prefix() -> "/v1".
+   #+END_SRC
+
+  NOTE: this won't affect ~Route~s in the handler, but instead, this will be
+  used when gathering routes and starting the Cowboy listener.
+
+** init/3
+   :PROPERTIES:
+   :CUSTOM_ID: init-3
+   :END:
+
+   #+BEGIN_SRC
+   Module:init(Route, Req, State) ->
+       {ok, State}.
+   #+END_SRC
+
+** cross_domains/3
+   :PROPERTIES:
+   :CUSTOM_ID: cross_domains-3
+   :END:
+
+   This is an optional callback that lets you enable cross-domain requests
+   ([[http://en.wikipedia.org/wiki/Cross-origin_resource_sharing][CORS]]).
+
+   #+BEGIN_SRC
+   Module:cross_domains(Route, Req, State) -> {[HostMatch], State}
+   #+END_SRC
+
+   ~HostMatch~ is equal to Cowboy HostMatch syntax.
+
+   This will be used when preparing headers right before replying.
+
+   If one of the HostMatches and the Origin match, ~access-control-allow-origin~
+   will be set to the Origin.
+
+** is_authenticated/3
+   :PROPERTIES:
+   :CUSTOM_ID: is_authenticated-3
+   :END:
+
+   Exporting this callback in a module means that every request that should
+   come to the handler needs authorization.
+
+   #+BEGIN_SRC
+   Module:is_authenticated(Route, Req, State) ->
+       {true, State} | {false, Body, State} | {false, Headers, Body, State}
+   #+END_SRC
+
+** has_permission/3
+   :PROPERTIES:
+   :CUSTOM_ID: has_permission-3
+   :END:
+
+   This is an optional callback which lets you handle if a request has
+   permission to proceed or not.
+
+   This callback will be called after ~Module:is_authenticated/3~ if
+   authentication succeeds.
+
+   #+BEGIN_SRC
+   Module:has_permission(Route, Req, State) ->
+       {true, State} | {false, Body, State} | {false, Headers, Body, State}
+   #+END_SRC
+
+** HttpMethod/3
+   :PROPERTIES:
+   :CUSTOM_ID: HttpMethod-3
+   :END:
+
+   This means ~get/3~, ~put/3~, ~post/3~, ~delete/3~.
+
+   #+BEGIN_SRC
+   Module:HttpMethod(Route, Req, State) ->
+       {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}
+   #+END_SRC
+
+   In this case, ~Route~ must be a pattern that would match only a single string.
+
+   Example:
+   #+BEGIN_SRC
+   get("/", Req, State) ->
+       ...
+       {<<"index">>, State}.
+
+   put("/:id/edit", Req, State) ->
+       ...
+       {20-0, <<"edited">>, State}.
+
+   post("/new", Req, State) ->
+       ...
+       {201, [{<<"Location">>, <<"/data/38-6">>}], <<"created">>, State}.
+
+   delete("/:id", Req, State) ->
+       ...
+       %% Body as a json
+       {20-4, #{<<"message">> => <<"deleted">>}, State}.
+   #+END_SRC
+
+** terminate/4
+  :PROPERTIES:
+    :CUSTOM_ID: terminate-4
+    :END:
+
+  #+BEGIN_SRC
+  Module:terminate(Reason, Route, Req, State) -> ok
+
+  Reason = normal
+         | not_allowed
+         | unauthenticated
+         | unauthorized
+         | {error, any()}
+  #+END_SRC
+
+* Example
+  :PROPERTIES:
+  :CUSTOM_ID: example
+  :END:
+
+  Please pay attention to comment.
+
+  #+BEGIN_SRC
+  -module(example).
+  -compile({parse_transform, leptus_pt}).
+
+  -export([prefix/0]).
+  -export([init/3]).
+  -export([cross_domains/3]).
+  -export([is_authenticated/3]).
+  -export([get/3]).
+  -export([terminate/4]).
+
+  prefix() -> "/example".
+
+  init(_Route, _Req, State) ->
+      {ok, State}.
+
+  cross_domains(_Route, _Req, State) ->
+      {['_'], State}.
+
+  is_authenticated(_Route, _Req, State) ->
+      {true, State}.
+
+  %% Route is "/1" in every callback in this example,
+  %% but we used prefix/0 to prefix "/1" by "/example",
+  %% so get("/1") will be invoked by issuing the URL "/example/1"
+  get("/1", _Req, State) ->
+      {<<"Example 1!">>, State}.
+
+  terminate(_Reason, _Route, _Req, _State) ->
+      ok.
+  #+END_SRC

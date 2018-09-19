@@ -1,13 +1,11 @@
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
-#+OPTIONS:  ^:nil num:nil
+#+OPTIONS:  toc:nil
+#+TITLE:    Types
 
 * Types
-  :PROPERTIES:
-  :CUSTOM_ID: types
-  :END:
 
-  #+BEGIN_SRC erlang
+  #+BEGIN_SRC
   json_term() = map()
 
   Route    = cowboy_router:route_match()

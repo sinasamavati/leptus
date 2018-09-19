@@ -1,46 +1,42 @@
 #+AUTHOR:   Sina Samavati
 #+EMAIL:    sina.samv@gmail.com
-#+OPTIONS:  ^:nil toc:nil num:nil
+#+OPTIONS:  toc:nil
+#+TITLE:    Leptus Documentation
 
-* Leptus Documentation
-  :PROPERTIES:
-  :CUSTOM_ID: docs
-  :END:
-
-** Table of contents
+* Table of Contents
    :PROPERTIES:
    :CUSTOM_ID: toc
    :END:
 
    - [[#quick-overview][Quick Overview]]
-   - [[types.org][Types]]
+   - [[file:types.org][Types]]
 
-   - [[callbacks.org][Callbacks]]
-     - [[callbacks.org#prefix0][prefix/0]]
-     - [[callbacks.org#init3][init/3]]
-     - [[callbacks.org#cross_domains3][cross_domains/3]]
-     - [[callbacks.org#is_authenticated3][is_authenticated/3]]
-     - [[callbacks.org#has_permission3][has_permission/3]]
-     - [[callbacks.org#httpmethod3][HttpMethod/3]]
-     - [[callbacks.org#terminate4][terminate/4]]
+   - [[file:callbacks.org][Callbacks]]
+     - [[file:callbacks.org::#prefix-0][prefix/0]]
+     - [[file:callbacks.org::#init-3][init/3]]
+     - [[file:callbacks.org::#cross_domains-3][cross_domains/3]]
+     - [[file:callbacks.org::#is_authenticated-3][is_authenticated/3]]
+     - [[file:callbacks.org::#has_permission-3][has_permission/3]]
+     - [[file:callbacks.org::#httpmethod-3][HttpMethod/3]]
+     - [[file:callbacks.org::#terminate-4][terminate/4]]
 
-   - [[configuration.org][Configuration]]
-     - [[configuration.org#handlers][handlers]]
-     - [[configuration.org#options][options]]
+   - [[file:configuration.org][Configuration]]
+     - [[file:configuration.org::#handlers][handlers]]
+     - [[file:configuration.org::#options][options]]
 
    - Modules
-     - [[leptus.org][leptus]]
-     - [[leptus_config.org][leptus_config]]
-     - [[leptus_logger.org][leptus_logger]]
-     - [[leptus_router.org][leptus_router]]
-     - [[leptus_utils.org][leptus_utils]]
+     - [[file:leptus.org][leptus]]
+     - [[file:leptus_config.org][leptus_config]]
+     - [[file:leptus_logger.org][leptus_logger]]
+     - [[file:leptus_router.org][leptus_router]]
+     - [[file:leptus_utils.org][leptus_utils]]
 
-** Quick Overview
+* Quick Overview
    :PROPERTIES:
    :CUSTOM_ID: quick-overview
    :END:
 
-   #+BEGIN_SRC erlang
+   #+BEGIN_SRC
    -module(hello).
    -compile({parse_transform, leptus_pt}).
 
@@ -65,7 +61,7 @@
    #+END_SRC
 
    Note the use of the following in your request/resource handler module.
-   #+BEGIN_SRC erlang
+   #+BEGIN_SRC
    -compile({parse_transform, leptus_pt}).
    #+END_SRC
 
