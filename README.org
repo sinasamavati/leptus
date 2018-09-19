@@ -72,7 +72,7 @@
 
 ** Documentation
 
-   Please check out the [[docs][docs]] directory.
+   Please refer to [[https://sinasamavati.xyz/leptus][https://sinasamavati.xyz/leptus]].
 
 ** Support
 
