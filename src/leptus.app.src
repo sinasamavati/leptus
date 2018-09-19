@@ -22,7 +22,7 @@
 {application, leptus,
  [
   {description, "The Erlang REST framework"},
-  {vsn, "0.4.2"},
+  {vsn, "0.5.0"},
   {registered, []},
   {applications, [
                   kernel,
