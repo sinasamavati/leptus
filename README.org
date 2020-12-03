@@ -14,7 +14,7 @@
 
    Clone it, and run ~make~. Or add it to your rebar configuration.
 
-   #+BEGIN_SRC
+   #+BEGIN_SRC erlang
    {deps, [
            {leptus, ".*", {git, "git://github.com/sinasamavati/leptus.git", {branch, "master"}}}
           ]}.
