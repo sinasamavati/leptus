@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leptus Documentation</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">Leptus Documentation</h1>
+</header>
+<div id="outline-container-org58d6274" class="outline-2">
+<h2 id="toc"><a id="org58d6274"></a>Table of Contents</h2>
+<div class="outline-text-2" id="text-toc">
+<ul class="org-ul">
+<li><a href="#quick-overview">Quick Overview</a></li>
+<li><a href="types.html">Types</a></li>
+
+<li><a href="callbacks.html">Callbacks</a>
+<ul class="org-ul">
+<li><a href="callbacks.html#prefix-0">prefix/0</a></li>
+<li><a href="callbacks.html#init-3">init/3</a></li>
+<li><a href="callbacks.html#cross_domains-3">cross_domains/3</a></li>
+<li><a href="callbacks.html#is_authenticated-3">is_authenticated/3</a></li>
+<li><a href="callbacks.html#has_permission-3">has_permission/3</a></li>
+<li><a href="callbacks.html#httpmethod-3">HttpMethod/3</a></li>
+<li><a href="callbacks.html#terminate-4">terminate/4</a></li>
+</ul></li>
+
+<li><a href="configuration.html">Configuration</a>
+<ul class="org-ul">
+<li><a href="configuration.html#handlers">handlers</a></li>
+<li><a href="configuration.html#options">options</a></li>
+</ul></li>
+
+<li>Modules
+<ul class="org-ul">
+<li><a href="leptus.html">leptus</a></li>
+<li><a href="leptus_config.html">leptus_config</a></li>
+<li><a href="leptus_logger.html">leptus_logger</a></li>
+<li><a href="leptus_router.html">leptus_router</a></li>
+<li><a href="leptus_utils.html">leptus_utils</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orga96371e" class="outline-2">
+<h2 id="quick-overview"><a id="orga96371e"></a>Quick Overview</h2>
+<div class="outline-text-2" id="text-quick-overview">
+<pre class="example">
+-module(hello).
+-compile({parse_transform, leptus_pt}).
+
+%% leptus callbacks
+-export([init/3]).
+-export([get/3]).
+-export([terminate/4]).
+
+init(_Route, _Req, State) -&gt;
+    {ok, State}.
+
+get("/", _Req, State) -&gt;
+    {&lt;&lt;"Hello, leptus!"&gt;&gt;, State};
+get("/hi/:name", Req, State) -&gt;
+    Status = ok,
+    Name = leptus_req:param(Req, name),
+    Body = #{&lt;&lt;"say"&gt;&gt; =&gt; &lt;&lt;"Hi"&gt;&gt;, &lt;&lt;"to"&gt;&gt; =&gt; Name},
+    {Status, Body, State}.
+
+terminate(_Reason, _Route, _Req, _State) -&gt;
+    ok.
+</pre>
+
+<p>
+Note the use of the following in your request/resource handler module.
+</p>
+<pre class="example">
+-compile({parse_transform, leptus_pt}).
+</pre>
+
+<p>
+Let's compile, and run the example above.
+</p>
+
+<pre class="example">
+$ erl -pa ebin deps/*/ebin
+</pre>
+
+<pre class="example">
+&gt; c(hello).
+&gt; leptus:start_listener(http, [{'_', [{hello, undefined_state}]}]).
+Leptus started on http://127.0.0.1:8080
+</pre>
+
+<pre class="example">
+$ curl localhost:8080/hi/Leptus
+{"say":"Hi","to":"Leptus"}
+</pre>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

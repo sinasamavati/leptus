@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>leptus_utils</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">leptus_utils</h1>
+</header><nav id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#module">Module</a></li>
+<li><a href="#functions">Functions</a>
+<ul>
+<li><a href="#priv_dir-1">priv_dir/1</a></li>
+<li><a href="#paginator-1">paginator/1</a></li>
+<li><a href="#paginate-3">paginate/3</a></li>
+<li><a href="#listener_bucket-1">listener_bucket/1</a></li>
+<li><a href="#listener_handlers-1">listener_handlers/1</a></li>
+<li><a href="#print_listener_info-1">print_listener_info/1</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav>
+
+<div id="outline-container-org27df0db" class="outline-2">
+<h2 id="module"><a id="org27df0db"></a>Module</h2>
+<div class="outline-text-2" id="text-module">
+<p>
+leptus_utils
+</p>
+
+<p>
+This module provides a number of useful functions.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5259872" class="outline-2">
+<h2 id="functions"><a id="org5259872"></a>Functions</h2>
+<div class="outline-text-2" id="text-functions">
+</div>
+
+<div id="outline-container-orgd922e74" class="outline-3">
+<h3 id="priv_dir-1"><a id="orgd922e74"></a>priv_dir/1</h3>
+<div class="outline-text-3" id="text-priv_dir-1">
+<p>
+Finds the path to the priv directory in an application.
+</p>
+
+<pre class="example">
+priv_dir(App) -&gt; Dir | {error, bad_name}
+
+App = atom()
+Dir = file:name_all()
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org0a3c0b0" class="outline-3">
+<h3 id="paginator-1"><a id="org0a3c0b0"></a>paginator/1</h3>
+<div class="outline-text-3" id="text-paginator-1">
+<p>
+Generates a paginator function for paginating a list of elements.
+</p>
+
+<pre class="example">
+paginator(NElementPerPage) -&gt; fun((Page, Objects) -&gt; Objects)
+
+NElementPerPage = Page = non_neg_integer()
+Objects = [any()]
+</pre>
+
+<p>
+Example:
+</p>
+
+<pre class="example">
+1&gt; Page = paginator(3).
+2&gt; Page(2, [1,2,3,4,5,6,7,8,9]).
+[4,5,6]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orga0edd76" class="outline-3">
+<h3 id="paginate-3"><a id="orga0edd76"></a>paginate/3</h3>
+<div class="outline-text-3" id="text-paginate-3">
+<p>
+Paginates a list of objects.
+</p>
+
+<pre class="example">
+paginate(NElementPerPage, Objects, Page) -&gt; Objects
+
+NElementPerPage = Page = non_neg_integer()
+Objects = [any()]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgcba4f8a" class="outline-3">
+<h3 id="listener_bucket-1"><a id="orgcba4f8a"></a>listener_bucket/1</h3>
+<div class="outline-text-3" id="text-listener_bucket-1">
+<p>
+Returns a running listener bucket that includes Handlers, Options and
+started date-time.
+</p>
+
+<pre class="example">
+listener_bucket(Listener) -&gt; Bucket | not_found
+
+Listener = http | https | spdy
+Bucket = #listener_bucket{}
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgf5b8dcc" class="outline-3">
+<h3 id="listener_handlers-1"><a id="orgf5b8dcc"></a>listener_handlers/1</h3>
+<div class="outline-text-3" id="text-listener_handlers-1">
+<p>
+Returns handlers of a running listener.
+</p>
+
+<pre class="example">
+listener_handlers(Listener) -&gt; Handlers | {error, not_found}
+
+Listener = http | https | spdy
+Handlers = [{module(), State :: any()}]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org4c7f79a" class="outline-3">
+<h3 id="print_listener_info-1"><a id="org4c7f79a"></a>print_listener_info/1</h3>
+<div class="outline-text-3" id="text-print_listener_info-1">
+<p>
+Prints a running listener information, such as handlers, routes and allowed
+methods.
+</p>
+
+<pre class="example">
+print_listener_info(Listener) -&gt; ok
+
+Listener = http | https | spdy
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

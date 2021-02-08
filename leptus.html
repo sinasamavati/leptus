@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>leptus</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">leptus</h1>
+</header><nav id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#module">Module</a></li>
+<li><a href="#types">Types</a></li>
+<li><a href="#functions">Functions</a>
+<ul>
+<li><a href="#start_listener-2">start_listener/2</a></li>
+<li><a href="#start_listener-3">start_listener/3</a></li>
+<li><a href="#start_listener-4">start_listener/4</a></li>
+<li><a href="#upgrade-0">upgrade/0</a></li>
+<li><a href="#upgrade-1">upgrade/1</a></li>
+<li><a href="#upgrade-2">upgrade/2</a></li>
+<li><a href="#upgrade-3">upgrade/3</a></li>
+<li><a href="#stop_listener-1">stop_listener/1</a></li>
+<li><a href="#running_listeners-0">running_listeners/0</a></li>
+<li><a href="#listener_uptime-1">listener_uptime/1</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav>
+
+<div id="outline-container-orgc0fe878" class="outline-2">
+<h2 id="module"><a id="orgc0fe878"></a>Module</h2>
+<div class="outline-text-2" id="text-module">
+<p>
+leptus
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgbba427c" class="outline-2">
+<h2 id="types"><a id="orgbba427c"></a>Types</h2>
+<div class="outline-text-2" id="text-types">
+<pre class="example">
+Listener  = http | https
+Handlers  = [{HostMatch, [{module(), State :: any()}]}]
+
+HostMatch = term()
+StaticDir = file:name() | {priv_dir, App :: atom(), Dir :: file:name()}
+
+Option = {ip, inet:ip_address()}
+       | {port, inet:port_number()}
+       | {num_acceptors, non_neg_integer()}
+       | {cacertfile, file:name_all()}
+       | {certfile, file:name_all()}
+       | {keyfile, file:name_all()}
+       | {static_dir, {HostMatch, StaticDir}}
+       | {log_handlers, [{module(), any()}]}
+Options = [Option]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org785f6ca" class="outline-2">
+<h2 id="functions"><a id="org785f6ca"></a>Functions</h2>
+<div class="outline-text-2" id="text-functions">
+</div>
+
+<div id="outline-container-orgb84b375" class="outline-3">
+<h3 id="start_listener-2"><a id="orgb84b375"></a>start_listener/2</h3>
+<div class="outline-text-3" id="text-start_listener-2">
+<p>
+Starts a listener of type <code>Listener</code>.
+</p>
+
+<pre class="example">
+leptus:start_listener(Listener, HandlersOrApp) -&gt; {ok, pid()}
+
+App = atom()
+HandlersOrApp = Handlers | App
+</pre>
+
+<p>
+Note that if you specify <code>App</code>, Leptus will try to evaluate
+<code>App/priv/leptus.config</code> file which should contain:
+</p>
+<pre class="example">
+{handlers, Handlers}.
+{options, Options}.
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgf3cf817" class="outline-3">
+<h3 id="start_listener-3"><a id="orgf3cf817"></a>start_listener/3</h3>
+<div class="outline-text-3" id="text-start_listener-3">
+<pre class="example">
+leptus:start_listener(Listener, Handlers, Options) -&gt;
+    leptus:start_listener(Listener, Handlers, Options, #{})
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org72650c9" class="outline-3">
+<h3 id="start_listener-4"><a id="org72650c9"></a>start_listener/4</h3>
+<div class="outline-text-3" id="text-start_listener-4">
+<p>
+Starts a listener of type <code>Listener</code>.
+</p>
+
+<pre class="example">
+leptus:start_listener(Listener, Handlers, Options, CowboyProtoOpts) -&gt;
+    {ok, pid()}
+
+CowboyProtoOpts = cowboy:opts()
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgbe2b33f" class="outline-3">
+<h3 id="upgrade-0"><a id="orgbe2b33f"></a>upgrade/0</h3>
+<div class="outline-text-3" id="text-upgrade-0">
+<p>
+Upgrades running listeners.
+</p>
+
+<pre class="example">
+upgrade() -&gt; upgrade([Listener])
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org00037a4" class="outline-3">
+<h3 id="upgrade-1"><a id="org00037a4"></a>upgrade/1</h3>
+<div class="outline-text-3" id="text-upgrade-1">
+<p>
+Upgrades the given listeners.
+</p>
+
+<pre class="example">
+upgrade([Listener]) -&gt; ok
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd37196e" class="outline-3">
+<h3 id="upgrade-2"><a id="orgd37196e"></a>upgrade/2</h3>
+<div class="outline-text-3" id="text-upgrade-2">
+<pre class="example">
+upgrade(Listener, Handlers) -&gt; upgrade(Listener, Handlers, Options)
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgb4f6557" class="outline-3">
+<h3 id="upgrade-3"><a id="orgb4f6557"></a>upgrade/3</h3>
+<div class="outline-text-3" id="text-upgrade-3">
+<p>
+Upgrades an running listener to switch to <code>Handlers</code> and <code>Options</code>.
+</p>
+
+<pre class="example">
+upgrade(Listener, Handlers, Options) -&gt; ok
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgaf28965" class="outline-3">
+<h3 id="stop_listener-1"><a id="orgaf28965"></a>stop_listener/1</h3>
+<div class="outline-text-3" id="text-stop_listener-1">
+<p>
+Stops a listener.
+</p>
+
+<pre class="example">
+stop_listener(Listener) -&gt; ok | {error, not_found}
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgcab9e2a" class="outline-3">
+<h3 id="running_listeners-0"><a id="orgcab9e2a"></a>running_listeners/0</h3>
+<div class="outline-text-3" id="text-running_listeners-0">
+<p>
+Lists running listeners.
+</p>
+
+<pre class="example">
+running_listeners() -&gt; [Listener]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org86775bd" class="outline-3">
+<h3 id="listener_uptime-1"><a id="org86775bd"></a>listener_uptime/1</h3>
+<div class="outline-text-3" id="text-listener_uptime-1">
+<p>
+Gives the uptime of a listener.
+</p>
+
+<pre class="example">
+listener_uptime(Listener) - &gt;
+    {Days :: integer(), calendar:time()} | {error, not_found}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

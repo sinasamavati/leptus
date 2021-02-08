@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>leptus_router</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">leptus_router</h1>
+</header><nav id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#module">Module</a></li>
+<li><a href="#types">Types</a>
+<ul>
+<li><a href="#functions">Functions</a></li>
+<li><a href="#paths-1">paths/1</a></li>
+<li><a href="#sort_dispatch-1">sort_dispatch/1</a></li>
+<li><a href="#static_file_routes-1">static_file_routes/1</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav>
+
+<div id="outline-container-org1974bcc" class="outline-2">
+<h2 id="module"><a id="org1974bcc"></a>Module</h2>
+<div class="outline-text-2" id="text-module">
+<p>
+leptus_router
+</p>
+
+<p>
+This module is used for collecting routes, and sorting them.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1acd751" class="outline-2">
+<h2 id="types"><a id="org1acd751"></a>Types</h2>
+<div class="outline-text-2" id="text-types">
+<pre class="example">
+Handlers = [{HostMatch, [{module(), State :: any()}]}]
+Routes   = cobwboy_router:routes()
+Dispatch = cowboy_router:dispatch_rules()
+</pre>
+</div>
+
+<div id="outline-container-org0777779" class="outline-3">
+<h3 id="functions"><a id="org0777779"></a>Functions</h3>
+<div class="outline-text-3" id="text-functions">
+</div>
+</div>
+
+<div id="outline-container-org4d441a5" class="outline-3">
+<h3 id="paths-1"><a id="org4d441a5"></a>paths/1</h3>
+<div class="outline-text-3" id="text-paths-1">
+<p>
+Gathers and makes a list of Cowboy routes.
+</p>
+
+<pre class="example">
+paths(Handlers) -&gt; Routes
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org465509d" class="outline-3">
+<h3 id="sort_dispatch-1"><a id="org465509d"></a>sort_dispatch/1</h3>
+<div class="outline-text-3" id="text-sort_dispatch-1">
+<p>
+Sorts dispatch the way order of routes matters in Cowboy.
+</p>
+
+<pre class="example">
+sort_dispatch(Dispatch) -&gt; Dispatch
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgdc90fd6" class="outline-3">
+<h3 id="static_file_routes-1"><a id="orgdc90fd6"></a>static_file_routes/1</h3>
+<div class="outline-text-3" id="text-static_file_routes-1">
+<p>
+Makes routes to serve static files using Cowboy static handler.
+</p>
+
+<pre class="example">
+static_file_routes({HostMatch, Dir | {priv_dir, App, Dir}}) -&gt; Routes
+</pre>
+
+<p>
+NOTE: <code>{priv_dir, App, Dir}</code> will use the directory <code>App/priv/Dir</code>.
+</p>
+
+<p>
+Assume we want to serve static files in <code>/var/www</code> which contains
+<code>index.html</code> and <code>static/css/style.css</code>, we call this function like the
+following:
+</p>
+
+<pre class="example">
+static_file_routes({'_', "/var/www"})
+</pre>
+
+<p>
+And that will return:
+</p>
+
+<pre class="example">
+[{'_', [
+	{"/", cowboy_static, {file, "/var/www/index.html"}},
+	{"/index.html", cowboy_static, {file, "/var/www/index.html"}},
+	{"/static/css/style.css", cowboy_static, {file, "/var/www/static/css/style.css"}}
+       ]}]
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

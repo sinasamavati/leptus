@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>leptus_logger</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">leptus_logger</h1>
+</header><nav id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#module">Module</a></li>
+<li><a href="#functions">Functions</a>
+<ul>
+<li><a href="#add_handler-2">add_handler/2</a></li>
+<li><a href="#delete_handler-2">delete_handler/2</a></li>
+<li><a href="#access_log-2">access_log/1</a></li>
+<li><a href="#format-2">format/2</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav>
+
+<div id="outline-container-org896105d" class="outline-2">
+<h2 id="module"><a id="org896105d"></a>Module</h2>
+<div class="outline-text-2" id="text-module">
+<p>
+leptus_logger
+</p>
+
+<p>
+This module is used for adding/removing log handlers and sending log events.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge723a9d" class="outline-2">
+<h2 id="functions"><a id="orge723a9d"></a>Functions</h2>
+<div class="outline-text-2" id="text-functions">
+</div>
+
+<div id="outline-container-org8a59c04" class="outline-3">
+<h3 id="add_handler-2"><a id="org8a59c04"></a>add_handler/2</h3>
+<div class="outline-text-3" id="text-add_handler-2">
+<p>
+Adds a new log handler to the gen_event manager leptus_log_man.
+</p>
+
+<pre class="example">
+add_handler(Handler, Args) -&gt;
+    ok | {'EXIT', any()} | any()
+
+Handler = atom() | {atom(), any()}
+Args = any()
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org6f7ad53" class="outline-3">
+<h3 id="delete_handler-2"><a id="org6f7ad53"></a>delete_handler/2</h3>
+<div class="outline-text-3" id="text-delete_handler-2">
+<p>
+Removes a log handler from the gen_event manager leptus_log_man.
+</p>
+
+<pre class="example">
+delete_handler(Handler, Args) -&gt;
+    any() | {error, module_not_found} | {'EXIT', any()}
+
+Handler = atom() | {atom(), any()}
+Args = any()
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgcfcec38" class="outline-3">
+<h3 id="access_log-2"><a id="orgcfcec38"></a>access_log/1</h3>
+<div class="outline-text-3" id="text-access_log-2">
+<p>
+Sends the event notification <code>{access_log, LogData}</code> to the event manager
+leptus_log_man.
+</p>
+
+<pre class="example">
+access_log(LogData) -&gt; ok
+
+LogData = #log_data {
+	      request_time :: calendar:datetime(),
+	      response_time :: undefined | calendar:datetime(),
+	      request_line :: string(),
+	      ip :: inet:ip_address(),
+	      version :: atom(),
+	      method :: binary(),
+	      uri :: binary(),
+	      headers :: [{binary(), iodata()}],
+	      status :: non_neg_integer(),
+	      content_length :: non_neg_integer()
+	  }
+</pre>
+
+<p>
+The <code>#log_data</code> record is defined in ~include/leptus_logger.hrl".
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0fc8f82" class="outline-3">
+<h3 id="format-2"><a id="org0fc8f82"></a>format/2</h3>
+<div class="outline-text-3" id="text-format-2">
+<p>
+Produces a log line with a given format.
+</p>
+
+<pre class="example">
+format(Fmt, LogData) -&gt; string()
+
+Fmt = string()
+LogData = #log_data {
+	      request_time :: calendar:datetime(),
+	      response_time :: undefined | calendar:datetime(),
+	      request_line :: string(),
+	      ip :: inet:ip_address(),
+	      version :: atom(),
+	      method :: binary(),
+	      uri :: binary(),
+	      headers :: [{binary(), iodata()}],
+	      status :: non_neg_integer(),
+	      content_length :: non_neg_integer()
+	  }
+</pre>
+
+<p>
+The <code>#log_data</code> record is defined in ~include/leptus_logger.hrl".
+</p>
+
+<p>
+Example:
+</p>
+<pre class="example">
+&gt; format("~h ~l ~u ~t \"~r\" ~s ~B", LogData).
+"127.0.0.1 - - [11/Jun/2014:03:07:25 +0200] \"GET /b?p=2 HTTP/1.1\" 200 8-3"
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

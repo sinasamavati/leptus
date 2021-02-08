@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Callbacks</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">Callbacks</h1>
+</header><nav id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#module">Module</a></li>
+<li><a href="#types">Types</a></li>
+<li><a href="#callbacks">Callbacks</a>
+<ul>
+<li><a href="#prefix-0">prefix/0</a></li>
+<li><a href="#init-3">init/3</a></li>
+<li><a href="#cross_domains-3">cross_domains/3</a></li>
+<li><a href="#is_authenticated-3">is_authenticated/3</a></li>
+<li><a href="#has_permission-3">has_permission/3</a></li>
+<li><a href="#HttpMethod-3">HttpMethod/3</a></li>
+<li><a href="#terminate-4">terminate/4</a></li>
+</ul>
+</li>
+<li><a href="#example">Example</a></li>
+</ul>
+</div>
+</nav>
+
+<div id="outline-container-org260d0a7" class="outline-2">
+<h2 id="module"><a id="org260d0a7"></a>Module</h2>
+<div class="outline-text-2" id="text-module">
+<p>
+leptus_handler
+</p>
+
+<p>
+<i><b>NOTE</b>: There are three callbacks which are required for every request
+handler:</i> <i><code>init/3</code>, <code>HttpMethod/3</code> and <code>terminate/4</code>.</i>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1104bdc" class="outline-2">
+<h2 id="types"><a id="org1104bdc"></a>Types</h2>
+<div class="outline-text-2" id="text-types">
+<pre class="example">
+Route = cowboy_router:route_match()
+Req   = cowboy_req:req()
+State = any()
+
+json_term() = map()
+
+status_binding() = continue
+		 | switching_protocols
+		 | ok
+		 | created
+		 | accepted
+		 | non_authoritative_information
+		 | no_content
+		 | reset_content
+		 | partial_content
+		 | multiple_choices
+		 | moved_permanently
+		 | found
+		 | see_other
+		 | not_modified
+		 | use_proxy
+		 | switch_proxy
+		 | temporary_redirect
+		 | bad_request
+		 | unauthorized
+		 | payment_required
+		 | forbidden
+		 | not_found
+		 | not_allowed
+		 | not_acceptable
+		 | proxy_authentication_required
+		 | request_timeout
+		 | conflict
+		 | gone
+		 | length_required
+		 | precondition_failed
+		 | request_entity_too_large
+		 | request_uri_too_long
+		 | unsupported_media_type
+		 | requested_range_not_satisfiable
+		 | expectation_failed
+		 | internal_server_error
+		 | not_implemented
+		 | bad_gateway
+		 | service_unavailable
+		 | gateway_timeout
+		 | http_version_not_supported
+
+Status  = non_neg_integer() | binary() | status_binding()
+Headers = map()
+Body    = iodata() | json_term()
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgc9a96d3" class="outline-2">
+<h2 id="callbacks"><a id="orgc9a96d3"></a>Callbacks</h2>
+<div class="outline-text-2" id="text-callbacks">
+</div>
+
+<div id="outline-container-org7a60da3" class="outline-3">
+<h3 id="prefix-0"><a id="org7a60da3"></a>prefix/0</h3>
+<div class="outline-text-3" id="text-prefix-0">
+<p>
+This is an optional callback which you can use for prefixing routes.
+</p>
+
+<pre class="example">
+Module:prefix() -&gt; string()
+</pre>
+
+<p>
+Example:
+</p>
+<pre class="example">
+prefix() -&gt; "/v1".
+</pre>
+
+<p>
+NOTE: this won't affect ~Route~s in the handler, but instead, this will be
+used when gathering routes and starting the Cowboy listener.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org2daf233" class="outline-3">
+<h3 id="init-3"><a id="org2daf233"></a>init/3</h3>
+<div class="outline-text-3" id="text-init-3">
+<pre class="example">
+Module:init(Route, Req, State) -&gt;
+    {ok, State}.
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org8ad6a6a" class="outline-3">
+<h3 id="cross_domains-3"><a id="org8ad6a6a"></a>cross_domains/3</h3>
+<div class="outline-text-3" id="text-cross_domains-3">
+<p>
+This is an optional callback that lets you enable cross-domain requests
+(<a href="http://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a>).
+</p>
+
+<pre class="example">
+Module:cross_domains(Route, Req, State) -&gt; {[HostMatch], State}
+</pre>
+
+<p>
+<code>HostMatch</code> is equal to Cowboy HostMatch syntax.
+</p>
+
+<p>
+This will be used when preparing headers right before replying.
+</p>
+
+<p>
+If one of the HostMatches and the Origin match, <code>access-control-allow-origin</code>
+will be set to the Origin.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org2119c6e" class="outline-3">
+<h3 id="is_authenticated-3"><a id="org2119c6e"></a>is_authenticated/3</h3>
+<div class="outline-text-3" id="text-is_authenticated-3">
+<p>
+Exporting this callback in a module means that every request that should
+come to the handler needs authorization.
+</p>
+
+<pre class="example">
+Module:is_authenticated(Route, Req, State) -&gt;
+    {true, State} | {false, Body, State} | {false, Headers, Body, State}
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org058c8d3" class="outline-3">
+<h3 id="has_permission-3"><a id="org058c8d3"></a>has_permission/3</h3>
+<div class="outline-text-3" id="text-has_permission-3">
+<p>
+This is an optional callback which lets you handle if a request has
+permission to proceed or not.
+</p>
+
+<p>
+This callback will be called after <code>Module:is_authenticated/3</code> if
+authentication succeeds.
+</p>
+
+<pre class="example">
+Module:has_permission(Route, Req, State) -&gt;
+    {true, State} | {false, Body, State} | {false, Headers, Body, State}
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgf153b23" class="outline-3">
+<h3 id="HttpMethod-3"><a id="orgf153b23"></a>HttpMethod/3</h3>
+<div class="outline-text-3" id="text-HttpMethod-3">
+<p>
+This means <code>get/3</code>, <code>put/3</code>, <code>post/3</code>, <code>delete/3</code>.
+</p>
+
+<pre class="example">
+Module:HttpMethod(Route, Req, State) -&gt;
+    {Body, State} | {Status, Body, State} | {Status, Headers, Body, State}
+</pre>
+
+<p>
+In this case, <code>Route</code> must be a pattern that would match only a single string.
+</p>
+
+<p>
+Example:
+</p>
+<pre class="example">
+get("/", Req, State) -&gt;
+    ...
+    {&lt;&lt;"index"&gt;&gt;, State}.
+
+put("/:id/edit", Req, State) -&gt;
+    ...
+    {20-0, &lt;&lt;"edited"&gt;&gt;, State}.
+
+post("/new", Req, State) -&gt;
+    ...
+    {201, [{&lt;&lt;"Location"&gt;&gt;, &lt;&lt;"/data/38-6"&gt;&gt;}], &lt;&lt;"created"&gt;&gt;, State}.
+
+delete("/:id", Req, State) -&gt;
+    ...
+    %% Body as a json
+    {20-4, #{&lt;&lt;"message"&gt;&gt; =&gt; &lt;&lt;"deleted"&gt;&gt;}, State}.
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org094a5cc" class="outline-3">
+<h3 id="terminate-4"><a id="org094a5cc"></a>terminate/4</h3>
+<div class="outline-text-3" id="text-terminate-4">
+<pre class="example">
+Module:terminate(Reason, Route, Req, State) -&gt; ok
+
+Reason = normal
+       | not_allowed
+       | unauthenticated
+       | unauthorized
+       | {error, any()}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org65c4542" class="outline-2">
+<h2 id="example"><a id="org65c4542"></a>Example</h2>
+<div class="outline-text-2" id="text-example">
+<p>
+Please pay attention to comment.
+</p>
+
+<pre class="example">
+-module(example).
+-compile({parse_transform, leptus_pt}).
+
+-export([prefix/0]).
+-export([init/3]).
+-export([cross_domains/3]).
+-export([is_authenticated/3]).
+-export([get/3]).
+-export([terminate/4]).
+
+prefix() -&gt; "/example".
+
+init(_Route, _Req, State) -&gt;
+    {ok, State}.
+
+cross_domains(_Route, _Req, State) -&gt;
+    {['_'], State}.
+
+is_authenticated(_Route, _Req, State) -&gt;
+    {true, State}.
+
+%% Route is "/1" in every callback in this example,
+%% but we used prefix/0 to prefix "/1" by "/example",
+%% so get("/1") will be invoked by issuing the URL "/example/1"
+get("/1", _Req, State) -&gt;
+    {&lt;&lt;"Example 1!"&gt;&gt;, State}.
+
+terminate(_Reason, _Route, _Req, _State) -&gt;
+    ok.
+</pre>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

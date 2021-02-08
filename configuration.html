@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">Configuration</h1>
+</header><nav id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sections">Sections</a>
+<ul>
+<li><a href="#handlers">handlers</a></li>
+<li><a href="#options">options</a></li>
+</ul>
+</li>
+<li><a href="#example">Example</a></li>
+</ul>
+</div>
+</nav>
+<p>
+<i><b>NOTE</b>: Read this if you want to pass the <code>App</code> name as the second argument to</i>
+<i><code>leptus:start_listener/2</code>.</i>
+</p>
+
+<p>
+<i>Leptus configuration file must be named <code>leptus.config</code>, and it must be put in</i>
+<i>the <code>priv</code> directory of the <code>App</code> application.</i>
+</p>
+
+<div id="outline-container-org971acc0" class="outline-2">
+<h2 id="sections"><a id="org971acc0"></a>Sections</h2>
+<div class="outline-text-2" id="text-sections">
+</div>
+
+<div id="outline-container-org6820da0" class="outline-3">
+<h3 id="handlers"><a id="org6820da0"></a>handlers</h3>
+<div class="outline-text-3" id="text-handlers">
+<p>
+In <code>leptus.config</code>, request handlers should be defined as follows:
+<code>{handlers, [{HostMatch, [{module(), State :: any()}]}]}.</code>
+</p>
+
+<p>
+Please refer to <a href="leptus.html#types">leptus module types</a> for further details
+on types.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org684dc4b" class="outline-3">
+<h3 id="options"><a id="org684dc4b"></a>options</h3>
+<div class="outline-text-3" id="text-options">
+<p>
+By default, Leptus runs on <code>127.0.0.1:808-0</code>, but you can override them:
+</p>
+
+<pre class="example">
+{options,
+ [
+   {ip, inet:ip_address()},
+   {port, inet:port_number()}
+ ]
+}.
+</pre>
+
+<p>
+Note: For an HTTPS listener, <code>cacertfile</code>, <code>certfile</code> and <code>keyfile</code> are required:
+</p>
+
+<pre class="example">
+{options,
+ [
+  {cacertfile, file:name()},
+  {certfile, file:name()},
+  {keyfile, file:name()}
+ ]
+}.
+</pre>
+
+<p>
+Please refer to <a href="leptus.html#types">leptus module types</a> for further details
+on types.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org28e7d04" class="outline-2">
+<h2 id="example"><a id="org28e7d04"></a>Example</h2>
+<div class="outline-text-2" id="text-example">
+<pre class="example">
+%% leptus.config
+
+{options,
+ [
+  {ip, {0, 0, 0, -0}},
+  {port, 444-4},
+  {cacertfile, "ssl/ca.crt"},
+  {certfile, "ssl/server.crt"},
+  {keyfile, "ssl/server.key"}
+ ]
+}.
+
+{handlers,
+ [
+  {'_',
+   [{rq_handler-1, undefined_state},
+    {rq_handler-2, [admin, dev]}]
+  }
+ ]
+}.
+</pre>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Types</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">Types</h1>
+</header>
+<div id="outline-container-org761055d" class="outline-2">
+<h2 id="org761055d">Types</h2>
+<div class="outline-text-2" id="text-org761055d">
+<pre class="example">
+json_term() = map()
+
+Route    = cowboy_router:route_match()
+Req      = cowboy_req:req()
+Status   = non_neg_integer() | atom() | binary()
+Body     = iodata() | json_term()
+Headers  = map()
+
+Handlers = [{HostMatch, [{module(), any()}]}]
+
+Option  = {ip, inet:ip_address()}
+	| {port, inet:port_number()}
+	| {num_acceptors, non_neg_integer()}
+	| {cacertfile, file:name_all()}
+	| {certfile, file:name_all()}
+	| {keyfile, file:name_all()}
+	| {static_dir, {HostMatch, StaticDir}}
+	| {log_handlers, [{module(), any()}]}
+Options = [Option]
+</pre>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>

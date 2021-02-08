@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2018-09-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>leptus_config</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Sina Samavati">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="org-div-home-and-up">
+ <a accesskey="h" href="index.html"> UP </a>
+ |
+ <a accesskey="H" href="https://github.com/sinasamavati/leptus"> HOME </a>
+</div><div id="content">
+<header>
+<h1 class="title">leptus_config</h1>
+</header><nav id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#module">Module</a></li>
+<li><a href="#types">Types</a></li>
+<li><a href="#functions">Functions</a>
+<ul>
+<li><a href="#start-0">start/0</a></li>
+<li><a href="#start_link-0">start_link/0</a></li>
+<li><a href="#lookup-1">lookup/1</a></li>
+<li><a href="#lookup-2">lookup/2</a></li>
+<li><a href="#set-2">set/2</a></li>
+<li><a href="#config_file-1">config_file/1</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav>
+
+<div id="outline-container-orgf4b0934" class="outline-2">
+<h2 id="module"><a id="orgf4b0934"></a>Module</h2>
+<div class="outline-text-2" id="text-module">
+<p>
+leptus_config
+</p>
+
+<p>
+This module is a gen_server which has an ETS table. It's used for keeping
+configurations in memory.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6adb669" class="outline-2">
+<h2 id="types"><a id="org6adb669"></a>Types</h2>
+<div class="outline-text-2" id="text-types">
+<pre class="example">
+Key     = any()
+Value   = any()
+App     = atom()
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org26e69c6" class="outline-2">
+<h2 id="functions"><a id="org26e69c6"></a>Functions</h2>
+<div class="outline-text-2" id="text-functions">
+</div>
+
+<div id="outline-container-org023bdde" class="outline-3">
+<h3 id="start-0"><a id="org023bdde"></a>start/0</h3>
+<div class="outline-text-3" id="text-start-0">
+<p>
+Starts leptus_config gen_server.
+</p>
+
+<pre class="example">
+start() -&gt; {ok, pid()} | {error, any()}
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org60ece34" class="outline-3">
+<h3 id="start_link-0"><a id="org60ece34"></a>start_link/0</h3>
+<div class="outline-text-3" id="text-start_link-0">
+<p>
+Starts leptus_config gen_server and creates a link to the process.
+</p>
+
+<pre class="example">
+start() -&gt; {ok, pid()} | {error, any()}
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgac959c5" class="outline-3">
+<h3 id="lookup-1"><a id="orgac959c5"></a>lookup/1</h3>
+<div class="outline-text-3" id="text-lookup-1">
+<p>
+Finds a key-value.
+</p>
+
+<pre class="example">
+lookup(Key) -&gt; any() | undefined
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org5e7250e" class="outline-3">
+<h3 id="lookup-2"><a id="org5e7250e"></a>lookup/2</h3>
+<div class="outline-text-3" id="text-lookup-2">
+<p>
+Finds a key-value.
+This returns the Default if nothing found.
+</p>
+
+<pre class="example">
+lookup(Key, Default) -&gt; any() | Default
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org99f2fd9" class="outline-3">
+<h3 id="set-2"><a id="org99f2fd9"></a>set/2</h3>
+<div class="outline-text-3" id="text-set-2">
+<p>
+Associates a key to a value.
+</p>
+
+<pre class="example">
+set(Key, Value) -&gt; ok
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orge98d75e" class="outline-3">
+<h3 id="config_file-1"><a id="orge98d75e"></a>config_file/1</h3>
+<div class="outline-text-3" id="text-config_file-1">
+<p>
+Reads leptus configuration file that is <code>App/priv/leptus.config</code>.
+</p>
+
+<pre class="example">
+config_file(App) -&gt; [any()] | {error, enoent}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Sina Samavati</p>
+<p class="date">Created: 2018-09-19</p>
+<p class="validation"></p>
+</div>
+</body>
+</html>
